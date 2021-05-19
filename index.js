@@ -1,6 +1,6 @@
 const app = require('express')();
-const PORT = process.env.PORT || 3000;
 const path = require('path');
+const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT);
 const io = require('socket.io')(server);
 
@@ -14,11 +14,6 @@ app.get('/', (req, res) => {
 });
 app.get('/client/*', (req, res) => {
     res.sendFile(path.join(__dirname, `/client/${req.params[0]}`));
-});
-app.get('/common/*', (req, res) => {
-    const name = req.params[0];
-    //const data = require(`./common/${name}`);
-    res.sendFile(path.join(__dirname, `/common/${req.params[0]}`));
 });
 
 io.on('connection', socket => {

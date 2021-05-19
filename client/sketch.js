@@ -1,3 +1,7 @@
+const p5 = require('p5');
+const io = require('socket.io-client');
+new p5(() => {
+
 const socket = io({
     reconnection: false //Do not try to reconnect automatically
 });
@@ -17,7 +21,7 @@ socket.on('disconnect', () => {
     window.location.href = window.location.href;
 });
 
-function setup() {
+setup = () => {
     createCanvas(windowWidth, windowHeight);
     textSize(20);
 
@@ -26,7 +30,7 @@ function setup() {
     }, 1000/15);
 }
 
-function draw() {
+draw = () => {
     background(0, 255,0);
     fill(0);
     ellipse(mouseX, mouseY, 50, 50);
@@ -57,3 +61,4 @@ function sendData() {
     }
     socket.emit('myPos', myData);
 }
+});
