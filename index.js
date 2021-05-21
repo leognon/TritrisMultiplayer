@@ -9,7 +9,7 @@ let sockets = {};
 const Match = require('./server/match.js');
 let match;
 
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
     res.sendFile(path.join(__dirname, '/client/index.html'));
 });
 app.get('/client/*', (req, res) => {
@@ -36,3 +36,6 @@ setInterval(() => {
 setInterval(() => {
     if (match) match.clientsUpdate();
 }, Math.floor(1000/20)); //Send new game states to clients at 20fps
+
+
+console.log('Server started');

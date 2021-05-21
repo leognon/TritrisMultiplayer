@@ -1,9 +1,15 @@
+const states = require('../common/states.js');
+
 class Match {
     constructor(socket1, socket2) {
         console.log('Created match between ' + socket1.id + ' and ' + socket2.id);
         this.players = [];
         this.addPlayer(socket1);
         this.addPlayer(socket2);
+
+        for (const p of this.players) {
+            p.sendState(states.INGAME);
+        }
     }
 
     addPlayer(socket) {
@@ -35,7 +41,7 @@ class Player {
         this.socket = socket;
         this.pos = { x: 0, y: 0 };
 
-        this.socket.on('myPos', this.gotData.bind(this));
+        this.socket.on('inputs', this.gotData.bind(this));
     }
 
     getId() {
@@ -43,11 +49,16 @@ class Player {
     }
 
     gotData(data) {
-        this.pos = data;
+        this.inputs = data;
+        console.log('Got data', this.inputs);
     }
 
     getData() {
         return this.pos; 
+    }
+
+    sendState(s) {
+        this.socket.emit('state', s);
     }
 
     sendData(data) {

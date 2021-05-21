@@ -1,64 +1,77 @@
 const p5 = require('p5');
 const io = require('socket.io-client');
-new p5(() => {
+const states = require('../common/states.js');
+const ClientGame = require('../client/clientGame.js');
 
+new p5(() => {
+window.debug = this; //Enables variables created with "this." to be accessed in the chrome developer console
 const socket = io({
     reconnection: false //Do not try to reconnect automatically
 });
 
-let prevData = {};
-let data = {};
-let myId;
 
-socket.on('id', id => {
-    myId = id;
+/* Client sends input packets
+ * Client receives data:
+ *      Set state to authoritative server
+ *      Delete inputs that server has processed
+ *      Then replay inputs that server has not processed
+ * 
+ * Server receives data:
+ *      Replay game from client perspective
+ *
+ *
+ */
+
+let state = states.FINDING_MATCH;
+let game;
+
+socket.on('state', s => {
+    state = s;
+    if (state == states.INGAME) {
+        game = new ClientGame();
+    }
 });
 socket.on('data', d => {
-    prevData = data;
-    data = d;
+
 });
 socket.on('disconnect', () => {
-    window.location.href = window.location.href;
+    console.log('Disconnected!!!');
+    noLoop();
+    //window.location.href = window.location.href;
 });
 
 setup = () => {
     createCanvas(windowWidth, windowHeight);
-    textSize(20);
 
     setInterval(() => {
-        sendData();
-    }, 1000/15);
+        if (game) sendData();
+    }, 1000/1); //15);
 }
 
 draw = () => {
-    background(0, 255,0);
-    fill(0);
-    ellipse(mouseX, mouseY, 50, 50);
-
-    if (!prevData || !prevData.players) prevData = data;
-    for (const id in data.players) {
-        if (id == myId) continue;
-        const prevPos = prevData.players[id];
-        const currPos = data.players[id];
-        let lerpPercent = (Date.now() - data.time) / (data.time - prevData.time);
-        const interpolatedPos = {
-            x: lerpPercent*currPos.x + (1-lerpPercent)*prevPos.x,
-            y: lerpPercent*currPos.y + (1-lerpPercent)*prevPos.y,
-        }
-        fill(255,0,0);
-        //ellipse(currPos.x, currPos.y, 25, 25);
-        ellipse(interpolatedPos.x, interpolatedPos.y, 15, 15);
+    if (state == states.FINDING_MATCH) {
+        background(0);
         fill(255);
-        text(id.slice(0, 5), interpolatedPos.x, interpolatedPos.y-20);
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        text('Finding match...', width/2, height/2);
+    } else if (state == states.INGAME) {
+        runGame();
     }
+}
 
+function runGame() {
+    game.update();
+    showGame();
+}
+
+function showGame() {
+    background(100);
+    game.redraw = true;
+    game.show(10, 10, 425, 850, false, true, true, true, true);
 }
 
 function sendData() {
-    const myData = {
-        x: mouseX,
-        y: mouseY
-    }
-    socket.emit('myPos', myData);
+    socket.emit('inputs', game.getInputs());
 }
 });
