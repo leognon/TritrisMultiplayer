@@ -59,9 +59,7 @@ class Grid {
             for (let col = 0; col < piece.grid[0].length; col++) {
                 let gridRow = row + piece.pos.y;
                 let gridCol = col + piece.pos.x;
-                if (
-                    this.grid[gridRow][gridCol].collides(piece.grid[row][col])
-                ) {
+                if (this.grid[gridRow][gridCol].collides(piece.grid[row][col])) {
                     return false;
                 }
             }
@@ -247,7 +245,10 @@ class Piece {
                 this.grid[row].push(new GridCell(pieces[row][col], clr));
             }
         }
-        this.pos = createVector(Math.ceil((8 - this.grid[0].length) / 2), 0);
+        this.pos = { 
+            x: Math.ceil((8 - this.grid[0].length) / 2),
+            y: 0
+        };
         this.rotation = 0;
         this.rotations = json.rotationOffset || [[0, 0]]; //How the position should change when rotated. If not specified, the pos can stay the same (for pieces with square dimensions)
     }

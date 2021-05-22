@@ -2,7 +2,7 @@ const { Game, Input } = require('../common/game.js');
 
 class ClientGame extends Game {
     constructor() {
-        super(8);
+        super(10);
         //TODO Figure out redraw
         this.colors = [
             color(255, 0, 0), //Red boomerang
@@ -18,24 +18,30 @@ class ClientGame extends Game {
         this.inputId = 0;
 
         this.leftWasPressed = false;
+        this.rightWasPressed = false;
     }
     
     update() {
-        if (keyIsDown(37)) { //Left arrow
-            this.inputs.push(new Input(this.inputId++, Date.now() - this.startTime, -1, 0, 0));
-            this.currentPiece.move(-1, 0);
-        }
-        if (keyIsDown(39)) { //Right arrow
-            this.inputs.push(new Input(this.inputId++, Date.now() - this.startTime, 1, 0, 0));
-            this.currentPiece.move(1, 0);
+        if (this.currentPiece) {
+            if (keyIsDown(37) && !this.leftWasPressed) { //Left arrow
+                this.inputs.push(new Input(this.inputId++, Date.now() - this.startTime, -1, 0, 0));
+                this.currentPiece.move(-1, 0);
+            }
+            if (keyIsDown(39) && !this.rightWasPressed) { //Right arrow
+                this.inputs.push(new Input(this.inputId++, Date.now() - this.startTime, 1, 0, 0));
+                this.currentPiece.move(1, 0);
+            }
         }
 
 
         this.leftWasPressed = keyIsDown(37);
+        this.rightWasPressed = keyIsDown(39);
     }
 
     getInputs() {
-        return this.inputs.map(i => i.encode());
+        const data = this.inputs.map(i => i.encode());
+        this.inputs = [];
+        return data;
     }
     
     show(x, y, w, h, paused, oldGraphics, showGridLines, showStats, showFlash) {

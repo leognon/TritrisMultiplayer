@@ -1,5 +1,5 @@
 const { Grid, GridCell, Triangle, Piece } = require('./classes.js');
-const piecesJSON = require('./pieces');
+const piecesJSON = require('./pieces.js');
 
 
 /* TODO
@@ -15,9 +15,14 @@ class Game {
         this.grid = new Grid(this.w, this.h);
 
         this.tritrisAmt = 0; //For statistics
+        this.startTime = Date.now();
         this.time = 0;
 
         this.alive = true;
+
+        //this.history = [];
+        this.inputs = [];
+        this.currentInput = 0;
 
         if (level < 0) level = 0;
         if (level > 29) level = 29;
@@ -45,6 +50,7 @@ class Game {
         ];
 
         this.currentPiece = null; //The current piece starts as null
+        this.currentPieceIndex = null;
         this.nextPiece = null; //The next piece starts as a random piece that isn't a single triangles
         this.nextPieceIndex = null;
         this.nextSingles = 0;
@@ -80,7 +86,7 @@ class Game {
         if (this.practice) this.softDropSpeed *= 4;
         this.lastMoveDown = Date.now() + 750;
 
-        this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
+        //this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
 
         this.entryDelay = msPerFrame * 14; //There is a 10 frame entry delay (the time btwn the last piece locking in, and the next spawning)
         this.spawnNextPiece = 0;
@@ -96,15 +102,27 @@ class Game {
         this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
     }
 
-    update() {
-        if (!this.alive) return;
+    updateToTime(t) {
+        while (this.time < t) {
+            //this.currentInput = -1;
+            /*for (let i = 0; i < this.inputs.length; i++) {
+                console.log('Current time: ' + this.time);
+                if (this.time <= this.inputs[i].time) {
+                    this.currentInput = i;
+                    break;
+                }
+            }*/
+            let deltaTime = Math.max(this.pieceSpeed - 3, 1); //TODO Figure this out
+            this.update(deltaTime);
+        }
+    }
 
-        const now = Date.now();
-        const deltaTime = now - this.lastFrame;
+    update(deltaTime) {
+        //if (!this.alive) return;
         this.time += deltaTime;
 
         //Play a line clear animation
-        if (now <= this.animationTime) {
+        if (Date.now() <= this.animationTime) {
             //Line clear animation. Not needed on server
         } else if (this.animatingLines.length > 0) {
             //After a line clear animation has just been completed
@@ -130,18 +148,41 @@ class Game {
         //Spawn the next piece after entry delay
         if (this.shouldSpawnPiece()) {
             this.spawnPiece();
-            this.lastMoveDown = now;
+            this.lastMoveDown = Date.now();
             if (!this.isValid(this.currentPiece)) {
                 this.alive = false; //If the new piece is already blocked, game over
             }
         }
 
         //Piece Movement
+        //TODO Figure out how to make this whole thing a while loop. Or just don't increase deltaTime if inputs are being played...
         if (this.currentPiece !== null) {
+            //Move based on the inputs the client gave
+            if (this.currentInput != -1 && this.currentInput < this.inputs.length) {
+                const input = this.inputs[this.currentInput];
+                if (input.time <= this.time) { //The input should be played
+                    console.log('Doing movement id:', input);
+                    //Move the piece according to the recorded input
+                    const placePiece = this.movePiece(input.horzDir, input.rot, input.vertDir);
+                    if (placePiece) {
+                        this.placePiece();
+                    }
+                    if (input.vertDir) {
+                        this.lastMoveDown = Date.now();
+                    }
+                    this.currentInput++;
+                    console.log('Increased input to ' + this.currentInput);
+                }
+            }
 
+            //Move down based on timer
+            let shouldMoveDown = Date.now() >= this.lastMoveDown + this.pieceSpeed;
+            if (this.currentPiece !== null && shouldMoveDown) {
+                const placePiece = this.movePiece(0, 0, true);
+                if (placePiece) this.placePiece();
+                this.lastMoveDown = Date.now();
+            }
         }
-
-        this.lastFrame = Date.now();
     }
 
     shouldIncreaseLevel() {
@@ -161,8 +202,8 @@ class Game {
 
     shouldSpawnPiece() {
         return this.currentPiece == null &&
-                now > this.spawnNextPiece &&
-                now > this.animationTime;
+                Date.now() > this.spawnNextPiece &&
+                Date.now() > this.animationTime;
     }
 
     placePiece() {
@@ -187,6 +228,7 @@ class Game {
             }
         }
         this.currentPiece = this.nextPiece; //Assign the new current piece
+        this.currentPieceIndex = this.nextPieceIndex;
         if (this.nextSingles > 0) {
             this.nextPieceIndex = 0; //This will make it spawn 3 single triangles in a row
             this.nextSingles--;
@@ -304,7 +346,10 @@ class Input {
         return {
             id: this.id,
             time: this.time, //TODO encode the direction using bits to be much more compact
-            dir: this.horzDir + ',' + this.vertDir + ',' + this.rot
+            horzDir: this.horzDir,
+            vertDir: this.vertDir,
+            rot: this.rot
+            //dir: this.horzDir + ',' + this.vertDir + ',' + this.rot
         }
     }
 }

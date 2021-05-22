@@ -1,4 +1,5 @@
 const states = require('../common/states.js');
+const ServerGame = require('../server/serverGame.js');
 
 class Match {
     constructor(socket1, socket2) {
@@ -18,7 +19,7 @@ class Match {
 
     physicsUpdate() {
         for (const p of this.players) {
-            //p.pos.y += 10;
+            p.physicsUpdate();
         }
     }
 
@@ -39,9 +40,13 @@ class Match {
 class Player {
     constructor(socket) {
         this.socket = socket;
-        this.pos = { x: 0, y: 0 };
+        this.serverGame = new ServerGame();
 
         this.socket.on('inputs', this.gotData.bind(this));
+    }
+
+    physicsUpdate() {
+        this.serverGame.updateToTime(Date.now() - this.serverGame.startTime);
     }
 
     getId() {
@@ -49,12 +54,13 @@ class Player {
     }
 
     gotData(data) {
-        this.inputs = data;
-        console.log('Got data', this.inputs);
+        this.serverGame.gotInputs(data);
+        //this.inputs = data;
     }
 
     getData() {
-        return this.pos; 
+        return this.serverGame.getData();
+        //TODO Send back game data
     }
 
     sendState(s) {
