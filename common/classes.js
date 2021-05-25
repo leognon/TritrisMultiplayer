@@ -1,14 +1,40 @@
 class Grid {
-    constructor(width, height) {
-        this.w = width;
-        this.h = height;
-        this.grid = [];
-        for (let i = 0; i < this.h; i++) {
-            this.grid.push([]);
-            for (let j = 0; j < this.w; j++) {
-                this.grid[i].push(new GridCell());
+    constructor(a, height) {
+        if (a instanceof Array) {
+            const gridData = a;
+            this.h = gridData.length;
+            this.w = gridData[0].length;
+            this.grid = [];
+            for (let i = 0; i < this.h; i++) {
+                this.grid.push([]);
+                for (let j = 0; j < this.w; j++) {
+                    const gridCell = new GridCell(gridData[i][j]);
+                    this.grid[i].push(gridCell);
+                }
+            }
+        } else {
+            this.w = a;
+            this.h = height;
+            this.grid = [];
+            for (let i = 0; i < this.h; i++) {
+                this.grid.push([]);
+                for (let j = 0; j < this.w; j++) {
+                    this.grid[i].push(new GridCell());
+                }
             }
         }
+    }
+
+    serialized() {
+        let output = [];
+        for (let i = 0; i < this.h; i++) {
+            output.push([]);
+            for (let j = 0; j < this.w; j++) {
+                const thisCell = this.grid[i][j];
+                output[i].push(thisCell.serialized());
+            }
+        }
+        return output;
     }
 
     clearLines() {
@@ -121,14 +147,37 @@ class GridCell {
             for (let row = 0; row < 2; row++) {
                 this.tris.push([]);
                 for (let col = 0; col < 2; col++) {
-                    if (triangles[row][col] == 1) {
-                        this.tris[row][col] = new Triangle(clr);
-                    } else {
-                        this.tris[row][col] = null;
+                    let tri = null;
+                    if (clr == undefined) { //Each triangle might have a different color
+                        //console.log('No clr. It is ', clr);
+                        if (triangles[row][col] != -1) { //-1 means no triangles
+                            tri = new Triangle(triangles[row][col]);
+                        }
+                    } else { //All the triangles are the same color
+                        //console.log('Clr is ', clr);
+                        if (triangles[row][col] == 1) {
+                            tri = new Triangle(clr);
+                        }
                     }
+                    this.tris[row][col] = tri;
                 }
             }
         }
+    }
+
+    serialized() {
+        let output = [];
+        for (let y = 0; y < this.tris.length; y++) {
+            output.push([]);
+            for (let x = 0; x < this.tris[y].length; x++) {
+                if (this.tris[y][x]) {
+                    output[y].push(this.tris[y][x].clr);
+                } else {
+                    output[y].push(-1);
+                }
+            }
+        }
+        return output;
     }
 
     removeRightTri() {
@@ -242,7 +291,9 @@ class Piece {
         for (let row = 0; row < pieces.length; row++) {
             this.grid.push([]);
             for (let col = 0; col < pieces[0].length; col++) {
+                //console.log('Creating piece');
                 this.grid[row].push(new GridCell(pieces[row][col], clr));
+                //console.log(this.grid[row][col]);
             }
         }
         this.pos = { 
@@ -271,7 +322,8 @@ class Piece {
         this.grid = newGrid;
 
         //Calculates a new position so the piece stays centered around the same piece
-        this.pos.add(this.rotations[this.rotation][0], this.rotations[this.rotation][1]);
+        this.pos.x += this.rotations[this.rotation][0]
+        this.pos.y += this.rotations[this.rotation][1];
         this.rotation = (this.rotation + 1) % this.rotations.length;
     }
 
@@ -289,7 +341,8 @@ class Piece {
 
         //Calculates a new position so the piece stays centered around the same piece
         this.rotation = (this.rotation - 1 + this.rotations.length) % this.rotations.length;
-        this.pos.sub(this.rotations[this.rotation][0], this.rotations[this.rotation][1]);
+        this.pos.x -= this.rotations[this.rotation][0]
+        this.pos.y -= this.rotations[this.rotation][1];
     }
 
     move(x, y) {

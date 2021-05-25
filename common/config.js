@@ -1,0 +1,5 @@
+module.exports = {
+    CLIENT_SEND_DATA: 1000/10,
+    SERVER_SEND_DATA: 1000/10,
+    SERVER_PHYSICS_UPDATE: 1000/60,
+}

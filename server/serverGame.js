@@ -3,15 +3,21 @@ const { Game, Input } = require('../common/game.js');
 
 class ServerGame extends Game {
     constructor() {
-        super(10);
+        super(0);
     }
 
     gotInputs(inputs) {
-        this.inputs.push(...inputs);
+        for (const inp of inputs) {
+            this.inputs[inp.id] = inp;
+        }
+        //this.inputs.push(...inputs);
     }
 
-    getData() {
-        return this;
+    getData() { //TODO Redo this system
+        return {
+            gameData: this.getGameState(),
+            receviedInputId: this.receviedInputId
+        }
     }
 }
 

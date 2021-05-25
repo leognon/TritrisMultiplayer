@@ -1,4 +1,5 @@
 const { Grid, GridCell, Triangle, Piece } = require('./classes.js');
+const RandomGenerator = require('random-seed');
 const piecesJSON = require('./pieces.js');
 
 
@@ -9,7 +10,7 @@ const piecesJSON = require('./pieces.js');
  */
 
 class Game {
-    constructor(level) {
+    constructor(level, seed = 123) {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -18,11 +19,15 @@ class Game {
         this.startTime = Date.now();
         this.time = 0;
 
+        this.seed = seed;
+        this.gen = new RandomGenerator(this.seed);
+
         this.alive = true;
 
         //this.history = [];
         this.inputs = [];
-        this.currentInput = 0;
+        this.receviedInputId = -1;
+        this.currentInputId = 0;
 
         if (level < 0) level = 0;
         if (level > 29) level = 29;
@@ -83,12 +88,10 @@ class Game {
         this.setSpeed(); //This will correctly set pieceSpeed depending on which level it's starting on
 
         this.softDropSpeed = msPerFrame * 2;
-        if (this.practice) this.softDropSpeed *= 4;
-        this.lastMoveDown = Date.now() + 750;
+        this.lastMoveDown = this.time + 750;
 
         //this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
 
-        this.entryDelay = msPerFrame * 14; //There is a 10 frame entry delay (the time btwn the last piece locking in, and the next spawning)
         this.spawnNextPiece = 0;
 
         this.animationTime = 0;
@@ -102,19 +105,63 @@ class Game {
         this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
     }
 
+    //Replays the entire game from start to t
+    updateFromStartToTime(t) {
+        this.goToStart();
+        this.updateToTime(t);
+    }
+
+    //Plays from the current state to time t
     updateToTime(t) {
-        while (this.time < t) {
-            //this.currentInput = -1;
-            /*for (let i = 0; i < this.inputs.length; i++) {
-                console.log('Current time: ' + this.time);
-                if (this.time <= this.inputs[i].time) {
-                    this.currentInput = i;
-                    break;
-                }
-            }*/
+        while (this.time <= t) {
             let deltaTime = Math.max(this.pieceSpeed - 3, 1); //TODO Figure this out
             this.update(deltaTime);
         }
+    }
+
+    goToStart() { //Resets the game so it can be replayed up to any time necessary
+        this.grid = new Grid(this.w, this.h);
+        this.tritrisAmt = 0; //For statistics
+        this.time = 0;
+
+        this.gen = new RandomGenerator(this.seed);
+
+        this.alive = true;
+
+        this.currentInputId = 0;
+
+        this.level = this.startLevel;
+        this.lines = 0;
+        this.score = 0;
+
+        this.currentPiece = null; //The current piece starts as null
+        this.currentPieceIndex = null;
+        this.nextPiece = null; //The next piece starts as a random piece that isn't a single triangles
+        this.nextPieceIndex = null;
+        this.nextSingles = 0;
+        this.bag = [];
+        this.spawnPiece(); //Sets the next piece
+        this.firstPieceIndex = this.nextPieceIndex; //Used for saving games
+        this.spawnPiece(); //Make next piece current, and pick new next
+
+        this.setSpeed(); //This will correctly set pieceSpeed depending on which level it's starting on
+
+        this.lastMoveDown = this.time + 750;
+
+        //this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
+
+        this.spawnNextPiece = 0;
+
+        this.animationTime = 0;
+        this.animatingLines = [];
+        this.lastColCleared = 0;
+        this.flashTime = 0;
+
+        this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
+    }
+
+    getGameState() {
+        return new GameState(this);
     }
 
     update(deltaTime) {
@@ -122,7 +169,7 @@ class Game {
         this.time += deltaTime;
 
         //Play a line clear animation
-        if (Date.now() <= this.animationTime) {
+        if (this.time <= this.animationTime) {
             //Line clear animation. Not needed on server
         } else if (this.animatingLines.length > 0) {
             //After a line clear animation has just been completed
@@ -148,7 +195,7 @@ class Game {
         //Spawn the next piece after entry delay
         if (this.shouldSpawnPiece()) {
             this.spawnPiece();
-            this.lastMoveDown = Date.now();
+            this.lastMoveDown = this.time;
             if (!this.isValid(this.currentPiece)) {
                 this.alive = false; //If the new piece is already blocked, game over
             }
@@ -158,29 +205,32 @@ class Game {
         //TODO Figure out how to make this whole thing a while loop. Or just don't increase deltaTime if inputs are being played...
         if (this.currentPiece !== null) {
             //Move based on the inputs the client gave
-            if (this.currentInput != -1 && this.currentInput < this.inputs.length) {
-                const input = this.inputs[this.currentInput];
+            if (this.currentInputId < this.inputs.length) {
+                //console.log(this.inputs);
+                const input = this.inputs[this.currentInputId];
+                //console.log('Checking input ' + input.id + ' with time ' + input.time + ' current time is '
+                    //+ this.time + ' realworld time is ' + (Date.now()-this.startTime));
                 if (input.time <= this.time) { //The input should be played
-                    console.log('Doing movement id:', input);
+                    //console.log('Applying id ' + input.id);
                     //Move the piece according to the recorded input
                     const placePiece = this.movePiece(input.horzDir, input.rot, input.vertDir);
                     if (placePiece) {
                         this.placePiece();
                     }
                     if (input.vertDir) {
-                        this.lastMoveDown = Date.now();
+                        this.lastMoveDown = this.time;
                     }
-                    this.currentInput++;
-                    console.log('Increased input to ' + this.currentInput);
+                    this.receviedInputId = input.id;
+                    this.currentInputId++;
                 }
             }
 
             //Move down based on timer
-            let shouldMoveDown = Date.now() >= this.lastMoveDown + this.pieceSpeed;
+            let shouldMoveDown = this.time >= this.lastMoveDown + this.pieceSpeed;
             if (this.currentPiece !== null && shouldMoveDown) {
                 const placePiece = this.movePiece(0, 0, true);
                 if (placePiece) this.placePiece();
-                this.lastMoveDown = Date.now();
+                this.lastMoveDown = this.time;
             }
         }
     }
@@ -202,8 +252,8 @@ class Game {
 
     shouldSpawnPiece() {
         return this.currentPiece == null &&
-                Date.now() > this.spawnNextPiece &&
-                Date.now() > this.animationTime;
+                this.time > this.spawnNextPiece &&
+                this.time > this.animationTime;
     }
 
     placePiece() {
@@ -216,7 +266,7 @@ class Game {
         }
 
         const entryDelay = this.calcEntryDelay(row);
-        this.spawnNextPiece = Date.now() + entryDelay;
+        this.spawnNextPiece = this.time + entryDelay;
 
         this.currentPiece = null; //There is an entry delay for the next piece
     }
@@ -233,7 +283,7 @@ class Game {
             this.nextPieceIndex = 0; //This will make it spawn 3 single triangles in a row
             this.nextSingles--;
         } else {
-            const bagIndex = Math.floor(Math.random() * this.bag.length);
+            const bagIndex = this.gen.range(this.bag.length); //Math.floor(Math.random() * this.bag.length);
             this.nextPieceIndex = this.bag.splice(bagIndex, 1)[0]; //Pick 1 item and remove it from bag
             if (this.nextPieceIndex == 0) {
                 //If it randomly chose to spawn 1 triangle, spawn 2 more
@@ -250,11 +300,11 @@ class Game {
         if (linesCleared.length > 0) {
             //this.currentSnapshot.setLines(linesCleared);
             //Set the time for when to stop animating
-            this.animationTime = Date.now() + this.maxAnimationTime;
+            this.animationTime = this.time + this.maxAnimationTime;
             this.animatingLines = linesCleared; //Which lines are being animated (and cleared)
             if (linesCleared.length == 3) {
                 //Tritris!
-                this.flashTime = Date.now() + this.maxFlashTime;
+                this.flashTime = this.time + this.maxFlashTime;
             }
         }
     }
@@ -330,6 +380,46 @@ class Game {
     isValid(piece) {
         if (piece.outOfBounds(this.w, this.h)) return false;
         return this.grid.isValid(piece);
+    }
+}
+
+class GameState {
+    constructor(game) {
+        this.w = game.w;
+        this.h = game.h;
+        this.serializedGrid = game.grid.serialized();
+        this.tritrisAmt = game.tritrisAmt;
+        this.startTime = game.startTime; //TODO This might be unnecessary
+        this.time = game.time;
+        this.seed = game.seed;
+        this.gen = new RandomGenerator(this.seed); //TODO These will be out of sync!!!!!!!!!!!!!
+
+        this.alive = game.alive;
+
+        this.level = game.level;
+        this.lines = game.lines;
+        this.score = game.score;
+        this.currentPiece = game.currentPiece; //TODO Rework how the current and next piece are sent
+        this.currentPieceIndex = game.currentPieceIndex;
+        this.nextPiece = game.nextPiece;
+        this.nextPieceIndex= game.nextPieceIndex;
+        this.nextSingles = game.nextSingles;
+        this.bag = game.bag;
+
+        this.pieceSpeed = game.pieceSpeed;
+        this.lastMoveDown = game.lastMoveDown;
+
+        this.spawnNextPiece = game.spawnNextPiece;
+        this.animationTime = game.animationTime;
+        this.animatingLines = game.animatingLines;
+        this.lastColCleared = game.lastColCleared;
+        this.flashTime = game.flashTime;
+
+        this.downPressedAt = game.downPressedAt;
+    }
+
+    serialize() {
+        return this;
     }
 }
 

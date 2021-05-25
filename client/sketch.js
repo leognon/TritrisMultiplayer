@@ -1,7 +1,7 @@
 const p5 = require('p5');
 const io = require('socket.io-client');
 const states = require('../common/states.js');
-const { Triangle, Piece } = require('../common/classes.js');
+const config = require('../common/config.js');
 const ClientGame = require('../client/clientGame.js');
 
 new p5(() => {
@@ -25,7 +25,7 @@ let state = states.FINDING_MATCH;
 let game;
 
 let nextSendData = 0;
-let sendDataEvery = 1000/1; //Send at 15 fps
+let sendDataEvery = config.CLIENT_SEND_DATA;
 
 function createSocket() {
     socket = io({
@@ -40,32 +40,7 @@ function createSocket() {
         }
     });
     socket.on('data', d => {
-        const myData = Object.values(d.players)[0];
-
-        //TODO Make this not horrible code... this was all very rushed just to debug
-        const piecesJSON = require('../common/pieces.js');
-        if (myData.currentPiece) {
-            game.currentPiece = new Piece(piecesJSON[myData.currentPieceIndex]);
-            game.currentPiece.pos.x = myData.currentPiece.pos.x;
-            game.currentPiece.pos.y = myData.currentPiece.pos.y;
-            game.currentPiece.pos.rotation = myData.currentPiece.pos.rotation;
-        } else {
-            game.currentPiece = null;
-        }
-        //console.log(game.grid);
-        for (let i = 0; i < game.grid.h; i++) {
-            for (let j = 0; j < game.grid.w; j++) {
-                for (let y = 0; y < 2; y++) {
-                    for (let x = 0; x < 2; x++) {
-                        if (myData.grid.grid[i][j].tris[y][x]) {
-                            game.grid.grid[i][j].tris[y][x] = new Triangle(myData.grid.grid[i][j].tris[y][x].clr);
-                        } else {
-                            game.grid.grid[i][j].tris[y][x] = null;
-                        }
-                    }
-                }
-            }
-        }
+        game.gotData(d);
     });
     socket.on('disconnect', () => {
         console.log('Disconnected!!!');
@@ -96,7 +71,7 @@ draw = () => {
 }
 
 function runGame() {
-    game.update();
+    game.clientUpdate();
     showGame();
 }
 
@@ -107,6 +82,7 @@ function showGame() {
 }
 
 function sendData() {
+    //console.log('Send data');
     socket.emit('inputs', game.getInputs());
 }
 });

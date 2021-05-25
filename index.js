@@ -3,6 +3,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT);
 const io = require('socket.io')(server);
+const config = require('./common/config.js');
 
 let sockets = {};
 
@@ -32,10 +33,10 @@ io.on('connection', socket => {
 
 setInterval(() => {
     if (match) match.physicsUpdate();
-}, Math.floor(1000/60)); //Physics update at 60fps
+}, config.SERVER_PHYSICS_UPDATE); //Physics update at 60fps
 setInterval(() => {
     if (match) match.clientsUpdate();
-}, Math.floor(1000/20)); //Send new game states to clients at 20fps
+}, config.SERVER_SEND_DATA); //Send new game states to clients at 20fps
 
 
 console.log('Server started');
