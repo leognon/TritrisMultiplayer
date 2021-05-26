@@ -284,24 +284,43 @@ class Triangle {
 }
 
 class Piece {
-    constructor(json) {
-        this.grid = [];
-        const pieces = json.pieces;
-        const clr = json.color;
-        for (let row = 0; row < pieces.length; row++) {
-            this.grid.push([]);
-            for (let col = 0; col < pieces[0].length; col++) {
-                //console.log('Creating piece');
-                this.grid[row].push(new GridCell(pieces[row][col], clr));
-                //console.log(this.grid[row][col]);
+    constructor(data) {
+        if (data.hasOwnProperty('grid')) {
+            //It is a serialized version
+            const gridData = data.grid;
+            this.grid = [];
+            for (let i = 0; i < gridData.length; i++) {
+                this.grid.push([]);
+                for (let j = 0; j < gridData[0].length; j++) {
+                    const gridCell = new GridCell(gridData[i][j]);
+                    this.grid[i].push(gridCell);
+                }
             }
+            this.pos = {
+                x: data.x,
+                y: data.y
+            }
+            this.rotation = data.rotation;
+            this.rotations = data.rotations;
+        } else {
+            this.grid = [];
+            const pieces = data.pieces;
+            const clr = data.color;
+            for (let row = 0; row < pieces.length; row++) {
+                this.grid.push([]);
+                for (let col = 0; col < pieces[0].length; col++) {
+                    //console.log('Creating piece');
+                    this.grid[row].push(new GridCell(pieces[row][col], clr));
+                    //console.log(this.grid[row][col]);
+                }
+            }
+            this.pos = { 
+                x: Math.ceil((8 - this.grid[0].length) / 2),
+                y: 0
+            };
+            this.rotation = 0;
+            this.rotations = data.rotationOffset || [[0, 0]]; //How the position should change when rotated. If not specified, the pos can stay the same (for pieces with square dimensions)
         }
-        this.pos = { 
-            x: Math.ceil((8 - this.grid[0].length) / 2),
-            y: 0
-        };
-        this.rotation = 0;
-        this.rotations = json.rotationOffset || [[0, 0]]; //How the position should change when rotated. If not specified, the pos can stay the same (for pieces with square dimensions)
     }
 
     rotate180() {
@@ -361,6 +380,24 @@ class Piece {
 
     getBottomRow() {
         return this.pos.y + this.grid.length;
+    }
+
+    serialized() {
+        let serializedGrid = [];
+        for (let i = 0; i < this.grid.length; i++) {
+            serializedGrid.push([]);
+            for (let j = 0; j < this.grid[0].length; j++) {
+                const thisCell = this.grid[i][j];
+                serializedGrid[i].push(thisCell.serialized());
+            }
+        }
+        return {
+            grid: serializedGrid,
+            x: this.pos.x,
+            y: this.pos.y,
+            rot: this.rotation,
+            rotations: this.rotations
+        }
     }
 
     showAt(x, y, w, h, colors, pieceImages, oldGraphics) {

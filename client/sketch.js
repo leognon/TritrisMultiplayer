@@ -36,7 +36,7 @@ function createSocket() {
         state = s;
         if (state == states.INGAME) {
             game = new ClientGame();
-            nextSendData = Date.now();
+            nextSendData = Date.now() + sendDataEvery;
         }
     });
     socket.on('data', d => {
@@ -72,6 +72,10 @@ draw = () => {
 
 function runGame() {
     game.clientUpdate();
+    if (game.input) {
+        socket.emit('inputs', game.input);
+        game.input = null;
+    }
     showGame();
 }
 
@@ -82,7 +86,6 @@ function showGame() {
 }
 
 function sendData() {
-    //console.log('Send data');
-    socket.emit('inputs', game.getInputs());
+    //socket.emit('inputs', game.getInputs());
 }
 });

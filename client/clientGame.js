@@ -3,7 +3,7 @@ const { Game, Input } = require('../common/game.js');
 
 class ClientGame extends Game {
     constructor() {
-        super(0);
+        super();
         //TODO Figure out redraw
         this.colors = [
             color(255, 0, 0), //Red boomerang
@@ -14,51 +14,47 @@ class ClientGame extends Game {
             color(250, 100, 25), //Orange Razor
             color(255), //White Ninja
         ];
-        this.startTime = Date.now();
-        this.inputs = [];
-        this.inputId = 0;
-        this.receviedInputId = 0;
 
         this.leftWasPressed = false;
         this.rightWasPressed = false;
         this.zWasPressed = false;
         this.xWasPressed = false;
 
-        this.lastFrame = Date.now();
+        this.input = null;
+        this.totalInputs = 0;
     }
 
     clientUpdate() {
+        let move = false;
+        let horzDir = 0;
+        let rot = 0;
+        //let vertDir = 0;
         if (this.currentPiece) {
             const currentTime = Date.now() - this.startTime;
             if (keyIsDown(37) && !this.leftWasPressed) { //Left arrow
-                this.inputs[this.inputId] = new Input(this.inputId, currentTime, -1, 0, 0);
-                this.inputsId++;
-                //this.currentPiece.move(-1, 0);
+                horzDir = -1;
+                move = true;
             }
             if (keyIsDown(39) && !this.rightWasPressed) { //Right arrow
-                this.inputs[this.inputId] = new Input(this.inputId, currentTime, 1, 0, 0);
-                this.inputId++
-                //this.currentPiece.move(1, 0);
+                horzDir = 1;
+                move = true;
             }
             if (keyIsDown(90) && !this.zWasPressed) { //Z (Counter clock)
-                this.inputs[this.inputId] = new Input(this.inputId, currentTime, 0, 0, -1);
-                this.inputId++;
-                //this.currentPiece.rotateLeft();
+                rot = -1;
+                move = true;
             }
             if (keyIsDown(88) && !this.xWasPressed) { //X (clockwise)
-                this.inputs[this.inputId] = new Input(this.inputId, currentTime, 0, 0, 1);
-                this.inputId++;
-                //this.currentPiece.rotateRight();
+                rot = 1;
+                move = true;
             }
-            //if (Math.random() < 0.05) console.log(this.inputs);
         }
 
-        //this.currentInput = 0;
-        //this.currentInput = -1;
-        this.update(Date.now() - this.lastFrame);
-        //this.clientReconcilliation(Date.now() - this.startTime);
-        //if (mouseIsPressed) console.log('Time diff: ' + this.time + ' vs ' + (Date.now() - this.startTime));
-        //this.updateToTime(Date.now() - this.startTime);
+        if (move) {
+            this.input = new Input(this.totalInputs, this.time, horzDir, false, rot);
+            this.totalInputs++;
+        }
+
+
 
         this.leftWasPressed = keyIsDown(37);
         this.rightWasPressed = keyIsDown(39);
@@ -68,45 +64,22 @@ class ClientGame extends Game {
         this.lastFrame = Date.now();
     }
 
-    clientReconcilliation(t) {
-        //this.currentInputId = this.receviedInputId + 1; // this.acknowledgedInputId;
-
-        //window.asdf += 'From ' + this.currentInputId + ' to ' + this.inputs.length + '\n';
-        this.updateToTime(t);
-    }
-
     gotData(data, myId) {
-        //console.log('Got data');
-        if (mouseIsPressed) {
-            //console.log('Calling debugger');
-            //debugger;
-        }
         const myData = Object.values(data.players)[0];
         const myGameData = myData.gameData;
-        //console.log('Diff: ', myGameData.time - (Date.now() - this.startTime));
-            //TODO Client time is ahead of server time...
-        //const now = Date.now();
-        //debugger;
-        //Clears any inputs that have already been recevied by the server
+
         this.receviedInputId = myData.receviedInputId;
-        /*for (let i = 0; i < this.inputs.length; i++) {
-            if (this.inputs[i].id == myData.receviedInputId) { //TODO This should become acknowledgedInputId??
-                this.inputs = this.inputs.slice(i+1);
-            }
-        }*/ //TODO Uncomment this
-        //TODO Make this not horrible code... this was all very rushed just to debug
-        if (myGameData.currentPiece) {
-            this.currentPiece = new Piece(this.piecesJSON[myGameData.currentPieceIndex]);
-            this.currentPiece.pos = createVector(myGameData.currentPiece.pos.x, myGameData.currentPiece.pos.y);
-            this.currentPiece.rotation = myGameData.currentPiece.rotation;
+
+        if (myGameData.currentPieceSerialized) {
+            this.currentPiece = new Piece(myGameData.currentPieceSerialized);
         } else {
             this.currentPiece = null;
         }
         if (myGameData.nextPiece) {
             this.nextPieceIndex = myGameData.nextPieceIndex;
             this.nextPiece = new Piece(this.piecesJSON[myGameData.nextPieceIndex]);
-            this.nextPiece.pos = createVector(myGameData.nextPiece.pos.x, myGameData.nextPiece.pos.y);
-            this.nextPiece.rotation = myGameData.nextPiece.rotation;
+            //this.nextPiece.pos = createVector(myGameData.nextPiece.pos.x, myGameData.nextPiece.pos.y);
+            //this.nextPiece.rotation = myGameData.nextPiece.rotation;
         } else {
             this.nextPiece = null;
         }
@@ -135,21 +108,8 @@ class ClientGame extends Game {
         //After being set to the authoratative server state, use client reconcilliation to update inputs the server hasn't seen yet
         this.startTime = myGameData.startTime; //TODO?????
         this.time = myGameData.time;
-        this.currentInputId = this.receviedInputId + 1;
-        this.clientReconcilliation(Date.now() - this.startTime);
-        //this.currentInput = 0; //Make it redo all the inputs that haven't been done by the server
-        //this.updateToTime(this.time + 1000); //TODO Testing
-        //this.updateToTime(Date.now() - this.startTime);
-        //this.currentInput = -1;
-        this.lastFrame = Date.now();
-        //this.updateFromStartToTime(Date.now() - this.startTime);
     }
 
-    getInputs() {
-        const data = this.inputs.map(i => i.encode());
-        //console.log('Gettings inputs', this.inputs, data);
-        return data;
-    }
 
     show(x, y, w, h, paused, oldGraphics, showGridLines, showStats, showFlash) {
         //Play flashing animation

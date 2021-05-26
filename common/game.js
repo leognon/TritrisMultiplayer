@@ -10,7 +10,7 @@ const piecesJSON = require('./pieces.js');
  */
 
 class Game {
-    constructor(level, seed = 123) {
+    constructor(level=5, seed = 123) {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -23,11 +23,6 @@ class Game {
         this.gen = new RandomGenerator(this.seed);
 
         this.alive = true;
-
-        //this.history = [];
-        this.inputs = [];
-        this.receviedInputId = -1;
-        this.currentInputId = 0;
 
         if (level < 0) level = 0;
         if (level > 29) level = 29;
@@ -90,7 +85,7 @@ class Game {
         this.softDropSpeed = msPerFrame * 2;
         this.lastMoveDown = this.time + 750;
 
-        //this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
+        this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
 
         this.spawnNextPiece = 0;
 
@@ -105,20 +100,6 @@ class Game {
         this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
     }
 
-    //Replays the entire game from start to t
-    updateFromStartToTime(t) {
-        this.goToStart();
-        this.updateToTime(t);
-    }
-
-    //Plays from the current state to time t
-    updateToTime(t) {
-        while (this.time <= t) {
-            let deltaTime = Math.max(this.pieceSpeed - 3, 1); //TODO Figure this out
-            this.update(deltaTime);
-        }
-    }
-
     goToStart() { //Resets the game so it can be replayed up to any time necessary
         this.grid = new Grid(this.w, this.h);
         this.tritrisAmt = 0; //For statistics
@@ -127,8 +108,6 @@ class Game {
         this.gen = new RandomGenerator(this.seed);
 
         this.alive = true;
-
-        this.currentInputId = 0;
 
         this.level = this.startLevel;
         this.lines = 0;
@@ -148,7 +127,7 @@ class Game {
 
         this.lastMoveDown = this.time + 750;
 
-        //this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
+        this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
 
         this.spawnNextPiece = 0;
 
@@ -162,77 +141,6 @@ class Game {
 
     getGameState() {
         return new GameState(this);
-    }
-
-    update(deltaTime) {
-        //if (!this.alive) return;
-        this.time += deltaTime;
-
-        //Play a line clear animation
-        if (this.time <= this.animationTime) {
-            //Line clear animation. Not needed on server
-        } else if (this.animatingLines.length > 0) {
-            //After a line clear animation has just been completed
-            //Readjust the entry delay to accommodate for the animation time
-            this.spawnNextPiece += this.maxAnimationTime;
-            this.lines += this.animatingLines.length;
-
-            //Increase the level after a certain amt of lines, then every 10 lines
-            if (this.shouldIncreaseLevel()) {
-                this.level++;
-                this.setSpeed();
-            }
-            this.score += this.scoreWeights[this.animatingLines.length] * (this.level + 1);
-            if (this.animatingLines.length == 3)
-                this.tritrisAmt++;
-
-            for (const row of this.animatingLines) {
-                this.grid.removeLine(row);
-            }
-            this.animatingLines = [];
-        }
-
-        //Spawn the next piece after entry delay
-        if (this.shouldSpawnPiece()) {
-            this.spawnPiece();
-            this.lastMoveDown = this.time;
-            if (!this.isValid(this.currentPiece)) {
-                this.alive = false; //If the new piece is already blocked, game over
-            }
-        }
-
-        //Piece Movement
-        //TODO Figure out how to make this whole thing a while loop. Or just don't increase deltaTime if inputs are being played...
-        if (this.currentPiece !== null) {
-            //Move based on the inputs the client gave
-            if (this.currentInputId < this.inputs.length) {
-                //console.log(this.inputs);
-                const input = this.inputs[this.currentInputId];
-                //console.log('Checking input ' + input.id + ' with time ' + input.time + ' current time is '
-                    //+ this.time + ' realworld time is ' + (Date.now()-this.startTime));
-                if (input.time <= this.time) { //The input should be played
-                    //console.log('Applying id ' + input.id);
-                    //Move the piece according to the recorded input
-                    const placePiece = this.movePiece(input.horzDir, input.rot, input.vertDir);
-                    if (placePiece) {
-                        this.placePiece();
-                    }
-                    if (input.vertDir) {
-                        this.lastMoveDown = this.time;
-                    }
-                    this.receviedInputId = input.id;
-                    this.currentInputId++;
-                }
-            }
-
-            //Move down based on timer
-            let shouldMoveDown = this.time >= this.lastMoveDown + this.pieceSpeed;
-            if (this.currentPiece !== null && shouldMoveDown) {
-                const placePiece = this.movePiece(0, 0, true);
-                if (placePiece) this.placePiece();
-                this.lastMoveDown = this.time;
-            }
-        }
     }
 
     shouldIncreaseLevel() {
@@ -399,10 +307,11 @@ class GameState {
         this.level = game.level;
         this.lines = game.lines;
         this.score = game.score;
-        this.currentPiece = game.currentPiece; //TODO Rework how the current and next piece are sent
+        this.currentPieceSerialized = null;
+        if (game.currentPiece) this.currentPieceSerialized = game.currentPiece.serialized();
         this.currentPieceIndex = game.currentPieceIndex;
-        this.nextPiece = game.nextPiece;
-        this.nextPieceIndex= game.nextPieceIndex;
+        this.nextPiece = game.nextPiece; //TODO Maybe rework how next piece is serialized. Rotations and pos don't matter though
+        this.nextPieceIndex = game.nextPieceIndex;
         this.nextSingles = game.nextSingles;
         this.bag = game.bag;
 

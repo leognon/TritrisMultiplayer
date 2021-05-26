@@ -25,7 +25,7 @@ class Match {
 
     clientsUpdate() {
         let data = {
-            time: Date.now(),
+            serverTime: Date.now(),
             players: {}
         };
         for (const p of this.players) {
@@ -46,7 +46,8 @@ class Player {
     }
 
     physicsUpdate() {
-        this.serverGame.updateFromStartToTime(Date.now() - this.serverGame.startTime);
+        this.serverGame.update();
+        //this.serverGame.updateFromStartToTime(Date.now() - this.serverGame.startTime);
     }
 
     getId() {
@@ -55,20 +56,18 @@ class Player {
 
     gotData(data) {
         this.serverGame.gotInputs(data);
-        //this.inputs = data;
     }
 
     getData() {
         return this.serverGame.getData();
-        //TODO Send back game data
-    }
-
-    sendState(s) {
-        this.socket.emit('state', s);
     }
 
     sendData(data) {
         this.socket.emit('data', data);
+    }
+
+    sendState(s) {
+        this.socket.emit('state', s);
     }
 }
 
