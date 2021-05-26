@@ -21,9 +21,9 @@ io.on('connection', socket => {
     console.log(socket.id + ' connected');
     sockets[socket.id] = socket;
     socket.emit('id', socket.id);
-    if (Object.keys(sockets).length == 2) {
+    //if (Object.keys(sockets).length == 2) {
         match = new Match(...Object.values(sockets));
-    }
+    //}
     socket.on('disconnect', () => {
         console.log(socket.id + ' disconnected');
         match = undefined;

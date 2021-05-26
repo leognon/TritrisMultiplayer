@@ -73,6 +73,7 @@ draw = () => {
 function runGame() {
     game.clientUpdate();
     if (game.input) {
+        console.log(game.input);
         socket.emit('inputs', game.input);
         game.input = null;
     }

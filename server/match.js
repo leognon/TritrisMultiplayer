@@ -3,10 +3,10 @@ const ServerGame = require('../server/serverGame.js');
 
 class Match {
     constructor(socket1, socket2) {
-        console.log('Created match between ' + socket1.id + ' and ' + socket2.id);
+        console.log('Created match between ' + socket1.id + ' and ' + (socket2 ? socket2.id : 'nobody'));
         this.players = [];
         this.addPlayer(socket1);
-        this.addPlayer(socket2);
+        //this.addPlayer(socket2);
 
         for (const p of this.players) {
             p.sendState(states.INGAME);
@@ -46,8 +46,8 @@ class Player {
     }
 
     physicsUpdate() {
-        this.serverGame.update();
-        //this.serverGame.updateFromStartToTime(Date.now() - this.serverGame.startTime);
+        //this.serverGame.update();
+        this.serverGame.updateFromStartToTime(Date.now() - this.serverGame.startTime);
     }
 
     getId() {

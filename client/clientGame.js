@@ -4,6 +4,7 @@ const { Game, Input } = require('../common/game.js');
 class ClientGame extends Game {
     constructor() {
         super();
+
         //TODO Figure out redraw
         this.colors = [
             color(255, 0, 0), //Red boomerang
@@ -28,9 +29,8 @@ class ClientGame extends Game {
         let move = false;
         let horzDir = 0;
         let rot = 0;
-        //let vertDir = 0;
+        let moveDown = false;
         if (this.currentPiece) {
-            const currentTime = Date.now() - this.startTime;
             if (keyIsDown(37) && !this.leftWasPressed) { //Left arrow
                 horzDir = -1;
                 move = true;
@@ -47,10 +47,15 @@ class ClientGame extends Game {
                 rot = 1;
                 move = true;
             }
+            if (keyIsDown(40)) {
+                moveDown = true;
+                move = true;
+            }
         }
 
         if (move) {
-            this.input = new Input(this.totalInputs, this.time, horzDir, false, rot);
+            const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
+            this.input = new Input(this.totalInputs, currentTime, horzDir, moveDown, rot);
             this.totalInputs++;
         }
 
@@ -106,7 +111,7 @@ class ClientGame extends Game {
         //TODO I must serialize the game to send in a proper state so that it can be applied when recevied, then update the client to now from the gotten state
 
         //After being set to the authoratative server state, use client reconcilliation to update inputs the server hasn't seen yet
-        this.startTime = myGameData.startTime; //TODO?????
+        //this.startTime = myGameData.startTime; //This will mess up other time zones
         this.time = myGameData.time;
     }
 

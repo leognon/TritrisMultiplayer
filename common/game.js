@@ -10,7 +10,7 @@ const piecesJSON = require('./pieces.js');
  */
 
 class Game {
-    constructor(level=5, seed = 123) {
+    constructor(level=15, seed = 0) {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
