@@ -22,7 +22,7 @@ class ClientGame extends Game {
         this.xWasPressed = false;
 
         this.input = null;
-        this.totalInputs = 0;
+        this.inputs = [];
     }
 
     clientUpdate() {
@@ -55,8 +55,8 @@ class ClientGame extends Game {
 
         if (move) {
             const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
-            this.input = new Input(this.totalInputs, currentTime, horzDir, moveDown, rot);
-            this.totalInputs++;
+            this.input = new Input(this.inputs.length, currentTime, horzDir, moveDown, rot);
+            this.inputs.push(this.input);
         }
 
 

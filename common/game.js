@@ -10,7 +10,7 @@ const piecesJSON = require('./pieces.js');
  */
 
 class Game {
-    constructor(level=15, seed = 0) {
+    constructor(level=9, seed = 0) {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -86,6 +86,7 @@ class Game {
         this.lastMoveDown = this.time + 750;
 
         this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
+        //TODO This is unnecessary in the server
 
         this.spawnNextPiece = 0;
 
@@ -98,6 +99,8 @@ class Game {
         this.flashAmount = 4;
 
         this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
+
+        this.inputs = [];
     }
 
     goToStart() { //Resets the game so it can be replayed up to any time necessary
@@ -138,6 +141,99 @@ class Game {
 
         this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
     }
+
+    updateFromStartToTime(t) {
+        this.goToStart();
+        this.updateToTime(t);
+    }
+
+    updateToTime(t) { //Go from the current time to t and do all inputs that happened during that time
+        let nextInputId = 0;
+        for (let i = 0; i < this.inputs.length; i++) {
+            if (this.inputs[i].time >= t) { //TODO Should this be > or >=
+                nextInputId = i; //Find which input has not been played yet
+                break;
+            }
+        }
+        while (this.time < t) {
+            let deltaTime = this.pieceSpeed;
+            if (this.time + deltaTime > t) {
+                deltaTime = t - this.time; //Ensure the time does not go over the desired time
+            }
+            let input = null; //The next input to be performed
+            let hasNextInput = (nextInputId < this.inputs.length); //If there is another input to be performed
+            if (hasNextInput) { //TODO Prevent cheating and ensure only inputs within a reasonable amount of time are allowed and make sure the time is increasing with the id
+                let nextInputTime = this.inputs[nextInputId].time; //When the next input is
+                let nextInputDeltaTime = nextInputTime - this.time; //How long from now until the next input
+                if (nextInputDeltaTime <= deltaTime) { //If the next input is sooner than the current deltaTime
+                    deltaTime = nextInputDeltaTime; //Then go to exactly that time to perform the input
+                    input = this.inputs[nextInputId];
+                    nextInputId++; //Move onto the next input. There is a chance the currentPiece is null and the input will be skipped
+                }
+            }
+            this.update(deltaTime, input);
+        }
+    }
+
+    update(deltaTime, input) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
+        this.lastFrame = Date.now();
+
+        this.time += deltaTime;
+        //if (!this.alive) return;
+
+        //Play a line clear animation
+        /*if (this.time <= this.animationTime) {
+            //Line clear animation. Not needed on server
+        } else if (this.animatingLines.length > 0) {
+            //After a line clear animation has just been completed
+            //Readjust the entry delay to accommodate for the animation time
+            this.spawnNextPiece += this.maxAnimationTime;
+            this.lines += this.animatingLines.length;
+
+            //Increase the level after a certain amt of lines, then every 10 lines
+            if (this.shouldIncreaseLevel()) {
+                this.level++;
+                this.setSpeed();
+            }
+            this.score += this.scoreWeights[this.animatingLines.length] * (this.level + 1);
+            if (this.animatingLines.length == 3)
+                this.tritrisAmt++;
+
+            for (const row of this.animatingLines) {
+                this.grid.removeLine(row);
+            }
+            this.animatingLines = [];
+        }*/
+
+        //Spawn the next piece after entry delay
+        if (this.shouldSpawnPiece()) {
+            this.spawnPiece();
+            this.lastMoveDown = this.time;
+            if (!this.isValid(this.currentPiece)) {
+                this.alive = false; //If the new piece is already blocked, game over
+            }
+        }
+
+        //Piece Movement
+        //TODO Figure out how to make this whole thing a while loop. Or just don't increase deltaTime if inputs are being played...
+        if (this.currentPiece !== null) {
+            //Move down based on timer
+            if (input) { //It is time for the input to be performed
+                const placePiece = this.movePiece(input.horzDir, input.rot, input.vertDir);
+                if (placePiece) {
+                    this.placePiece();
+                    this.lastMoveDown = this.time;
+                }
+            } //TODO Once client prediction is implemented, figure out the ordering of playing inputs and moving pieces. What if something happens at the same time?
+            let shouldMoveDown = this.time >= this.lastMoveDown + this.pieceSpeed;
+            if (this.currentPiece !== null && shouldMoveDown) {
+                const placePiece = this.movePiece(0, 0, true);
+                if (placePiece) this.placePiece();
+                this.lastMoveDown = this.time;
+            }
+        }
+    }
+
 
     getGameState() {
         return new GameState(this);
