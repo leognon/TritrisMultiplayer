@@ -177,8 +177,8 @@ class Game {
                 }
             }
             this.update(deltaTime, input, false);
-            if (input) {
-                this.doneInputId = Math.max(this.doneInputId, input.id); //Update the highest input id that has been completed
+            if (input && input.id > this.doneInputId) {
+                this.doneInputId = input.id; //Math.max(this.doneInputId, input.id); //Update the highest input id that has been completed
                 this.lastestState = new GameState(this);
             }
         }
@@ -242,7 +242,6 @@ class Game {
         if (canMoveDown) this.moveDown();
     }
 
-
     getGameState() {
         return new GameState(this);
     }
@@ -290,12 +289,12 @@ class Game {
             }
         }
         this.currentPiece = this.nextPiece; //Assign the new current piece
-        this.currentPieceIndex = this.nextPieceIndex;
+        this.currentPieceIndex = this.nextPieceIndex; //TODO This will be out of sync on the client. It shouldn't matter though
         if (this.nextSingles > 0) {
             this.nextPieceIndex = 0; //This will make it spawn 3 single triangles in a row
             this.nextSingles--;
         } else {
-            //TODO Don't make the bag alwasy 0!!
+            //TODO Don't make the bagIndex always 0!!
             const bagIndex = 0; //this.gen.range(this.bag.length); //Math.floor(Math.random() * this.bag.length);
             this.nextPieceIndex = this.bag.splice(bagIndex, 1)[0]; //Pick 1 item and remove it from bag
             if (this.nextPieceIndex == 0) {
@@ -418,7 +417,7 @@ class GameState {
         this.nextPiece = game.nextPiece; //TODO Maybe rework how next piece is serialized. Rotations and pos don't matter though
         this.nextPieceIndex = game.nextPieceIndex;
         this.nextSingles = game.nextSingles;
-        this.bag = game.bag;
+        this.bag = [...game.bag]; //Save a copy of the current bag
 
         this.pieceSpeed = game.pieceSpeed;
         this.lastMoveDown = game.lastMoveDown;

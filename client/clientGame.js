@@ -96,38 +96,32 @@ class ClientGame extends Game {
         const myData = Object.values(data.players)[0];
         const myGameData = myData.gameData;
 
+        //Remove inputs already processed by the server
         this.doneInputId = myGameData.doneInputId;
-        //console.log('Got data from ' + myGameData.time + ' my time is ' + this.time + ' server has done inputs ' + this.doneInputId);
         for (let i = this.inputs.length-1; i >= 0; i--) {
             if (this.inputs[i].id <= this.doneInputId) {
                 this.inputs.splice(i, 1); //Removed inputs the server has already completed
             }
         }
-        //console.log('My inputs: ', this.inputs);
 
-        if (myGameData.currentPieceSerialized) {
-            this.currentPiece = new Piece(myGameData.currentPieceSerialized);
-        } else {
-            this.currentPiece = null;
-        }
-        if (myGameData.nextPiece) {
-            this.nextPieceIndex = myGameData.nextPieceIndex;
-            this.nextPiece = new Piece(this.piecesJSON[myGameData.nextPieceIndex]);
-            //this.nextPiece.pos = createVector(myGameData.nextPiece.pos.x, myGameData.nextPiece.pos.y);
-            //this.nextPiece.rotation = myGameData.nextPiece.rotation;
-        } else {
-            this.nextPiece = null;
-        }
+        this.seed = myGameData.seed;
+        //this.gen = myGameData.gen; //TODO This will by out of sync
+        this.bag = myGameData.bag;
+        this.nextSingles = myGameData.nextSingles;
+
+        if (myGameData.currentPieceSerialized) this.currentPiece = new Piece(myGameData.currentPieceSerialized);
+        else this.currentPiece = null;
+
+        this.nextPieceIndex = myGameData.nextPieceIndex;
+        if (this.nextPieceIndex !== null) this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex]);
+        else this.nextPiece = null;
+
         this.grid = new Grid(myGameData.serializedGrid);
 
         this.tritrisAmt = myGameData.tritrisAmt;
-        this.seed = myGameData.seed;
-        //this.gen = myGameData.gen; //TODO This will by out of sync
         this.alive = myGameData.alive;
         this.level = myGameData.level;
         this.lines = myGameData.lines;
-        this.nextSingles = myGameData.nextSingles;
-        this.bag = myGameData.bag;
         this.pieceSpeed = myGameData.pieceSpeed;
         this.lastMoveDown = myGameData.lastMoveDown;
 
@@ -149,6 +143,10 @@ class ClientGame extends Game {
         this.serverCurrentPiece = null;
         if (myGameData.currentPieceSerialized) {
             this.serverCurrentPiece = new Piece(myGameData.currentPieceSerialized);
+        }
+        this.serverNextPiece = null;
+        if (myGameData.nextPieceIndex) {
+            this.serverNextPiece = new Piece(this.piecesJSON[myGameData.nextPieceIndex]);
         }
 
         //console.log('Going to current time ' + (Date.now() - this.startTime));
@@ -190,6 +188,9 @@ class ClientGame extends Game {
             this.serverGrid.show(x + w + 150, y, w, h, this.colors, this.pieceImages, paused, showGridLines, oldGraphics);
             if (this.serverCurrentPiece) {
                 this.serverCurrentPiece.show(x + w + 150, y, cellW, cellH, this.colors, this.pieceImages, oldGraphics);
+            }
+            if (this.serverNextPiece) {
+                this.serverNextPiece.showAt(x + w + w + 150 + 50, y + 50, 150, 150, this.colors, this.pieceImages, oldGraphics);
             }
         }
         this.grid.show(x, y, w, h, this.colors, this.pieceImages, paused, showGridLines, oldGraphics);

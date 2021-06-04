@@ -11,7 +11,7 @@ class ServerGame extends Game {
     }
 
     gotInputs(inp) {
-        console.log(inp);
+        //console.log(inp);
         this.inputs[inp.id] = inp; //TODO Add validation here to prevent bugs and cheating
     }
 
