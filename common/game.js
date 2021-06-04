@@ -10,7 +10,7 @@ const piecesJSON = require('./pieces.js');
  */
 
 class Game {
-    constructor(level=9, seed = 0) {
+    constructor(level=0, seed = 0) {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -101,6 +101,8 @@ class Game {
         this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
 
         this.inputs = [];
+        this.doneInputId = -1; //The higheset input id that has been completed
+        this.lastestState = new GameState(this); //The game state with the highest input id completed
     }
 
     goToStart() { //Resets the game so it can be replayed up to any time necessary
@@ -148,15 +150,18 @@ class Game {
     }
 
     updateToTime(t) { //Go from the current time to t and do all inputs that happened during that time
-        let nextInputId = 0;
+        if (this.time > t) {
+            console.log('Cannot go backwards!');
+        }
+        let nextInputId = this.inputs.length; //The id of the next input that should be played. If none should be played, it will be inputs.length
         for (let i = 0; i < this.inputs.length; i++) {
-            if (this.inputs[i].time >= t) { //TODO Should this be > or >=
+            if (this.inputs[i].time > this.time) {
                 nextInputId = i; //Find which input has not been played yet
                 break;
             }
         }
         while (this.time < t) {
-            let deltaTime = this.pieceSpeed;
+            let deltaTime = this.pieceSpeed; // this.pieceSpeed/100; //TODO Figure out deltaTime stuff in the server
             if (this.time + deltaTime > t) {
                 deltaTime = t - this.time; //Ensure the time does not go over the desired time
             }
@@ -171,11 +176,15 @@ class Game {
                     nextInputId++; //Move onto the next input. There is a chance the currentPiece is null and the input will be skipped
                 }
             }
-            this.update(deltaTime, input);
+            this.update(deltaTime, input, false);
+            if (input) {
+                this.doneInputId = Math.max(this.doneInputId, input.id); //Update the highest input id that has been completed
+                this.lastestState = new GameState(this);
+            }
         }
     }
 
-    update(deltaTime, input) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
+    update(deltaTime, input, canMoveDown) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
         this.lastFrame = Date.now();
 
         this.time += deltaTime;
@@ -219,19 +228,18 @@ class Game {
         if (this.currentPiece !== null) {
             //Move down based on timer
             if (input) { //It is time for the input to be performed
+                //console.log(`Doing input id ${input.id} at ${input.time}`);
                 const placePiece = this.movePiece(input.horzDir, input.rot, input.vertDir);
                 if (placePiece) {
                     this.placePiece();
                     this.lastMoveDown = this.time;
                 }
+                if (input.vertDir) {
+                    this.lastMoveDown = this.time;
+                }
             } //TODO Once client prediction is implemented, figure out the ordering of playing inputs and moving pieces. What if something happens at the same time?
-            let shouldMoveDown = this.time >= this.lastMoveDown + this.pieceSpeed;
-            if (this.currentPiece !== null && shouldMoveDown) {
-                const placePiece = this.movePiece(0, 0, true);
-                if (placePiece) this.placePiece();
-                this.lastMoveDown = this.time;
-            }
         }
+        if (canMoveDown) this.moveDown();
     }
 
 
@@ -287,7 +295,8 @@ class Game {
             this.nextPieceIndex = 0; //This will make it spawn 3 single triangles in a row
             this.nextSingles--;
         } else {
-            const bagIndex = this.gen.range(this.bag.length); //Math.floor(Math.random() * this.bag.length);
+            //TODO Don't make the bag alwasy 0!!
+            const bagIndex = 0; //this.gen.range(this.bag.length); //Math.floor(Math.random() * this.bag.length);
             this.nextPieceIndex = this.bag.splice(bagIndex, 1)[0]; //Pick 1 item and remove it from bag
             if (this.nextPieceIndex == 0) {
                 //If it randomly chose to spawn 1 triangle, spawn 2 more
@@ -421,6 +430,8 @@ class GameState {
         this.flashTime = game.flashTime;
 
         this.downPressedAt = game.downPressedAt;
+
+        this.doneInputId = game.doneInputId;
     }
 
     serialize() {

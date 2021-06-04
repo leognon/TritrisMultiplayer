@@ -8,7 +8,6 @@ new p5(() => {
 window.debug = this; //Enables variables created with "this." to be accessed in the chrome developer console
 let socket;
 
-
 /* Client sends input packets
  * Client receives data:
  *      Set state to authoritative server
@@ -34,13 +33,16 @@ function createSocket() {
 
     socket.on('state', s => {
         state = s;
-        if (state == states.INGAME) {
+        if (state == states.INGAME) { //TODO Don't wait for server to start game. Make sure to start ahead of server
             game = new ClientGame();
             nextSendData = Date.now() + sendDataEvery;
         }
     });
     socket.on('data', d => {
-        game.gotData(d);
+        //game.gotData(d);
+        setTimeout(() => {
+            game.gotData(d);
+        }, config.FAKE_LATENCY); //Some fake latency
     });
     socket.on('disconnect', () => {
         console.log('Disconnected!!!');
@@ -68,15 +70,36 @@ draw = () => {
         }
         runGame();
     }
+    showConsole();
+}
+
+let cLog = "";
+const origConsoleLog = console.log;
+console.log = (a, b, c, d) => {
+    let str = a + (b ? (', ' + JSON.stringify(b)) : '') + (c ? (', ' + JSON.stringify(c)) : '') + '\n';
+    if (d) str += 'TOO MANY ARGS!!' + '\n';
+    origConsoleLog(str);
+    cLog += str;
+}
+
+function showConsole() {
+    const fontSize = 12;
+    textSize(fontSize);
+    const numLines = cLog.split('\n').length;
+    const height = numLines * (fontSize + 3);
+    text(cLog, 930, 920 - height);
 }
 
 function runGame() {
     game.clientUpdate();
-    if (game.input) {
-        console.log(game.input);
-        socket.emit('inputs', game.input);
-        game.input = null;
+    for (const inp of game.inputsQueue) {
+        const tempInp = inp;
+        setTimeout(() => {
+            //console.log('Send input id: ' + tempInp.id);
+            socket.emit('inputs', tempInp);
+        }, config.FAKE_LATENCY);
     }
+    game.inputsQueue = [];
     showGame();
 }
 

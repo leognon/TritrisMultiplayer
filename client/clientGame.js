@@ -1,4 +1,5 @@
 const { Grid, Piece, Triangle } = require('../common/classes.js');
+const config = require('../common/config.js');
 const { Game, Input } = require('../common/game.js');
 
 class ClientGame extends Game {
@@ -21,8 +22,10 @@ class ClientGame extends Game {
         this.zWasPressed = false;
         this.xWasPressed = false;
 
-        this.input = null;
-        this.inputs = [];
+        this.inputsQueue = []; //Fill up a queue of inputs to be sent to the server at regular intervals
+        this.lastFrame = Date.now();
+        this.inputId = 0;
+        this.lastSentInput = 0;
     }
 
     clientUpdate() {
@@ -30,36 +33,39 @@ class ClientGame extends Game {
         let horzDir = 0;
         let rot = 0;
         let moveDown = false;
-        if (this.currentPiece) {
-            if (keyIsDown(37) && !this.leftWasPressed) { //Left arrow
-                horzDir = -1;
-                move = true;
-            }
-            if (keyIsDown(39) && !this.rightWasPressed) { //Right arrow
-                horzDir = 1;
-                move = true;
-            }
-            if (keyIsDown(90) && !this.zWasPressed) { //Z (Counter clock)
-                rot = -1;
-                move = true;
-            }
-            if (keyIsDown(88) && !this.xWasPressed) { //X (clockwise)
-                rot = 1;
-                move = true;
-            }
-            if (keyIsDown(40)) {
-                moveDown = true;
-                move = true;
-            }
+        if (keyIsDown(37) && !this.leftWasPressed) { //Left arrow
+            horzDir = -1;
+            move = true;
+        }
+        if (keyIsDown(39) && !this.rightWasPressed) { //Right arrow
+            horzDir = 1;
+            move = true;
+        }
+        if (keyIsDown(90) && !this.zWasPressed) { //Z (Counter clock)
+            rot = -1;
+            move = true;
+        }
+        if (keyIsDown(88) && !this.xWasPressed) { //X (clockwise)
+            rot = 1;
+            move = true;
+        }
+        if (keyIsDown(40)) {
+            moveDown = true;
+            move = true;
+        }
+        const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
+        const inp = new Input(this.inputId, currentTime, horzDir, moveDown, rot);
+
+        //If the player made a move or haven't made a move in a while, send an input to keep the server updated
+        const hasInput = move ? true : false; // || Date.now() - this.startTime > this.lastSentInput + config.CLIENT_PING_EVERY;
+        if (hasInput) { //The lastSentInput is like a ping
+            this.addInput(inp);
+            this.lastSentInput = currentTime;
+            this.inputId++;
         }
 
-        if (move) {
-            const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
-            this.input = new Input(this.inputs.length, currentTime, horzDir, moveDown, rot);
-            this.inputs.push(this.input);
-        }
-
-
+        const deltaTime = Date.now() - this.lastFrame;
+        this.update(deltaTime, hasInput ? inp : null, true);
 
         this.leftWasPressed = keyIsDown(37);
         this.rightWasPressed = keyIsDown(39);
@@ -69,11 +75,35 @@ class ClientGame extends Game {
         this.lastFrame = Date.now();
     }
 
+    moveDown() {
+        let shouldMoveDown = this.time >= this.lastMoveDown + this.pieceSpeed;
+        if (this.currentPiece !== null && shouldMoveDown) {
+            const inp = new Input(this.inputId++, Date.now()-this.startTime, 0, 1, 0);
+            //console.log('Moving down at ' + this.time, inp);
+            this.addInput(inp);
+            const placePiece = this.movePiece(0, 0, true);
+            if (placePiece) this.placePiece();
+            this.lastMoveDown = this.time;
+        }
+    }
+
+    addInput(inp) {
+        this.inputsQueue.push(inp);
+        this.inputs.push(inp);
+    }
+
     gotData(data, myId) {
         const myData = Object.values(data.players)[0];
         const myGameData = myData.gameData;
 
-        this.receviedInputId = myData.receviedInputId;
+        this.doneInputId = myGameData.doneInputId;
+        //console.log('Got data from ' + myGameData.time + ' my time is ' + this.time + ' server has done inputs ' + this.doneInputId);
+        for (let i = this.inputs.length-1; i >= 0; i--) {
+            if (this.inputs[i].id <= this.doneInputId) {
+                this.inputs.splice(i, 1); //Removed inputs the server has already completed
+            }
+        }
+        //console.log('My inputs: ', this.inputs);
 
         if (myGameData.currentPieceSerialized) {
             this.currentPiece = new Piece(myGameData.currentPieceSerialized);
@@ -112,7 +142,19 @@ class ClientGame extends Game {
 
         //After being set to the authoratative server state, use client reconcilliation to update inputs the server hasn't seen yet
         //this.startTime = myGameData.startTime; //This will mess up other time zones
+        //console.log('Got data. Time diff: ' + (this.time - myGameData.time));
         this.time = myGameData.time;
+
+        this.serverGrid = new Grid(myGameData.serializedGrid); //TODO Remove this. This is was the server sees for debugging
+        this.serverCurrentPiece = null;
+        if (myGameData.currentPieceSerialized) {
+            this.serverCurrentPiece = new Piece(myGameData.currentPieceSerialized);
+        }
+
+        //console.log('Going to current time ' + (Date.now() - this.startTime));
+        this.updateToTime(Date.now() - this.startTime); //Recatch-up the game
+        //console.log('Caught up');
+        this.lastFrame = Date.now();
     }
 
 
@@ -141,6 +183,15 @@ class ClientGame extends Game {
         const cellW = w / this.w;
         const cellH = h / this.h;
 
+        if (this.serverGrid) {
+            noStroke();
+            fill(0);
+            rect(x + w + 150, y, w, h);
+            this.serverGrid.show(x + w + 150, y, w, h, this.colors, this.pieceImages, paused, showGridLines, oldGraphics);
+            if (this.serverCurrentPiece) {
+                this.serverCurrentPiece.show(x + w + 150, y, cellW, cellH, this.colors, this.pieceImages, oldGraphics);
+            }
+        }
         this.grid.show(x, y, w, h, this.colors, this.pieceImages, paused, showGridLines, oldGraphics);
         if (this.currentPiece && !paused) {
             this.currentPiece.show(x, y, cellW, cellH, this.colors, this.pieceImages, oldGraphics);

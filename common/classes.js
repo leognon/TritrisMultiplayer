@@ -395,7 +395,7 @@ class Piece {
             grid: serializedGrid,
             x: this.pos.x,
             y: this.pos.y,
-            rot: this.rotation,
+            rotation: this.rotation,
             rotations: this.rotations
         }
     }

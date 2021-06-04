@@ -6,14 +6,18 @@ class ServerGame extends Game {
         super();
     }
 
+    moveDown() {
+
+    }
+
     gotInputs(inp) {
         console.log(inp);
-        this.inputs[inp.id] = inp;
+        this.inputs[inp.id] = inp; //TODO Add validation here to prevent bugs and cheating
     }
 
     getData() { //TODO Redo this system
         return {
-            gameData: this.getGameState(),
+            gameData: this.lastestState
         }
     }
 }
