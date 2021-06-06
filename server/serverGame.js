@@ -10,8 +10,13 @@ class ServerGame extends Game {
 
     }
 
-    gotInputs(inp) {
-        //console.log(inp);
+    gotInputs(inps) {
+        for (let encodedInp of inps) {
+            this.addInput(Input.decode(encodedInp));
+        }
+    }
+
+    addInput(inp) {
         this.inputs[inp.id] = inp; //TODO Add validation here to prevent bugs and cheating
     }
 

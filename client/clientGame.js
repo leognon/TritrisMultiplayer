@@ -155,6 +155,14 @@ class ClientGame extends Game {
         this.lastFrame = Date.now();
     }
 
+    getInputs() {
+        let inps = [];
+        for (let inp of this.inputsQueue) {
+            inps.push(inp.encode());
+        }
+        this.inputsQueue = []; //Discard inputs that no longer need to be sent
+        return inps;
+    }
 
     show(x, y, w, h, paused, oldGraphics, showGridLines, showStats, showFlash) {
         //Play flashing animation

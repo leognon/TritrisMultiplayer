@@ -24,7 +24,6 @@ let state = states.FINDING_MATCH;
 let game;
 
 let nextSendData = 0;
-let sendDataEvery = config.CLIENT_SEND_DATA;
 
 function createSocket() {
     socket = io({
@@ -35,7 +34,7 @@ function createSocket() {
         state = s;
         if (state == states.INGAME) { //TODO Don't wait for server to start game. Make sure to start ahead of server
             game = new ClientGame();
-            nextSendData = Date.now() + sendDataEvery;
+            nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         }
     });
     socket.on('data', d => {
@@ -66,7 +65,7 @@ draw = () => {
     } else if (state == states.INGAME) {
         if (Date.now() > nextSendData) {
             sendData();
-            nextSendData = Date.now() + sendDataEvery;
+            nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         }
         runGame();
     }
@@ -92,14 +91,6 @@ function showConsole() {
 
 function runGame() {
     game.clientUpdate();
-    for (const inp of game.inputsQueue) {
-        const tempInp = inp;
-        setTimeout(() => {
-            //console.log('Send input id: ' + tempInp.id);
-            socket.emit('inputs', tempInp);
-        }, config.FAKE_LATENCY);
-    }
-    game.inputsQueue = [];
     showGame();
 }
 
@@ -110,6 +101,8 @@ function showGame() {
 }
 
 function sendData() {
-    //socket.emit('inputs', game.getInputs());
+    socket.emit('inputs', game.getInputs());
 }
+
+
 });

@@ -457,6 +457,10 @@ class Input {
             //dir: this.horzDir + ',' + this.vertDir + ',' + this.rot
         }
     }
+
+    static decode(data) {
+        return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot);
+    }
 }
 
 module.exports = { Game, Input };
