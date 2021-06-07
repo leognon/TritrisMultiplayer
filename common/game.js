@@ -176,7 +176,7 @@ class Game {
                     nextInputId++; //Move onto the next input. There is a chance the currentPiece is null and the input will be skipped
                 }
             }
-            this.update(deltaTime, input, false);
+            this.update(deltaTime, input);
             if (input && input.id > this.doneInputId) {
                 this.doneInputId = input.id; //Math.max(this.doneInputId, input.id); //Update the highest input id that has been completed
                 this.lastestState = new GameState(this);
@@ -184,7 +184,7 @@ class Game {
         }
     }
 
-    update(deltaTime, input, canMoveDown) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
+    update(deltaTime, input) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
         this.lastFrame = Date.now();
 
         this.time += deltaTime;
@@ -228,9 +228,8 @@ class Game {
         if (this.currentPiece !== null) {
             //Move down based on timer
             if (input) { //It is time for the input to be performed
-                //console.log(`Doing input id ${input.id} at ${input.time}`);
-                const placePiece = this.movePiece(input.horzDir, input.rot, input.vertDir);
-                if (placePiece) {
+                const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
+                if (moveData.placePiece) {
                     this.placePiece();
                     this.lastMoveDown = this.time;
                 }
@@ -239,7 +238,6 @@ class Game {
                 }
             } //TODO Once client prediction is implemented, figure out the ordering of playing inputs and moving pieces. What if something happens at the same time?
         }
-        if (canMoveDown) this.moveDown();
     }
 
     getGameState() {
@@ -351,17 +349,24 @@ class Game {
         let valid = this.isValid(this.currentPiece);
         if (valid) {
             //The piece (possibly) moved horizontally, rotated and moved down
-
-            //this.currentSnapshot.addMove(this.totalTime, horzDirection, moveDown, rotation);
-            return false; //Don't place the piece
+            return {
+                placePiece: false, //Don't place the piece
+                playSound: (horzDirection != 0 || rotation != 0),
+                rotated: (rotation != 0),
+                chargeDas: false
+            }
         }
         //If blocked, undo horz move and maybe wall-charge
         this.currentPiece.move(-horzDirection, 0);
         valid = this.isValid(this.currentPiece);
         if (valid) {
             //If the piece was block when moving horz, then wall charge
-            //this.currentSnapshot.addMove(this.totalTime, 0, moveDown, rotation);
-            return false;
+            return {
+                placePiece: false,
+                playSound: (rotation != 0),
+                rotated: (rotation != 0),
+                chargeDas: true
+            }
         }
 
         //If not valid, undo rotation
@@ -371,14 +376,23 @@ class Game {
         valid = this.isValid(this.currentPiece);
         if (valid) {
             //The piece was blocked by rotating
-            //this.currentSnapshot.addMove(this.totalTime, 0, moveDown, 0);
-            return false; //Don't place the piece
+            return {
+                placePiece: false, //Don't place the piece
+                playSound: false,
+                rotated: false,
+                chargeDas: (horzDirection != 0),
+            }
         }
 
         //If it reaches here, the piece was blocked by moving down and should be placed
         if (moveDown) this.currentPiece.move(0, -1); //Move the piece back up
         //The extra if statement is incase the pieces are at the top and spawn in other pieces
-        return true; //Place the piece
+        return {
+            placePiece: true, //Place the piece
+            playSound: false,
+            rotated: false,
+            chargeDas: false
+        }
     }
 
     calcEntryDelay(y) {

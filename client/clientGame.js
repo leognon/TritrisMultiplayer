@@ -17,74 +17,147 @@ class ClientGame extends Game {
             color(255), //White Ninja
         ];
 
+        const frameRate = 60.0988; //frames per second
+        const msPerFrame = 1000 / frameRate;
+        this.das = 0;
+        this.dasMax = msPerFrame * 16;
+        this.dasCharged = msPerFrame * 10;
+
+        //TODO Add push down points
+        this.softDropSpeed = msPerFrame * 2;
+        this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
+        this.downWasPressed = false;
+
         this.leftWasPressed = false;
         this.rightWasPressed = false;
         this.zWasPressed = false;
+        this.zCharged = false;
         this.xWasPressed = false;
+        this.xCharged = false;
+        this.controls = {
+            clock: 88,
+            counterClock: 90,
+            down: 40,
+            left: 37,
+            restart: 27,
+            right: 39,
+            start: 13
+        }
 
         this.inputsQueue = []; //Fill up a queue of inputs to be sent to the server at regular intervals
         this.lastFrame = Date.now();
         this.inputId = 0;
-        this.lastSentInput = 0;
     }
 
     clientUpdate() {
-        let move = false;
-        let horzDir = 0;
-        let rot = 0;
-        let moveDown = false;
-        if (keyIsDown(37) && !this.leftWasPressed) { //Left arrow
-            horzDir = -1;
-            move = true;
-        }
-        if (keyIsDown(39) && !this.rightWasPressed) { //Right arrow
-            horzDir = 1;
-            move = true;
-        }
-        if (keyIsDown(90) && !this.zWasPressed) { //Z (Counter clock)
-            rot = -1;
-            move = true;
-        }
-        if (keyIsDown(88) && !this.xWasPressed) { //X (clockwise)
-            rot = 1;
-            move = true;
-        }
-        if (keyIsDown(40)) {
-            moveDown = true;
-            move = true;
-        }
-        const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
-        const inp = new Input(this.inputId, currentTime, horzDir, moveDown, rot);
-
-        //If the player made a move or haven't made a move in a while, send an input to keep the server updated
-        const hasInput = move ? true : false; // || Date.now() - this.startTime > this.lastSentInput + config.CLIENT_PING_EVERY;
-        if (hasInput) { //The lastSentInput is like a ping
-            this.addInput(inp);
-            this.lastSentInput = currentTime;
-            this.inputId++;
-        }
-
         const deltaTime = Date.now() - this.lastFrame;
-        this.update(deltaTime, hasInput ? inp : null, true);
+        this.time += deltaTime;
 
-        this.leftWasPressed = keyIsDown(37);
-        this.rightWasPressed = keyIsDown(39);
-        this.zWasPressed = keyIsDown(90);
-        this.xWasPressed = keyIsDown(88);
+        if (this.shouldSpawnPiece()) {
+            this.spawnPiece();
+            this.lastMoveDown = this.time;
+            if (!this.isValid(this.currentPiece)) {
+                this.alive = false;
+            }
+        }
+
+        if (this.currentPiece !== null) {
+            //If either left is pressed or right is pressed and down isn't
+            let oneKeyPressed = keyIsDown(this.controls.left) != keyIsDown(this.controls.right);
+            if (!this.practice && keyIsDown(this.controls.down)) {
+                oneKeyPressed = false; //Allows down and left/right to be pressed in practice, but not in a real game
+            }
+            let move = false;
+            if (oneKeyPressed) {
+                this.das += deltaTime;
+                if (
+                    (keyIsDown(this.controls.left) && !this.leftWasPressed) ||
+                    (keyIsDown(this.controls.right) && !this.rightWasPressed)
+                ) {
+                    //If it was tapped, move and reset das
+                    move = true;
+                    this.das = 0;
+                } else if (this.das >= this.dasMax) {
+                    move = true; //Key is being held, keep moving
+                    this.das = this.dasCharged;
+                }
+            }
+
+            let horzDirection = 0;
+            if (move) {
+                if (keyIsDown(this.controls.left)) horzDirection = -1;
+                if (keyIsDown(this.controls.right)) horzDirection = 1;
+            }
+
+            const zPressed = keyIsDown(this.controls.counterClock) && (!this.zWasPressed || this.zCharged);
+            const xPressed = keyIsDown(this.controls.clock) && (!this.xWasPressed || this.xCharged);
+            let rotation = 0;
+            if (zPressed && xPressed) rotation = 2;
+            else if (xPressed) rotation = 1;
+            else if (zPressed) rotation = -1;
+
+            let pieceSpeed = this.pieceSpeed;
+            if (keyIsDown(this.controls.down)) {
+                //Pressing down moves twice as fast, or as fast as the min
+                pieceSpeed = min(pieceSpeed, this.softDropSpeed);
+            }
+            if (keyIsDown(this.controls.down) && !this.downWasPressed) {
+                this.downPressedAt = this.currentPiece.pos.y; //Save when the piece was first pressed down
+            }
+            let moveDown = this.time >= this.lastMoveDown + pieceSpeed;
+            if (horzDirection != 0 || rotation != 0 || moveDown) {
+                this.redraw = true; //A piece has moved, so the game must be redrawn
+                const moveData = this.movePiece(horzDirection, rotation, moveDown);
+
+                if (moveData.playSound) {
+                    //Play move sound
+                }
+                if (moveData.chargeDas) {
+                    this.das = this.dasMax;
+                }
+                if (moveData.rotated) {
+                    this.zCharged = false;
+                    this.xCharged = false;
+                } else if (rotation != 0) {
+                    //Player tried to rotate but was blocked, so charge rotation
+                    if (rotation == 1 || rotation == 2) this.xCharged = true;
+                    if (rotation == -1 || rotation == 2) this.zCharged = true;
+                }
+
+                const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
+                const inp = new Input(this.inputId++, currentTime, horzDirection, moveDown, rotation);
+                this.addInput(inp);
+
+                if (moveData.placePiece) {
+                    let pushDownPoints = 0;
+                    if (keyIsDown(this.controls.down)) {
+                        //If it was pushed down, give 1 point per grid cell
+                        pushDownPoints = this.currentPiece.pos.y - this.downPressedAt;
+                        this.score += pushDownPoints;
+                    }
+                    this.downPressedAt = 0;
+
+                    //Place the piece
+                    this.placePiece();
+
+                    this.zCharged = false; //After a piece is placed, don't rotate the next piece
+                    this.xCharged = false;
+                } else {
+                    //If the piece was able to just move down, reset the timer
+                    if (moveDown) this.lastMoveDown = this.time;
+                }
+            }
+        }
+
+        this.downWasPressed = keyIsDown(this.controls.down);
+        this.leftWasPressed = keyIsDown(this.controls.left);
+        this.rightWasPressed = keyIsDown(this.controls.right);
+        this.zWasPressed = keyIsDown(this.controls.counterClock); //If Z was pressed
+        this.xWasPressed = keyIsDown(this.controls.clock); //If X was pressed
+        if (!keyIsDown(this.controls.counterClock)) this.zCharged = false; //If the player is pressing anymore, they no longer want to rotate, so don't charge
+        if (!keyIsDown(this.controls.clock)) this.xCharged = false;
 
         this.lastFrame = Date.now();
-    }
-
-    moveDown() {
-        let shouldMoveDown = this.time >= this.lastMoveDown + this.pieceSpeed;
-        if (this.currentPiece !== null && shouldMoveDown) {
-            const inp = new Input(this.inputId++, Date.now()-this.startTime, 0, 1, 0);
-            //console.log('Moving down at ' + this.time, inp);
-            this.addInput(inp);
-            const placePiece = this.movePiece(0, 0, true);
-            if (placePiece) this.placePiece();
-            this.lastMoveDown = this.time;
-        }
     }
 
     addInput(inp) {
@@ -120,6 +193,7 @@ class ClientGame extends Game {
 
         this.tritrisAmt = myGameData.tritrisAmt;
         this.alive = myGameData.alive;
+        this.score = myGameData.score;
         this.level = myGameData.level;
         this.lines = myGameData.lines;
         this.pieceSpeed = myGameData.pieceSpeed;
@@ -131,8 +205,6 @@ class ClientGame extends Game {
         this.lastColCleared = myGameData.lastColCleared;
         this.flashTime = myGameData.flashTime;
         this.downPressedAt = myGameData.downPressedAt;
-
-        //TODO I must serialize the game to send in a proper state so that it can be applied when recevied, then update the client to now from the gotten state
 
         //After being set to the authoratative server state, use client reconcilliation to update inputs the server hasn't seen yet
         //this.startTime = myGameData.startTime; //This will mess up other time zones
@@ -148,7 +220,6 @@ class ClientGame extends Game {
         if (myGameData.nextPieceIndex) {
             this.serverNextPiece = new Piece(this.piecesJSON[myGameData.nextPieceIndex]);
         }
-
         //console.log('Going to current time ' + (Date.now() - this.startTime));
         this.updateToTime(Date.now() - this.startTime); //Recatch-up the game
         //console.log('Caught up');
