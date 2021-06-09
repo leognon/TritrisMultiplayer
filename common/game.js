@@ -83,6 +83,8 @@ class Game {
         this.setSpeed(); //This will correctly set pieceSpeed depending on which level it's starting on
 
         this.softDropSpeed = msPerFrame * 2;
+        this.pushDownPoints = 0;
+        this.softDropAccuracy = 18; //Bc of inconsistent framerate, soft drop speed may vary. This accounts for that
         this.lastMoveDown = this.time + 750;
 
         this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
@@ -130,6 +132,7 @@ class Game {
 
         this.setSpeed(); //This will correctly set pieceSpeed depending on which level it's starting on
 
+        this.pushDownPoints = 0;
         this.lastMoveDown = this.time + 750;
 
         this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
@@ -229,11 +232,21 @@ class Game {
             //Move down based on timer
             if (input) { //It is time for the input to be performed
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
-                if (moveData.placePiece) {
-                    this.placePiece();
+                if (input.vertDir) {
+                    const timeSinceLastMoveDown = this.time - this.lastMoveDown;
+                    const diffFromSoftDrop = Math.abs(timeSinceLastMoveDown - this.softDropSpeed);
+                    if (diffFromSoftDrop <= this.softDropAccuracy && this.level < 19) { //20ms is an arbitrary number because of inconsistent frame rate
+                        this.pushDownPoints++; //Pushing down
+                    } else {
+                        this.pushDownPoints = 0;
+                    }
                     this.lastMoveDown = this.time;
                 }
-                if (input.vertDir) {
+                if (moveData.placePiece) {
+                    this.placePiece();
+                    this.score += this.pushDownPoints;
+                    this.pushDownPoints = 0;
+
                     this.lastMoveDown = this.time;
                 }
             } //TODO Once client prediction is implemented, figure out the ordering of playing inputs and moving pieces. What if something happens at the same time?
@@ -434,6 +447,7 @@ class GameState {
         this.bag = [...game.bag]; //Save a copy of the current bag
 
         this.pieceSpeed = game.pieceSpeed;
+        this.pushDownPoints = game.pushDownPoints;
         this.lastMoveDown = game.lastMoveDown;
 
         this.spawnNextPiece = game.spawnNextPiece;

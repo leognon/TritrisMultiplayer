@@ -23,9 +23,6 @@ class ClientGame extends Game {
         this.dasMax = msPerFrame * 16;
         this.dasCharged = msPerFrame * 10;
 
-        //TODO Add push down points
-        this.softDropSpeed = msPerFrame * 2;
-        this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
         this.downWasPressed = false;
 
         this.leftWasPressed = false;
@@ -105,6 +102,16 @@ class ClientGame extends Game {
                 this.downPressedAt = this.currentPiece.pos.y; //Save when the piece was first pressed down
             }
             let moveDown = this.time >= this.lastMoveDown + pieceSpeed;
+            if (moveDown) {
+                //TODO Level 19+ speeds will always register as push down????
+                const timeSinceLastMoveDown = this.time - this.lastMoveDown;
+                const diffFromSoftDrop = Math.abs(timeSinceLastMoveDown - this.softDropSpeed);
+                if (diffFromSoftDrop <= this.softDropAccuracy && this.level < 19) { //Accounts for varying framerate
+                    this.pushDownPoints++; //Pushing down
+                } else {
+                    this.pushDownPoints = 0;
+                }
+            }
             if (horzDirection != 0 || rotation != 0 || moveDown) {
                 this.redraw = true; //A piece has moved, so the game must be redrawn
                 const moveData = this.movePiece(horzDirection, rotation, moveDown);
@@ -129,13 +136,8 @@ class ClientGame extends Game {
                 this.addInput(inp);
 
                 if (moveData.placePiece) {
-                    let pushDownPoints = 0;
-                    if (keyIsDown(this.controls.down)) {
-                        //If it was pushed down, give 1 point per grid cell
-                        pushDownPoints = this.currentPiece.pos.y - this.downPressedAt;
-                        this.score += pushDownPoints;
-                    }
-                    this.downPressedAt = 0;
+                    this.score += this.pushDownPoints;
+                    this.pushDownPoints = 0;
 
                     //Place the piece
                     this.placePiece();
@@ -191,12 +193,14 @@ class ClientGame extends Game {
 
         this.grid = new Grid(myGameData.serializedGrid);
 
+        //TODO Refactor how the game goes to start (use a gamestate), and remove the tons of duplication. Make importing a gamestate easier
         this.tritrisAmt = myGameData.tritrisAmt;
         this.alive = myGameData.alive;
         this.score = myGameData.score;
         this.level = myGameData.level;
         this.lines = myGameData.lines;
         this.pieceSpeed = myGameData.pieceSpeed;
+        this.pushDownPoints = myGameData.pushDownPoints;
         this.lastMoveDown = myGameData.lastMoveDown;
 
         this.spawnNextPiece = myGameData.spawnNextPiece;
