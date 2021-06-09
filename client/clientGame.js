@@ -1,5 +1,6 @@
 const { Grid, Piece, Triangle } = require('../common/classes.js');
 const config = require('../common/config.js');
+const RandomGenerator = require('random-seed');
 const { Game, Input } = require('../common/game.js');
 
 class ClientGame extends Game {
@@ -208,7 +209,11 @@ class ClientGame extends Game {
         }
 
         this.seed = myGameData.seed;
-        //this.gen = myGameData.gen; //TODO This will by out of sync
+        this.gen = new RandomGenerator(this.seed);
+        this.numGens = myGameData.numGens;
+        for (let i = 0; i < this.numGens; i++)
+            this.gen.range(1); //Advance the internal state of the random number generator to match
+
         this.bag = myGameData.bag;
         this.nextSingles = myGameData.nextSingles;
 

@@ -4,13 +4,23 @@ const piecesJSON = require('./pieces.js');
 
 
 /* TODO
- * Rename timer variables
- * Remove extra variables
- * Fix number of points for double (should be 300)
+ *  Rename timer variables
+ *  Remove extra variables
+ *  Fix number of points for double (should be 300)
+ *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
+ *  Add second player
+ *  Make push down points consistent
+ *  Figure out deltaTime stuff
+ *  Make server more authoritative. Validate inputs, ensure piece falls consistently
+ *  Add redraw
+ *
+ * DONE
+ *  Add line clears
+ *  Add RNG
  */
 
 class Game {
-    constructor(level=0, seed = 0) {
+    constructor(level=18, seed = 'abc123') {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -21,6 +31,7 @@ class Game {
 
         this.seed = seed;
         this.gen = new RandomGenerator(this.seed);
+        this.numGens = 0; //Used to know how many steps to advance the rng from the initial state when the client recieves an update
 
         this.alive = true;
 
@@ -112,6 +123,7 @@ class Game {
         this.time = 0;
 
         this.gen = new RandomGenerator(this.seed);
+        this.numGens = 0;
 
         this.alive = true;
 
@@ -286,8 +298,8 @@ class Game {
             this.nextPieceIndex = 0; //This will make it spawn 3 single triangles in a row
             this.nextSingles--;
         } else {
-            //TODO Don't make the bagIndex always 0!!
-            const bagIndex = 0; //this.gen.range(this.bag.length); //Math.floor(Math.random() * this.bag.length);
+            const bagIndex = this.gen.range(this.bag.length);
+            this.numGens++;
             this.nextPieceIndex = this.bag.splice(bagIndex, 1)[0]; //Pick 1 item and remove it from bag
             if (this.nextPieceIndex == 0) {
                 //If it randomly chose to spawn 1 triangle, spawn 2 more
@@ -431,8 +443,9 @@ class GameState {
         this.tritrisAmt = game.tritrisAmt;
         this.startTime = game.startTime; //TODO This might be unnecessary
         this.time = game.time;
+
         this.seed = game.seed;
-        this.gen = new RandomGenerator(this.seed); //TODO These will be out of sync!!!!!!!!!!!!!
+        this.numGens = game.numGens;
 
         this.alive = game.alive;
 
