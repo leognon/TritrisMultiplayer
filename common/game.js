@@ -95,7 +95,6 @@ class Game {
         this.animationTime = 0;
         this.animatingLines = [];
         this.maxAnimationTime = 20 * msPerFrame;
-        this.lastColCleared = 0;
         this.maxFlashTime = 20 * msPerFrame;
         this.flashTime = 0;
         this.flashAmount = 4;
@@ -141,14 +140,13 @@ class Game {
 
         this.animationTime = 0;
         this.animatingLines = [];
-        this.lastColCleared = 0;
         this.flashTime = 0;
 
         this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
     }
 
     updateFromStartToTime(t) {
-        this.goToStart();
+        this.goToStart(); //TODO Don't go to start every time. Instead, save the game state every ~10 seconds and reset to there
         this.updateToTime(t);
     }
 
@@ -194,28 +192,11 @@ class Game {
         //if (!this.alive) return;
 
         //Play a line clear animation
-        /*if (this.time <= this.animationTime) {
+        if (this.time <= this.animationTime) {
             //Line clear animation. Not needed on server
         } else if (this.animatingLines.length > 0) {
-            //After a line clear animation has just been completed
-            //Readjust the entry delay to accommodate for the animation time
-            this.spawnNextPiece += this.maxAnimationTime;
-            this.lines += this.animatingLines.length;
-
-            //Increase the level after a certain amt of lines, then every 10 lines
-            if (this.shouldIncreaseLevel()) {
-                this.level++;
-                this.setSpeed();
-            }
-            this.score += this.scoreWeights[this.animatingLines.length] * (this.level + 1);
-            if (this.animatingLines.length == 3)
-                this.tritrisAmt++;
-
-            for (const row of this.animatingLines) {
-                this.grid.removeLine(row);
-            }
-            this.animatingLines = [];
-        }*/
+            this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
+        }
 
         //Spawn the next piece after entry delay
         if (this.shouldSpawnPiece()) {
@@ -260,7 +241,7 @@ class Game {
     shouldIncreaseLevel() {
         if (this.level == this.startLevel) {
             //This formula is from https://tetris.wiki/Tetris_(NES,_Nintendo)
-            if (this.lines >= (this.startLevel + 1) * 10 || this.lines >= max(100, this.startLevel * 10 - 50)) {
+            if (this.lines >= (this.startLevel + 1) * 10 || this.lines >= Math.max(100, this.startLevel * 10 - 50)) {
                 return true;
             }
         } else {
@@ -318,10 +299,30 @@ class Game {
         this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex]);
     }
 
+    updateScoreAndLevel() {
+        //After a line clear animation has just been completed
+        //Readjust the entry delay to accommodate for the animation time
+        this.spawnNextPiece += this.maxAnimationTime;
+        this.lines += this.animatingLines.length;
+
+        //Increase the level after a certain amt of lines, then every 10 lines
+        if (this.shouldIncreaseLevel()) {
+            this.level++;
+            this.setSpeed();
+        }
+        this.score += this.scoreWeights[this.animatingLines.length] * (this.level + 1);
+        if (this.animatingLines.length == 3)
+            this.tritrisAmt++;
+
+        for (const row of this.animatingLines) {
+            this.grid.removeLine(row);
+        }
+        this.animatingLines = [];
+    }
+
     clearLines() {
         let linesCleared = this.grid.clearLines();
         if (linesCleared.length > 0) {
-            //this.currentSnapshot.setLines(linesCleared);
             //Set the time for when to stop animating
             this.animationTime = this.time + this.maxAnimationTime;
             this.animatingLines = linesCleared; //Which lines are being animated (and cleared)
@@ -453,7 +454,6 @@ class GameState {
         this.spawnNextPiece = game.spawnNextPiece;
         this.animationTime = game.animationTime;
         this.animatingLines = game.animatingLines;
-        this.lastColCleared = game.lastColCleared;
         this.flashTime = game.flashTime;
 
         this.downPressedAt = game.downPressedAt;

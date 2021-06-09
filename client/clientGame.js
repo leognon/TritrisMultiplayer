@@ -50,6 +50,13 @@ class ClientGame extends Game {
         const deltaTime = Date.now() - this.lastFrame;
         this.time += deltaTime;
 
+        if (this.time <= this.animationTime) {
+            this.playLineClearingAnimation();
+        } else if (this.animatingLines.length > 0) {
+            this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
+        }
+
+
         if (this.shouldSpawnPiece()) {
             this.spawnPiece();
             this.lastMoveDown = this.time;
@@ -162,6 +169,27 @@ class ClientGame extends Game {
         this.lastFrame = Date.now();
     }
 
+    playLineClearingAnimation() {
+        const percentDone = (this.animationTime - this.time) / this.maxAnimationTime;
+        const clearingCol = Math.floor(percentDone * this.w);
+        for (const row of this.animatingLines) {
+            //Clear as many cols as necessary
+            for (let col = this.w; col >= clearingCol; col--) {
+                //Clear from middle to left (triangle by traingle)
+                const colPos = Math.floor(col / 2);
+                if (col % 2 == 1) this.grid.removeRightTri(row, colPos);
+                else this.grid.removeLeftTri(row, colPos);
+
+                //Clear from middle to right
+                const otherColPos = this.w - 1 - colPos;
+                if (col % 2 == 0)
+                    this.grid.removeRightTri(row, otherColPos);
+                else this.grid.removeLeftTri(row, otherColPos);
+            }
+        }
+        //this.redraw = true;
+    }
+
     addInput(inp) {
         this.inputsQueue.push(inp);
         this.inputs.push(inp);
@@ -206,7 +234,6 @@ class ClientGame extends Game {
         this.spawnNextPiece = myGameData.spawnNextPiece;
         this.animationTime = myGameData.animationTime;
         this.animatingLines = myGameData.animatingLines;
-        this.lastColCleared = myGameData.lastColCleared;
         this.flashTime = myGameData.flashTime;
         this.downPressedAt = myGameData.downPressedAt;
 
@@ -241,11 +268,11 @@ class ClientGame extends Game {
 
     show(x, y, w, h, paused, oldGraphics, showGridLines, showStats, showFlash) {
         //Play flashing animation
-        const flashing = this.flashTime >= Date.now();
+        const flashing = this.flashTime >= this.time;
         if (!this.redraw && !flashing) return; //If not flashing, only draw when necessary
 
         if (flashing && showFlash) {
-            const timePassed = this.flashTime - Date.now();
+            const timePassed = this.flashTime - this.time;
             const interval = Math.floor(this.flashAmount * timePassed / this.maxFlashTime);
             if (interval % 2 == 0) {
                 background(150);
