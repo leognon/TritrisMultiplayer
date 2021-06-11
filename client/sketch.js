@@ -2,26 +2,15 @@ const p5 = require('p5');
 const io = require('socket.io-client');
 const states = require('../common/states.js');
 const config = require('../common/config.js');
-const ClientGame = require('../client/clientGame.js');
+const MyGame = require('../client/myGame.js');
+const OtherGame = require('../client/otherGame.js');
 
 new p5(() => {
-window.debug = this; //Enables variables created with "this." to be accessed in the chrome developer console
 let socket;
-
-/* Client sends input packets
- * Client receives data:
- *      Set state to authoritative server
- *      Delete inputs that server has processed
- *      Then replay inputs that server has not processed
- *
- * Server receives data:
- *      Replay game from client perspective
- *
- *
- */
 
 let state = states.FINDING_MATCH;
 let game;
+let otherGame;
 
 let nextSendData = 0;
 
@@ -33,14 +22,25 @@ function createSocket() {
     socket.on('state', s => {
         state = s;
         if (state == states.INGAME) { //TODO Don't wait for server to start game. Make sure to start ahead of server
-            game = new ClientGame();
+            game = new MyGame();
+            otherGame = new OtherGame();
             nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         }
     });
     socket.on('data', d => {
         //game.gotData(d);
         setTimeout(() => {
-            game.gotData(d);
+            const games = d.players;
+            const myData = games[socket.id];
+            let otherData;
+            for (let id in games) {
+                if (id != socket.id) {
+                    otherData = games[id];
+                    break;
+                }
+            }
+            game.gotData(myData);
+            otherGame.gotData(otherData);
         }, config.FAKE_LATENCY); //Some fake latency
     });
     socket.on('disconnect', () => {
@@ -56,6 +56,7 @@ setup = () => {
 }
 
 draw = () => {
+    background(100);
     if (state == states.FINDING_MATCH) {
         background(0);
         fill(255);
@@ -91,13 +92,13 @@ function showConsole() {
 
 function runGame() {
     game.clientUpdate();
-    showGame();
+    showGame(game, 10, 10);
+    showGame(otherGame, 550, 10);
 }
 
-function showGame() {
-    background(100);
-    game.redraw = true;
-    game.show(10, 10, 375, 375*2, false, true, true, true, true);
+function showGame(g, x, y) {
+    g.redraw = true;
+    g.show(x, y, 300, 300*2, false, true, true, true, true);
 }
 
 function sendData() {

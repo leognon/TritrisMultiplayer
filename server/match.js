@@ -6,7 +6,7 @@ class Match {
         console.log('Created match between ' + socket1.id + ' and ' + (socket2 ? socket2.id : 'nobody'));
         this.players = [];
         this.addPlayer(socket1);
-        //this.addPlayer(socket2);
+        this.addPlayer(socket2);
 
         for (const p of this.players) {
             p.sendState(states.INGAME);
