@@ -38,5 +38,17 @@ setInterval(() => {
     if (match) match.clientsUpdate();
 }, config.SERVER_SEND_DATA); //Send new game states to clients at 20fps
 
+//An interactive console to make debugging eaiser
+const stdin = process.openStdin();
+stdin.addListener("data", (d) => {
+    d = d.toString().trim();
+    try {
+        let g = null;
+        if (match) g = match.players[0].serverGame;
+        console.log(eval(d));
+    } catch (e) {
+        console.error('Something went wrong.', e);
+    }
+});
 
 console.log('Server started');
