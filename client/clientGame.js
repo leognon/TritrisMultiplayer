@@ -208,44 +208,7 @@ class ClientGame extends Game {
             }
         }
 
-        this.seed = myGameData.seed;
-        this.gen = new RandomGenerator(this.seed);
-        this.numGens = myGameData.numGens;
-        for (let i = 0; i < this.numGens; i++)
-            this.gen.range(1); //Advance the internal state of the random number generator to match
-
-        this.bag = myGameData.bag;
-        this.nextSingles = myGameData.nextSingles;
-
-        if (myGameData.currentPieceSerialized) this.currentPiece = new Piece(myGameData.currentPieceSerialized);
-        else this.currentPiece = null;
-
-        this.nextPieceIndex = myGameData.nextPieceIndex;
-        if (this.nextPieceIndex !== null) this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex]);
-        else this.nextPiece = null;
-
-        this.grid = new Grid(myGameData.serializedGrid);
-
-        //TODO Refactor how the game goes to start (use a gamestate), and remove the tons of duplication. Make importing a gamestate easier
-        this.tritrisAmt = myGameData.tritrisAmt;
-        this.alive = myGameData.alive;
-        this.score = myGameData.score;
-        this.level = myGameData.level;
-        this.lines = myGameData.lines;
-        this.pieceSpeed = myGameData.pieceSpeed;
-        this.pushDownPoints = myGameData.pushDownPoints;
-        this.lastMoveDown = myGameData.lastMoveDown;
-
-        this.spawnNextPiece = myGameData.spawnNextPiece;
-        this.animationTime = myGameData.animationTime;
-        this.animatingLines = myGameData.animatingLines;
-        this.flashTime = myGameData.flashTime;
-        this.downPressedAt = myGameData.downPressedAt;
-
-        //After being set to the authoratative server state, use client reconcilliation to update inputs the server hasn't seen yet
-        //this.startTime = myGameData.startTime; //This will mess up other time zones
-        //console.log('Got data. Time diff: ' + (this.time - myGameData.time));
-        this.time = myGameData.time;
+        this.goToGameState(myGameData);
 
         this.serverGrid = new Grid(myGameData.serializedGrid); //TODO Remove this. This is was the server sees for debugging
         this.serverCurrentPiece = null;
@@ -256,9 +219,8 @@ class ClientGame extends Game {
         if (myGameData.nextPieceIndex) {
             this.serverNextPiece = new Piece(this.piecesJSON[myGameData.nextPieceIndex]);
         }
-        //console.log('Going to current time ' + (Date.now() - this.startTime));
+
         this.updateToTime(Date.now() - this.startTime); //Recatch-up the game
-        //console.log('Caught up');
         this.lastFrame = Date.now();
     }
 

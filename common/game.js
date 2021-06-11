@@ -4,10 +4,12 @@ const piecesJSON = require('./pieces.js');
 
 
 /* TODO
+ *
+ * TEST ON ACTUAL SERVER!!!
+ *
  *  Rename timer variables
  *  Remove extra variables
  *  Fix number of points for double (should be 300)
- *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
  *  Add second player
  *  Make push down points consistent
  *  Figure out deltaTime stuff
@@ -17,6 +19,7 @@ const piecesJSON = require('./pieces.js');
  * DONE
  *  Add line clears
  *  Add RNG
+ *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
  */
 
 class Game {
@@ -110,51 +113,54 @@ class Game {
         this.flashTime = 0;
         this.flashAmount = 4;
 
-        this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
-
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
         this.lastestState = new GameState(this); //The game state with the highest input id completed
+
+        this.initialGameState = new GameState(this);
     }
 
     goToStart() { //Resets the game so it can be replayed up to any time necessary
-        this.grid = new Grid(this.w, this.h);
-        this.tritrisAmt = 0; //For statistics
-        this.time = 0;
+        this.goToGameState(this.initialGameState);
+    }
 
+    goToGameState(state) {
+        this.seed = state.seed;
         this.gen = new RandomGenerator(this.seed);
-        this.numGens = 0;
+        this.numGens = state.numGens;
+        for (let i = 0; i < this.numGens; i++)
+            this.gen.range(1); //Advance the internal state of the random number generator to match
 
-        this.alive = true;
+        this.bag = [...state.bag];
+        this.nextSingles = state.nextSingles;
 
-        this.level = this.startLevel;
-        this.lines = 0;
-        this.score = 0;
+        if (state.currentPieceSerialized) this.currentPiece = new Piece(state.currentPieceSerialized);
+        else this.currentPiece = null;
 
-        this.currentPiece = null; //The current piece starts as null
-        this.currentPieceIndex = null;
-        this.nextPiece = null; //The next piece starts as a random piece that isn't a single triangles
-        this.nextPieceIndex = null;
-        this.nextSingles = 0;
-        this.bag = [];
-        this.spawnPiece(); //Sets the next piece
-        this.firstPieceIndex = this.nextPieceIndex; //Used for saving games
-        this.spawnPiece(); //Make next piece current, and pick new next
+        this.nextPieceIndex = state.nextPieceIndex;
+        if (this.nextPieceIndex !== null) this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex]);
+        else this.nextPiece = null;
 
-        this.setSpeed(); //This will correctly set pieceSpeed depending on which level it's starting on
+        this.grid = new Grid(state.serializedGrid);
 
-        this.pushDownPoints = 0;
-        this.lastMoveDown = this.time + 750;
+        this.tritrisAmt = state.tritrisAmt;
+        this.alive = state.alive;
+        this.score = state.score;
+        this.level = state.level;
+        this.lines = state.lines;
+        this.pieceSpeed = state.pieceSpeed;
+        this.pushDownPoints = state.pushDownPoints;
+        this.lastMoveDown = state.lastMoveDown;
 
-        this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
+        this.spawnNextPiece = state.spawnNextPiece;
+        this.animationTime = state.animationTime;
+        this.animatingLines = state.animatingLines;
+        this.flashTime = state.flashTime;
 
-        this.spawnNextPiece = 0;
+        this.time = state.time;
 
-        this.animationTime = 0;
-        this.animatingLines = [];
-        this.flashTime = 0;
-
-        this.downPressedAt = 0; //Used to calculate how many cells a piece traveled when down was pressed
+        //this.updateToTime(Date.now() - this.startTime); //Recatch-up the game
+        this.lastFrame = Date.now();
     }
 
     updateFromStartToTime(t) {
@@ -469,12 +475,10 @@ class GameState {
         this.animatingLines = game.animatingLines;
         this.flashTime = game.flashTime;
 
-        this.downPressedAt = game.downPressedAt;
-
         this.doneInputId = game.doneInputId;
     }
 
-    serialize() {
+    serialize() { //TODO This isn't used
         return this;
     }
 }
