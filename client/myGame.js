@@ -55,58 +55,7 @@ class MyGame extends ClientGame {
 
         if (this.currentPiece !== null) {
             //If either left is pressed or right is pressed and down isn't
-            let oneKeyPressed = keyIsDown(this.controls.left) != keyIsDown(this.controls.right);
-            if (!this.practice && keyIsDown(this.controls.down)) {
-                oneKeyPressed = false; //Allows down and left/right to be pressed in practice, but not in a real game
-            }
-            let move = false;
-            if (oneKeyPressed) {
-                this.das += deltaTime;
-                if (
-                    (keyIsDown(this.controls.left) && !this.leftWasPressed) ||
-                    (keyIsDown(this.controls.right) && !this.rightWasPressed)
-                ) {
-                    //If it was tapped, move and reset das
-                    move = true;
-                    this.das = 0;
-                } else if (this.das >= this.dasMax) {
-                    move = true; //Key is being held, keep moving
-                    this.das = this.dasCharged;
-                }
-            }
-
-            let horzDirection = 0;
-            if (move) {
-                if (keyIsDown(this.controls.left)) horzDirection = -1;
-                if (keyIsDown(this.controls.right)) horzDirection = 1;
-            }
-
-            const zPressed = keyIsDown(this.controls.counterClock) && (!this.zWasPressed || this.zCharged);
-            const xPressed = keyIsDown(this.controls.clock) && (!this.xWasPressed || this.xCharged);
-            let rotation = 0;
-            if (zPressed && xPressed) rotation = 2;
-            else if (xPressed) rotation = 1;
-            else if (zPressed) rotation = -1;
-
-            let pieceSpeed = this.pieceSpeed;
-            if (keyIsDown(this.controls.down)) {
-                //Pressing down moves twice as fast, or as fast as the min
-                pieceSpeed = min(pieceSpeed, this.softDropSpeed);
-            }
-            if (keyIsDown(this.controls.down) && !this.downWasPressed) {
-                this.downPressedAt = this.currentPiece.pos.y; //Save when the piece was first pressed down
-            }
-            let moveDown = this.time >= this.lastMoveDown + pieceSpeed;
-            if (moveDown) {
-                //TODO Level 19+ speeds will always register as push down????
-                const timeSinceLastMoveDown = this.time - this.lastMoveDown;
-                const diffFromSoftDrop = Math.abs(timeSinceLastMoveDown - this.softDropSpeed);
-                if (diffFromSoftDrop <= this.softDropAccuracy && this.level < 19) { //Accounts for varying framerate
-                    this.pushDownPoints++; //Pushing down
-                } else {
-                    this.pushDownPoints = 0;
-                }
-            }
+            const { horzDirection, rotation, moveDown } = this.getCurrentInputs();
             if (horzDirection != 0 || rotation != 0 || moveDown) {
                 this.redraw = true; //A piece has moved, so the game must be redrawn
                 const moveData = this.movePiece(horzDirection, rotation, moveDown);
@@ -146,6 +95,60 @@ class MyGame extends ClientGame {
             }
         }
 
+        this.lastFrame = Date.now();
+    }
+
+    getCurrentInputs() {
+        const deltaTime = Date.now() - this.lastFrame;
+
+        let oneKeyPressed = keyIsDown(this.controls.left) != keyIsDown(this.controls.right);
+        if (keyIsDown(this.controls.down)) oneKeyPressed = false; //Cannot move left/right and press down at the same time
+
+        let shouldMoveHorz = false;
+        if (oneKeyPressed) {
+            this.das += deltaTime;
+            if ((keyIsDown(this.controls.left) && !this.leftWasPressed) || //Just started pressing left
+                (keyIsDown(this.controls.right) && !this.rightWasPressed)) { //Just started pressing right
+                //If it was tapped, move and reset das
+                shouldMoveHorz = true;
+                this.das = 0;
+            } else if (this.das >= this.dasMax) { //Key has been held long enough to fully charge
+                shouldMoveHorz = true; //Key is being held, keep moving
+                this.das = this.dasCharged;
+            }
+        }
+
+        let horzDirection = 0;
+        if (shouldMoveHorz) {
+            if (keyIsDown(this.controls.left)) horzDirection = -1;
+            if (keyIsDown(this.controls.right)) horzDirection = 1;
+        }
+
+        //If the user just pressed rotate or they have been holding it and it's charged
+        const zPressed = keyIsDown(this.controls.counterClock) && (!this.zWasPressed || this.zCharged);
+        const xPressed = keyIsDown(this.controls.clock) && (!this.xWasPressed || this.xCharged);
+        let rotation = 0;
+        if (zPressed && xPressed) rotation = 2; //A 180 rotation
+        else if (xPressed) rotation = 1;
+        else if (zPressed) rotation = -1;
+
+        let pieceSpeed = this.pieceSpeed; //The default piece speed based on the current level
+        if (keyIsDown(this.controls.down)) {
+            //Pressing down moves at 19 speed
+            pieceSpeed = min(pieceSpeed, this.softDropSpeed);
+        }
+        let moveDown = this.time >= this.lastMoveDown + pieceSpeed;
+        if (moveDown) {
+            //TODO Level 19+ speeds will always register as push down????
+            const timeSinceLastMoveDown = this.time - this.lastMoveDown;
+            const diffFromSoftDrop = Math.abs(timeSinceLastMoveDown - this.softDropSpeed);
+            if (diffFromSoftDrop <= this.softDropAccuracy && this.level < 19) { //Accounts for varying framerate
+                this.pushDownPoints++; //Pushing down
+            } else {
+                this.pushDownPoints = 0;
+            }
+        }
+
         this.downWasPressed = keyIsDown(this.controls.down);
         this.leftWasPressed = keyIsDown(this.controls.left);
         this.rightWasPressed = keyIsDown(this.controls.right);
@@ -154,7 +157,9 @@ class MyGame extends ClientGame {
         if (!keyIsDown(this.controls.counterClock)) this.zCharged = false; //If the player is pressing anymore, they no longer want to rotate, so don't charge
         if (!keyIsDown(this.controls.clock)) this.xCharged = false;
 
-        this.lastFrame = Date.now();
+        return {
+            horzDirection, rotation, moveDown
+        };
     }
 
     addInput(inp) {
