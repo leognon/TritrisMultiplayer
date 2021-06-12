@@ -179,6 +179,7 @@ class Game {
             if (this.inputs[i].time > this.time) {
                 nextInputId = i; //Find which input has not been played yet
                 break;
+            }
         }
         while (this.time < t) {
             //TODO Make deltaTime softDropSpeed??? Currently, any soft drops will be an Input and the nextInput algorithm will jump to them. What if the user doesn't send inputs though?

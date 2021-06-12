@@ -4,7 +4,7 @@
   "description": "Online multiplayer Tritris (Tetris with  Triangles)",
   "main": "index.js",
   "scripts": {
-    "build": "browserify g client/sketch.js -o client/bundle.js",
+    "build": "browserify client/sketch.js -o client/bundle.js",
     "buildDebug": "browserify --debug client/sketch.js -o client/bundle.js",
     "start": "npm run build && node index.js",
     "dev": "nodemon -i client/bundle.js --exec 'npm run buildDebug && { afplay ~/Desktop/youtube/tritris/tritris/assets/move.wav & } && node index.js'"
