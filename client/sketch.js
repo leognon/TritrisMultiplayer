@@ -31,13 +31,13 @@ function createSocket() {
         //game.gotData(d);
         setTimeout(() => {
             const games = d.players;
-            const myData = games[socket.id];
+            const myData = d.yourData;
             let otherData;
             for (let id in games) {
-                if (id != socket.id) {
+                //if (id != socket.id) {
                     otherData = games[id];
                     break;
-                }
+                //}
             }
             game.gotData(myData);
             otherGame.gotData(otherData);
@@ -80,6 +80,10 @@ console.log = (a, b, c, d) => {
     if (d) str += 'TOO MANY ARGS!!' + '\n';
     origConsoleLog(str);
     cLog += str;
+    const maxLen = 40;
+    if (cLog.split('\n').length > maxLen) {
+        cLog = cLog.split('\n').slice(cLog.split('\n').length-maxLen, maxLen).join('\n');
+    }
 }
 
 function showConsole() {
@@ -87,11 +91,12 @@ function showConsole() {
     textSize(fontSize);
     const numLines = cLog.split('\n').length;
     const height = numLines * (fontSize + 3);
-    text(cLog, 930, 920 - height);
+    text(cLog, 930, 700 - height);
 }
 
 function runGame() {
     game.clientUpdate();
+    otherGame.interpolateUpdate();
     showGame(game, 10, 10);
     showGame(otherGame, 550, 10);
 }

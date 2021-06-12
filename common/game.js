@@ -23,7 +23,7 @@ const piecesJSON = require('./pieces.js');
  */
 
 class Game {
-    constructor(level=18, seed = 'abc123') {
+    constructor(level=9, seed = 'abc123') {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -170,16 +170,17 @@ class Game {
 
     updateToTime(t) { //Go from the current time to t and do all inputs that happened during that time
         if (this.time > t) {
-            console.log('Cannot go backwards!');
+            console.log('Cannot go backwards to ' + t);
         }
         let nextInputId = this.inputs.length; //The id of the next input that should be played. If none should be played, it will be inputs.length
+
         for (let i = 0; i < this.inputs.length; i++) {
             if (this.inputs[i].time > this.time) {
                 nextInputId = i; //Find which input has not been played yet
                 break;
-            }
         }
         while (this.time < t) {
+            //TODO Make deltaTime softDropSpeed??? Currently, any soft drops will be an Input and the nextInput algorithm will jump to them. What if the user doesn't send inputs though?
             let deltaTime = this.pieceSpeed; // this.pieceSpeed/100; //TODO Figure out deltaTime stuff in the server
             if (this.time + deltaTime > t) {
                 deltaTime = t - this.time; //Ensure the time does not go over the desired time

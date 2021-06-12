@@ -23,16 +23,31 @@ class Match {
         }
     }
 
+    //Sends data to the clients
     clientsUpdate() {
         let data = {
-            serverTime: Date.now(),
-            players: {}
+            serverTime: Date.now(), //TODO serverTime might be unnecessary
+            players: {},
+            yourData: null
         };
         for (const p of this.players) {
-            data.players[p.getId()] = p.getData();
+            //The current game state of the player and the inputs which have not been
+            //sent. The player will go to a previous state that had been sent, then
+            //begin performing inputs to take them to this state.
+            data.players[p.getId()] = p.serverGame.getGameStateAndInputs();
         }
         for (const p of this.players) {
+            //The authoratative state at time t, and the input id that has been received
+            //The player will then update their client to the current time (performing
+            //any update the server has yet to do)
+            data.yourData = p.serverGame.getGameState();
+
+            const tempYourData = data.players[p.getId()];
+            delete data.players[p.getId()]; //Remove it from the other player's data
+
             p.sendData(data);
+
+            data.players[p.getId()] = tempYourData; //Add it back
         }
     }
 }
@@ -46,7 +61,6 @@ class Player {
     }
 
     physicsUpdate() {
-        //this.serverGame.update();
         this.serverGame.updateFromStartToTime(Date.now() - this.serverGame.startTime);
     }
 
@@ -58,8 +72,8 @@ class Player {
         this.serverGame.gotInputs(data);
     }
 
-    getData() {
-        return this.serverGame.getData();
+    getGameState() {
+        return this.serverGame.getGameState();
     }
 
     sendData(data) {
