@@ -15,6 +15,7 @@ const piecesJSON = require('./pieces.js');
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
  *  Add redraw
+ *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
  *
  * DONE
  *  Add line clears

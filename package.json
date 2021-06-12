@@ -4,7 +4,7 @@
   "description": "Online multiplayer Tritris (Tetris with  Triangles)",
   "main": "index.js",
   "scripts": {
-    "build": "browserify -g uglifyify client/sketch.js -o client/bundle.js",
+    "build": "browserify g client/sketch.js -o client/bundle.js",
     "buildDebug": "browserify --debug client/sketch.js -o client/bundle.js",
     "start": "npm run build && node index.js",
     "dev": "nodemon -i client/bundle.js --exec 'npm run buildDebug && { afplay ~/Desktop/youtube/tritris/tritris/assets/move.wav & } && node index.js'"
@@ -17,8 +17,7 @@
     "p5": "^1.3.1",
     "random-seed": "^0.3.0",
     "socket.io": "^4.1.2",
-    "socket.io-client": "^4.1.2",
-    "uglifyify": "^5.0.2"
+    "socket.io-client": "^4.1.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
