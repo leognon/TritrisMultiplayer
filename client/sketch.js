@@ -73,25 +73,25 @@ draw = () => {
     showConsole();
 }
 
-let cLog = "";
+let cLog = [];
 const origConsoleLog = console.log;
 console.log = (a, b, c, d) => {
     let str = a + (b ? (', ' + JSON.stringify(b)) : '') + (c ? (', ' + JSON.stringify(c)) : '') + '\n';
     if (d) str += 'TOO MANY ARGS!!' + '\n';
     origConsoleLog(str);
-    cLog += str;
+    cLog.push(str);
     const maxLen = 40;
-    if (cLog.split('\n').length > maxLen) {
-        cLog = cLog.split('\n').slice(cLog.split('\n').length-maxLen, maxLen).join('\n');
+    while (cLog.length > maxLen) {
+        cLog.splice(0, 1);
     }
 }
 
 function showConsole() {
     const fontSize = 12;
     textSize(fontSize);
-    const numLines = cLog.split('\n').length;
-    const height = numLines * (fontSize + 3);
-    text(cLog, 930, 700 - height);
+    const txt = cLog.join(' ');
+    const height = cLog.length * (fontSize + 3);
+    text(txt, 930, 700 - height);
 }
 
 function runGame() {

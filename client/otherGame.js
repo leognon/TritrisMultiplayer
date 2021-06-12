@@ -31,6 +31,7 @@ class OtherGame extends ClientGame {
             this.receivedTimes.splice(0, 1);
         }
         let avgUpdateEvery = this.totalReceivedTimes / this.receivedTimes.length;
+        //TODO Is avgUpdateEvery necessary? Just use config.SERVER_SEND_DATA
 
         //TODO Delete inputs that are before the previous state
         for (let encodedInp of inputs) {
@@ -39,11 +40,12 @@ class OtherGame extends ClientGame {
         }
 
         const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
-        const tooClose = avgUpdateEvery; //This is the minimum it should be behind. If it gets closer than this, it lags back by behindBy time
+        const tooClose = 0; //This is the minimum it should be behind. If it gets closer than this, it lags back by behindBy time
         let desTime = gameData.time - behindBy; //What time to go to
 
         if (desTime < this.time) { //Don't go backwards in time. This will stop any lag backs from appearing, however the interpolation may get closer to the actual time
             desTime = this.time;
+            console.log('Staying constant.');
         }
         console.log('Behind by ' + floor(gameData.time - desTime));
         if (gameData.time - desTime < tooClose) { //If the interpolation is too close,
@@ -52,7 +54,10 @@ class OtherGame extends ClientGame {
         }
 
         if (desTime < 0) {
-            return; //Game has just started. No updates yet
+            //return; //Game has just started. No updates yet
+        }
+        if (desTime == this.time) {
+            //TODO return?? Don't need to go back
         }
 
         //The below code finds a game state that is just before desired time. It then sets it's state to that, then updates to be exactly at desTime
