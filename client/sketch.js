@@ -80,18 +80,21 @@ console.log = (a, b, c, d) => {
     if (d) str += 'TOO MANY ARGS!!' + '\n';
     origConsoleLog(str);
     cLog.push(str);
-    const maxLen = 40;
+    const maxLen = 50;
     while (cLog.length > maxLen) {
         cLog.splice(0, 1);
     }
 }
 
 function showConsole() {
+    fill(100);
+    rect(855, 0, 300, height);
     const fontSize = 12;
     textSize(fontSize);
     const txt = cLog.join(' ');
-    const height = cLog.length * (fontSize + 3);
-    text(txt, 930, 700 - height);
+    const txtHeight = cLog.length * (fontSize + 3);
+    fill(0);
+    text(txt, 860, 813 - txtHeight);
 }
 
 function runGame() {

@@ -17,6 +17,7 @@ class OtherGame extends ClientGame {
     interpolateUpdate() {
         const deltaTime = Date.now() - this.lastFrame;
         this.updateToTime(this.time + deltaTime);
+        console.log(`Updated to ${this.time}`);
         this.lastFrame = Date.now();
     }
 
@@ -43,14 +44,18 @@ class OtherGame extends ClientGame {
         const tooClose = 0; //This is the minimum it should be behind. If it gets closer than this, it lags back by behindBy time
         let desTime = gameData.time - behindBy; //What time to go to
 
+        console.log(`My ${this.time} Received ${gameData.time} Des ${desTime}`);
+
         if (desTime < this.time) { //Don't go backwards in time. This will stop any lag backs from appearing, however the interpolation may get closer to the actual time
             desTime = this.time;
-            console.log('Staying constant.');
+            console.log(`Staying constant to ${desTime}`);
         }
         console.log('Behind by ' + floor(gameData.time - desTime));
         if (gameData.time - desTime < tooClose) { //If the interpolation is too close,
             desTime = gameData.time - behindBy; //Go back to the desired amount. This will cause a lagback
-            console.log('Jumping back');
+            console.log(`Jumping back to ${desTime}`);
+            //TODO When it jumps back, it goes back very far, then very quickly goes back to where it was before.
+            //What if it receives packets out of order!?!?!?!?!
         }
 
         if (desTime < 0) {
