@@ -116,7 +116,7 @@ class Game {
 
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
-        this.lastestState = new GameState(this); //The game state with the highest input id completed
+        this.latestState = new GameState(this); //The game state with the highest input id completed
 
         this.initialGameState = new GameState(this);
     }
@@ -201,7 +201,7 @@ class Game {
             this.update(deltaTime, input);
             if (input && input.id > this.doneInputId) {
                 this.doneInputId = input.id; //Math.max(this.doneInputId, input.id); //Update the highest input id that has been completed
-                this.lastestState = new GameState(this);
+                this.latestState = new GameState(this);
             }
         }
     }

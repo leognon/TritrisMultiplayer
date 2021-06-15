@@ -5,12 +5,18 @@ class ServerGame extends Game {
     constructor() {
         super();
         this.lastInputSent = -1;
+        this.lastSentTime = -1;
     }
 
     gotInputs(inps) {
+        if (inps.length == 0) return;
+        let latestTime = 0;
         for (let encodedInp of inps) {
-            this.addInput(Input.decode(encodedInp));
+            const inp = Input.decode(encodedInp);
+            this.addInput(inp);
+            if (inp.time > latestTime) latestTime = inp.time;
         }
+        this.updateFromStartToTime(latestTime);
     }
 
     addInput(inp) {
@@ -18,10 +24,19 @@ class ServerGame extends Game {
     }
 
     getGameStateAndInputs() {
-        return {
-            gameData: this.lastestState,
+        let data = {
+            changed: false,
+            gameData: {
+                time: (Date.now() - this.startTime),
+            },
             inputs: this.getCurrentInputs()
+        };
+        if (this.latestState.time > this.lastSentTime) {
+            data.changed = true;
+            data.gameData = this.latestState;
+            this.lastSentTime = this.latestState.time;
         }
+        return data;
     }
 
     getCurrentInputs() {
@@ -37,7 +52,7 @@ class ServerGame extends Game {
     //Gets the current game state to be applied to myGame
     getGameState() { //TODO Redo this system
         return {
-            gameData: this.lastestState
+            gameData: this.latestState
         }
     }
 }

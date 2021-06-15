@@ -45,12 +45,9 @@ class OtherGame extends ClientGame {
 
         if (desTime < this.time) { //Don't go backwards in time. This will stop any lag backs from appearing, however the interpolation may get closer to the actual time
             desTime = this.time;
-            console.log('Staying constant.');
         }
-        console.log('Behind by ' + floor(gameData.time - desTime));
         if (gameData.time - desTime < tooClose) { //If the interpolation is too close,
             desTime = gameData.time - behindBy; //Go back to the desired amount. This will cause a lagback
-            console.log('Jumping back');
         }
 
         if (desTime < 0) {
@@ -61,7 +58,7 @@ class OtherGame extends ClientGame {
         }
 
         //The below code finds a game state that is just before desired time. It then sets it's state to that, then updates to be exactly at desTime
-        this.previousStates.push(gameData);
+        if (data.changed) this.previousStates.push(gameData);
         let mostRecentStateBeforeDesTimeIndex = -1; //That's quite a long name...
         for (let i = 0; i < this.previousStates.length; i++) {
             if (this.previousStates[i].time <= desTime) { //It is just before the desired time
