@@ -8,6 +8,8 @@ class OtherGame extends ClientGame {
         this.prevState = this.initialGameState;
         this.curState = this.initialGameState;
 
+        this.lastReceivedInputTime = -1; //The time when the most recent input was received
+
         this.previousStates = [];
         this.lastReceived = 0; //When the last data was receieved
         this.receivedTimes = []; //An array of the amount of time since the previous time was receieved
@@ -16,7 +18,12 @@ class OtherGame extends ClientGame {
 
     interpolateUpdate() {
         const deltaTime = Date.now() - this.lastFrame;
-        this.updateToTime(this.time + deltaTime);
+
+        //Simulate gravity if there are no more inputs to simulate
+        let gravity = false;
+        if (this.time > this.lastReceivedInputTime) gravity = true;
+        this.updateToTime(this.time + deltaTime, gravity);
+
         this.lastFrame = Date.now();
     }
 
@@ -37,6 +44,8 @@ class OtherGame extends ClientGame {
         for (let encodedInp of inputs) {
             const decoded = Input.decode(encodedInp);
             this.inputs[decoded.id] = decoded;
+            if (decoded.time > this.lastReceivedInputTime)
+                this.lastReceivedInputTime = decoded.time;
         }
 
         const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
@@ -72,7 +81,7 @@ class OtherGame extends ClientGame {
         } else {
             this.goToStart();
         }
-        this.updateToTime(desTime); //Jump from the state just before desTime to exactly at desTime, replaying any inputs that happened during that time
+        this.updateToTime(desTime, false); //Jump from the state just before desTime to exactly at desTime, replaying any inputs that happened during that time
 
         this.lastFrame = Date.now();
     }

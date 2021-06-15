@@ -61,7 +61,7 @@ class Player {
     }
 
     physicsUpdate() {
-        //this.serverGame.updateFromStartToTime(Date.now() - this.serverGame.startTime);
+        this.serverGame.physicsUpdate();
     }
 
     getId() {

@@ -180,7 +180,7 @@ class MyGame extends ClientGame {
 
         this.goToGameState(myGameData);
 
-        this.updateToTime(Date.now() - this.startTime); //Recatch-up the game
+        this.updateToTime(Date.now() - this.startTime, false); //Recatch-up the game
         this.lastFrame = Date.now();
     }
 
@@ -192,7 +192,6 @@ class MyGame extends ClientGame {
         this.inputsQueue = []; //Discard inputs that no longer need to be sent
         return inps;
     }
-
 }
 
 module.exports = MyGame;

@@ -8,6 +8,14 @@ class ServerGame extends Game {
         this.lastSentTime = -1;
     }
 
+    physicsUpdate() {
+        this.updateToTime(Date.now() - this.startTime, true);
+        if (this.time - 7*1000 >= this.latestState.time) {
+            //If no inputs recieved for 7 seconds, force the state to update
+            this.updateGameState();
+        }
+    }
+
     gotInputs(inps) {
         if (inps.length == 0) return;
         let latestTime = 0;
@@ -16,7 +24,8 @@ class ServerGame extends Game {
             this.addInput(inp);
             if (inp.time > latestTime) latestTime = inp.time;
         }
-        this.updateFromStartToTime(latestTime);
+        this.updateFromStartToTime(latestTime, false); //Updates to the last known time
+        this.physicsUpdate(); //Updates to the current time (simulating gravity)
     }
 
     addInput(inp) {
