@@ -10,7 +10,6 @@ const piecesJSON = require('./pieces.js');
  *  Rename timer variables
  *  Remove extra variables
  *  Fix number of points for double (should be 300)
- *  Make push down points consistent
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
  *  Add redraw
@@ -23,6 +22,7 @@ const piecesJSON = require('./pieces.js');
  *  Add RNG
  *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
  *  Add second player
+ *  Make push down points consistent
  */
 
 class Game {
@@ -166,14 +166,9 @@ class Game {
         this.lastFrame = Date.now();
     }
 
-    updateFromStartToTime(t, gravity) {
-        this.goToStart(); //TODO Don't go to start every time. Instead, save the game state every ~10 seconds and reset to there
-        this.updateToTime(t, gravity);
-    }
-
     updateToTime(t, gravity) { //Go from the current time to t and do all inputs that happened during that time
         if (this.time > t) {
-            console.log('Cannot go backwards to ' + t);
+            console.log('Cannot go backwards to ' + t + ' from ' + this.time);
         }
         let nextInputId = this.inputs.length; //The id of the next input that should be played. If none should be played, it will be inputs.length
 
@@ -242,13 +237,8 @@ class Game {
             if (input) { //It is time for the input to be performed
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
                 if (input.vertDir) {
-                    const timeSinceLastMoveDown = this.time - this.lastMoveDown;
-                    const diffFromSoftDrop = Math.abs(timeSinceLastMoveDown - this.softDropSpeed);
-                    if (diffFromSoftDrop <= this.softDropAccuracy && this.level < 19) { //20ms is an arbitrary number because of inconsistent frame rate
-                        this.pushDownPoints++; //Pushing down
-                    } else {
-                        this.pushDownPoints = 0;
-                    }
+                    if (input.softDrop) this.pushDownPoints++; //Pushing down
+                    else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
                 }
                 if (moveData.placePiece) {
@@ -504,12 +494,13 @@ class GameState {
 }
 
 class Input {
-    constructor(id, time, horzDir, vertDir, rot) {
+    constructor(id, time, horzDir, vertDir, rot, softDrop) {
         this.id = id;
         this.time = time;
         this.horzDir = horzDir;
         this.vertDir = vertDir;
         this.rot = rot;
+        this.softDrop = softDrop;
     }
 
     encode() {
@@ -518,13 +509,14 @@ class Input {
             time: this.time, //TODO encode the direction using bits to be much more compact
             horzDir: this.horzDir,
             vertDir: this.vertDir,
-            rot: this.rot
+            rot: this.rot,
+            softDrop: this.softDrop
             //dir: this.horzDir + ',' + this.vertDir + ',' + this.rot
         }
     }
 
     static decode(data) {
-        return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot);
+        return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot, data.softDrop);
     }
 }
 
