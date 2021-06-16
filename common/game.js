@@ -16,6 +16,7 @@ const piecesJSON = require('./pieces.js');
  *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
  *  Fix in game timer display
  *  Add graphics
+ *  Round decimals to make game more deterministic
  *
  * DONE
  *  Add line clears
@@ -23,6 +24,7 @@ const piecesJSON = require('./pieces.js');
  *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
  *  Add second player
  *  Make push down points consistent
+ *  Add lines clears for other game
  */
 
 class Game {
@@ -113,8 +115,6 @@ class Game {
         this.animatingLines = [];
         this.maxAnimationTime = 20 * msPerFrame;
         this.maxFlashTime = 20 * msPerFrame;
-        this.flashTime = 0;
-        this.flashAmount = 4;
 
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
@@ -158,7 +158,6 @@ class Game {
         this.spawnNextPiece = state.spawnNextPiece;
         this.animationTime = state.animationTime;
         this.animatingLines = state.animatingLines;
-        this.flashTime = state.flashTime;
 
         this.time = state.time;
 
@@ -215,10 +214,9 @@ class Game {
         this.time += deltaTime;
         //if (!this.alive) return;
 
-        //Play a line clear animation
-        if (this.time <= this.animationTime) {
-            //Line clear animation. Not needed on server
-        } else if (this.animatingLines.length > 0) {
+        if (this.time <= this.animationTime) { //Line clear animation
+            this.playLineClearingAnimation();
+        } else if (this.animatingLines.length > 0) { //Line clear animation finished
             this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
         }
 
@@ -356,9 +354,30 @@ class Game {
             this.animatingLines = linesCleared; //Which lines are being animated (and cleared)
             if (linesCleared.length == 3) {
                 //Tritris!
-                this.flashTime = this.time + this.maxFlashTime;
+                //this.flashTime = this.time + this.maxFlashTime;
             }
         }
+    }
+
+    playLineClearingAnimation() {
+        const percentDone = (this.animationTime - this.time) / this.maxAnimationTime;
+        const clearingCol = Math.floor(percentDone * this.w);
+        for (const row of this.animatingLines) {
+            //Clear as many cols as necessary
+            for (let col = this.w; col >= clearingCol; col--) {
+                //Clear from middle to left (triangle by traingle)
+                const colPos = Math.floor(col / 2);
+                if (col % 2 == 1) this.grid.removeRightTri(row, colPos);
+                else this.grid.removeLeftTri(row, colPos);
+
+                //Clear from middle to right
+                const otherColPos = this.w - 1 - colPos;
+                if (col % 2 == 0)
+                    this.grid.removeRightTri(row, otherColPos);
+                else this.grid.removeLeftTri(row, otherColPos);
+            }
+        }
+        //this.redraw = true;
     }
 
     setSpeed() {
@@ -483,7 +502,6 @@ class GameState {
         this.spawnNextPiece = game.spawnNextPiece;
         this.animationTime = game.animationTime;
         this.animatingLines = game.animatingLines;
-        this.flashTime = game.flashTime;
 
         this.doneInputId = game.doneInputId;
     }

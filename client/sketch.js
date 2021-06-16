@@ -108,6 +108,9 @@ function showConsole() {
 function runGame() {
     game.clientUpdate();
     otherGame.interpolateUpdate();
+    if (game.isFlashing()) {
+        background(150);
+    }
     showGame(game, 10, 10);
     showGame(otherGame, 550, 10);
 }

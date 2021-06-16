@@ -17,47 +17,26 @@ class ClientGame extends Game {
             color(250, 100, 25), //Orange Razor
             color(255), //White Ninja
         ];
+
+        this.flashAmount = 4;
     }
 
-    playLineClearingAnimation() {
-        const percentDone = (this.animationTime - this.time) / this.maxAnimationTime;
-        const clearingCol = Math.floor(percentDone * this.w);
-        for (const row of this.animatingLines) {
-            //Clear as many cols as necessary
-            for (let col = this.w; col >= clearingCol; col--) {
-                //Clear from middle to left (triangle by traingle)
-                const colPos = Math.floor(col / 2);
-                if (col % 2 == 1) this.grid.removeRightTri(row, colPos);
-                else this.grid.removeLeftTri(row, colPos);
-
-                //Clear from middle to right
-                const otherColPos = this.w - 1 - colPos;
-                if (col % 2 == 0)
-                    this.grid.removeRightTri(row, otherColPos);
-                else this.grid.removeLeftTri(row, otherColPos);
+    isFlashing() { //Returns whether or not to flash white
+        if (this.time <= this.animationTime && this.animatingLines.length == 3) {
+            //Currently play tritris line clear animation
+            const timePassed = this.animationTime - this.time;
+            const interval = Math.floor(this.flashAmount * timePassed / this.maxFlashTime);
+            this.redraw = true; //If flashing, redraw each frame
+            if (interval % 2 == 0) {
+                return true;
+            } else {
+                return false;
             }
         }
-        //this.redraw = true;
+        return false;
     }
 
     show(x, y, w, h, paused, oldGraphics, showGridLines, showStats, showFlash) {
-        //Play flashing animation
-        const flashing = this.flashTime >= this.time;
-        if (!this.redraw && !flashing) return; //If not flashing, only draw when necessary
-
-        if (flashing && showFlash) {
-            const timePassed = this.flashTime - this.time;
-            const interval = Math.floor(this.flashAmount * timePassed / this.maxFlashTime);
-            if (interval % 2 == 0) {
-                //background(150);
-            } else { //TODO Readd flash animation!
-                //background(100);
-            }
-            this.redraw = true; //If flashing, redraw each frame
-        } else {
-            //background(100);
-        }
-
         noStroke();
         fill(0);
         rect(x, y, w, h);
@@ -198,7 +177,7 @@ class ClientGame extends Game {
             );
         }
 
-        if (!flashing) this.redraw = false;
+        //if (!flashing) this.redraw = false;
     }
 }
 
