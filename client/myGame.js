@@ -51,6 +51,7 @@ class MyGame extends ClientGame {
             if (!this.isValid(this.currentPiece)) {
                 this.alive = false;
             }
+            this.redraw = true;
         }
 
         if (this.currentPiece !== null) {
@@ -177,6 +178,7 @@ class MyGame extends ClientGame {
 
         this.updateToTime(Date.now() - this.startTime, false); //Recatch-up the game
         this.lastFrame = Date.now();
+        this.redraw = true;
     }
 
     getInputs() {

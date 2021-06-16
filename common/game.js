@@ -12,7 +12,6 @@ const piecesJSON = require('./pieces.js');
  *  Fix number of points for double (should be 300)
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
- *  Add redraw
  *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
  *  Fix in game timer display
  *  Add graphics
@@ -25,6 +24,7 @@ const piecesJSON = require('./pieces.js');
  *  Add second player
  *  Make push down points consistent
  *  Add lines clears for other game
+ *  Add redraw
  */
 
 class Game {
@@ -216,6 +216,7 @@ class Game {
 
         if (this.time <= this.animationTime) { //Line clear animation
             this.playLineClearingAnimation();
+            this.redraw = true;
         } else if (this.animatingLines.length > 0) { //Line clear animation finished
             this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
         }
@@ -227,6 +228,7 @@ class Game {
             if (!this.isValid(this.currentPiece)) {
                 this.alive = false; //If the new piece is already blocked, game over
             }
+            this.redraw = true;
         }
 
         //Piece Movement
@@ -246,6 +248,7 @@ class Game {
 
                     //this.lastMoveDown = this.time; //TODO This is unnecessary?
                 }
+                this.redraw = true;
             } //TODO Once client prediction is implemented, figure out the ordering of playing inputs and moving pieces. What if something happens at the same time?
         }
         //Move down based on timer
@@ -257,6 +260,7 @@ class Game {
             if (moveData.placePiece) {
                 this.placePiece();
             }
+            this.redraw = true;
         }
     }
 
@@ -377,7 +381,7 @@ class Game {
                 else this.grid.removeLeftTri(row, otherColPos);
             }
         }
-        //this.redraw = true;
+        this.redraw = true;
     }
 
     setSpeed() {

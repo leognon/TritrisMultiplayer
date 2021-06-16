@@ -37,6 +37,8 @@ class ClientGame extends Game {
     }
 
     show(x, y, w, h, paused, oldGraphics, showGridLines, showStats, showFlash) {
+        if (!this.redraw) return;
+
         noStroke();
         fill(0);
         rect(x, y, w, h);
@@ -85,7 +87,7 @@ class ClientGame extends Game {
             textW + padding + 10,
             txtSize * 4.5 + padding * 2
         );
-        noFill();
+        fill(100);
         stroke(0);
         strokeWeight(3);
         //The box outline
@@ -109,7 +111,7 @@ class ClientGame extends Game {
             scorePos.y + scoreDim.y + cellH
         );
         const nextPieceDim = createVector(cellW * 3, cellW * 3);
-        noFill();
+        fill(100);
         stroke(0);
         strokeWeight(3);
         rect(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y);
@@ -162,7 +164,7 @@ class ClientGame extends Game {
                 textW + padding + 10,
                 txtSize * 2.75 + padding * 2
             );
-            noFill();
+            fill(100);
             stroke(0);
             strokeWeight(3);
             //The box outline
@@ -177,7 +179,7 @@ class ClientGame extends Game {
             );
         }
 
-        //if (!flashing) this.redraw = false;
+        this.redraw = false;
     }
 }
 

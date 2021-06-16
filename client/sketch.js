@@ -25,6 +25,7 @@ function createSocket() {
             game = new MyGame();
             otherGame = new OtherGame();
             nextSendData = Date.now() + config.CLIENT_SEND_DATA;
+            background(100);
         }
     });
     socket.on('data', d => {
@@ -56,7 +57,6 @@ setup = () => {
 }
 
 draw = () => {
-    background(100);
     if (state == states.FINDING_MATCH) {
         background(0);
         fill(255);
@@ -70,7 +70,7 @@ draw = () => {
         }
         runGame();
     }
-    showConsole();
+    //showConsole();
 }
 
 playing = 0;
@@ -93,7 +93,6 @@ console.log = (a, b, c, d) => {
         cLog.splice(0, 1);
     }
 }
-
 function showConsole() {
     fill(100);
     rect(855, 0, 300, height);
@@ -116,7 +115,6 @@ function runGame() {
 }
 
 function showGame(g, x, y) {
-    g.redraw = true;
     g.show(x, y, 300, 300*2, false, true, true, true, true);
 }
 

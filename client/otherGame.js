@@ -84,6 +84,7 @@ class OtherGame extends ClientGame {
         this.updateToTime(desTime, false); //Jump from the state just before desTime to exactly at desTime, replaying any inputs that happened during that time
 
         this.lastFrame = Date.now();
+        this.redraw = true;
     }
 }
 
