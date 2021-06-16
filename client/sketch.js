@@ -8,9 +8,12 @@ const OtherGame = require('../client/otherGame.js');
 new p5(() => {
 let socket;
 
-let state = states.FINDING_MATCH;
+let state = states.LOADING;
 let game;
 let otherGame;
+
+let piecesImage; //The spritesheet
+let pieceImages = []; //The individual images
 
 let nextSendData = 0;
 
@@ -53,11 +56,25 @@ function createSocket() {
 
 setup = () => {
     createCanvas(windowWidth, windowHeight);
-    createSocket();
+    piecesImage = loadImage('../client/piecesImage.png', () => {
+        pieceImages = loadPieces(piecesImage);
+
+        state = states.FINDING_MATCH;
+        createSocket();
+    });
+    FFF_Forward = loadFont('../client/fff-forward.ttf', () => {
+        textFont(FFF_Forward);
+    });
 }
 
 draw = () => {
-    if (state == states.FINDING_MATCH) {
+    if (state == states.LOADING) {
+        background(51);
+        fill(255);
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        text('Loading...', width/2, height/2);
+    } else if (state == states.FINDING_MATCH) {
         background(0);
         fill(255);
         textSize(20);
@@ -115,12 +132,37 @@ function runGame() {
 }
 
 function showGame(g, x, y) {
-    g.show(x, y, 300, 300*2, false, true, true, true, true);
+    g.show(x, y, 300, 300*2, pieceImages, true, true, true);
 }
 
 function sendData() {
     socket.emit('inputs', game.getInputs());
 }
 
+function loadPieces(piecesImage) {
+    let pieceImages = []; //A 2d array of each piece color and their rotations
+    for (let i = 0; i < 2; i++) { //All of the colors (except white)
+        for (let j = 0; j < 3; j++) {
+            pieceImages.push(load4Triangles(i, j, piecesImage));
+        }
+    }
+    pieceImages.push(load4Triangles(0, 3, piecesImage)); //The white ninja
+
+    function load4Triangles(i, j, piecesImage) { //Aaaaaah a function inside a function!!!
+        const triWidth = piecesImage.width / 8;
+        let triangles = [];
+        for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 2; col++) {
+                const x = (j*2 + col) * triWidth; //The j*2 is because each set of 4 is a 2x2 square of triangles
+                const y = (i*2 + row) * triWidth;
+                const imageSlice = piecesImage.get(x, y, triWidth, triWidth);
+                triangles.push(imageSlice); //A single rotation
+            }
+        }
+        return triangles;
+    }
+
+    return pieceImages;
+}
 
 });

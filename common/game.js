@@ -5,8 +5,6 @@ const piecesJSON = require('./pieces.js');
 
 /* TODO
  *
- * TEST ON ACTUAL SERVER!!!
- *
  *  Rename timer variables
  *  Remove extra variables
  *  Fix number of points for double (should be 300)
@@ -14,7 +12,6 @@ const piecesJSON = require('./pieces.js');
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
  *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
  *  Fix in game timer display
- *  Add graphics
  *  Round decimals to make game more deterministic
  *
  * DONE
@@ -25,6 +22,7 @@ const piecesJSON = require('./pieces.js');
  *  Make push down points consistent
  *  Add lines clears for other game
  *  Add redraw
+ *  Add graphics
  */
 
 class Game {

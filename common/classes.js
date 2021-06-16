@@ -93,7 +93,7 @@ class Grid {
         return true;
     }
 
-    show(x, y, w, h, colors, pieceImages, paused, showGridLines, oldGraphics) {
+    show(x, y, w, h, pieceImages, showGridLines) {
         const cellW = w / this.w;
         const cellH = h / this.h;
 
@@ -108,20 +108,16 @@ class Grid {
             for (let j = 0; j <= this.h; j++)
                 line(x, y + j * cellH, x + w, y + j * cellH);
         }
-        if (!paused) {
-            //Draws the triangles in the grid
-            for (let i = 0; i < this.h; i++) {
-                for (let j = 0; j < this.w; j++) {
-                    this.grid[i][j].show(
-                        x + j * cellW,
-                        y + i * cellH,
-                        cellW,
-                        cellH,
-                        colors,
-                        pieceImages,
-                        oldGraphics
-                    );
-                }
+        //Draws the triangles in the grid
+        for (let i = 0; i < this.h; i++) {
+            for (let j = 0; j < this.w; j++) {
+                this.grid[i][j].show(
+                    x + j * cellW,
+                    y + i * cellH,
+                    cellW,
+                    cellH,
+                    pieceImages
+                );
             }
         }
 
@@ -237,11 +233,11 @@ class GridCell {
         return false;
     }
 
-    show(x, y, w, h, colors, pieceImages, oldGraphics) {
+    show(x, y, w, h, pieceImages) {
         for (let row = 0; row < this.tris.length; row++) {
             for (let col = 0; col < this.tris[0].length; col++) {
                 if (this.tris[row][col])
-                    this.tris[row][col].show(x, y, w, h, row, col, colors, pieceImages, oldGraphics);
+                    this.tris[row][col].show(x, y, w, h, row, col, pieceImages);
             }
         }
     }
@@ -252,8 +248,8 @@ class Triangle {
         this.clr = clr;
     }
 
-    show(x, y, w, h, row, col, colors, pieceImages, oldGraphics) {
-        if (oldGraphics) {
+    show(x, y, w, h, row, col, pieceImages) {
+        /*if (oldGraphics) {
             stroke(100);
             strokeWeight(2);
             fill(colors[this.clr]);
@@ -266,7 +262,7 @@ class Triangle {
             } else if (row == 1 && col == 1) {
                 triangle(x, y + h, x + w, y, x + w, y + h);
             }
-        } else {
+        } else {*/
             const thisColor = pieceImages[this.clr];
             let rot;
             if (row == 0 && col == 0) { //Top left
@@ -279,7 +275,7 @@ class Triangle {
                 rot = 0;
             }
             image(thisColor[rot], x, y, w, h);
-        }
+        //}
     }
 }
 
@@ -400,7 +396,7 @@ class Piece {
         }
     }
 
-    showAt(x, y, w, h, colors, pieceImages, oldGraphics) {
+    showAt(x, y, w, h, pieceImages) {
         const dim = 3;//max(this.grid.length, this.grid[0].length);
         const cellW = w / dim;
         const cellH = h / dim;
@@ -414,13 +410,11 @@ class Piece {
             centerY,
             w / dim,
             h / dim,
-            colors,
             pieceImages,
-            oldGraphics
         );
     }
 
-    show(originX, originY, cellW, cellH, colors, pieceImages, oldGraphics) {
+    show(originX, originY, cellW, cellH, pieceImages) {
         originX += this.pos.x * cellW;
         originY += this.pos.y * cellH;
         for (let row = 0; row < this.grid.length; row++) {
@@ -430,9 +424,7 @@ class Piece {
                     originY + row * cellH,
                     cellW,
                     cellH,
-                    colors,
-                    pieceImages,
-                    oldGraphics
+                    pieceImages
                 );
             }
         }

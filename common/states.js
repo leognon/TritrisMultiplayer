@@ -1,5 +1,6 @@
 const states = {
-    FINDING_MATCH: 0,
-    INGAME: 1
+    LOADING: 0,
+    FINDING_MATCH: 1,
+    INGAME: 2
 }
 module.exports = states;

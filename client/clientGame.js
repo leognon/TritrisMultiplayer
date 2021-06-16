@@ -36,7 +36,7 @@ class ClientGame extends Game {
         return false;
     }
 
-    show(x, y, w, h, paused, oldGraphics, showGridLines, showStats, showFlash) {
+    show(x, y, w, h, pieceImages, showGridLines, showStats, showFlash) {
         if (!this.redraw) return;
 
         noStroke();
@@ -46,9 +46,9 @@ class ClientGame extends Game {
         const cellW = w / this.w;
         const cellH = h / this.h;
 
-        this.grid.show(x, y, w, h, this.colors, this.pieceImages, paused, showGridLines, oldGraphics);
-        if (this.currentPiece && !paused) {
-            this.currentPiece.show(x, y, cellW, cellH, this.colors, this.pieceImages, oldGraphics);
+        this.grid.show(x, y, w, h, pieceImages, showGridLines);
+        if (this.currentPiece) {
+            this.currentPiece.show(x, y, cellW, cellH, pieceImages);
         }
 
         const txtSize = 20;
@@ -115,28 +115,26 @@ class ClientGame extends Game {
         stroke(0);
         strokeWeight(3);
         rect(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y);
-        if (!paused && this.nextPiece) {
+        if (this.nextPiece) {
             if (this.nextSingles == 0) { //Show next piece normally
                 this.nextPiece.showAt(
                     nextPiecePos.x,
                     nextPiecePos.y,
                     nextPieceDim.x,
                     nextPieceDim.y,
-                    this.colors,
-                    this.pieceImages,
-                    oldGraphics
+                    pieceImages
                 );
             } else if (this.nextSingles == 2) { //Show 3 Ninjas coming up
                 const spacingX = nextPieceDim.x / 7;
                 const spacingY = nextPieceDim.y / 7;
-                this.nextPiece.showAt(nextPiecePos.x - spacingX, nextPiecePos.y - spacingY, nextPieceDim.x, nextPieceDim.y, this.colors, this.pieceImages, oldGraphics);
-                this.nextPiece.showAt(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y, this.colors, this.pieceImages, oldGraphics);
-                this.nextPiece.showAt(nextPiecePos.x + spacingX, nextPiecePos.y + spacingY, nextPieceDim.x, nextPieceDim.y, this.colors, this.pieceImages, oldGraphics);
+                this.nextPiece.showAt(nextPiecePos.x - spacingX, nextPiecePos.y - spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(nextPiecePos.x + spacingX, nextPiecePos.y + spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
             } else if (this.nextSingles == 1) { //Show 2 ninjas coming up
                 const spacingX = nextPieceDim.x / 7;
                 const spacingY = nextPieceDim.y / 7;
-                this.nextPiece.showAt(nextPiecePos.x - spacingX/2, nextPiecePos.y - spacingY/2, nextPieceDim.x, nextPieceDim.y, this.colors, this.pieceImages, oldGraphics);
-                this.nextPiece.showAt(nextPiecePos.x + spacingX/2, nextPiecePos.y + spacingY/2, nextPieceDim.x, nextPieceDim.y, this.colors, this.pieceImages, oldGraphics);
+                this.nextPiece.showAt(nextPiecePos.x - spacingX/2, nextPiecePos.y - spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(nextPiecePos.x + spacingX/2, nextPiecePos.y + spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
             }
         }
 
