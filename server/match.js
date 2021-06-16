@@ -34,7 +34,7 @@ class Match {
             //The current game state of the player and the inputs which have not been
             //sent. The player will go to a previous state that had been sent, then
             //begin performing inputs to take them to this state.
-            data.players[p.getId()] = p.serverGame.getGameStateAndInputs();
+            data.players[p.getId()] = p.getGameStateAndInputs();
         }
         for (const p of this.players) {
             //The authoratative state at time t, and the input id that has been received
@@ -61,7 +61,7 @@ class Player {
     }
 
     physicsUpdate() {
-        this.serverGame.updateFromStartToTime(Date.now() - this.serverGame.startTime);
+        this.serverGame.physicsUpdate();
     }
 
     getId() {
@@ -70,6 +70,10 @@ class Player {
 
     gotData(data) {
         this.serverGame.gotInputs(data);
+    }
+
+    getGameStateAndInputs() {
+        return this.serverGame.getGameStateAndInputs();
     }
 
     getGameState() {

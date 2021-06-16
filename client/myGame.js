@@ -55,7 +55,7 @@ class MyGame extends ClientGame {
 
         if (this.currentPiece !== null) {
             //If either left is pressed or right is pressed and down isn't
-            const { horzDirection, rotation, moveDown } = this.getCurrentInputs();
+            const { horzDirection, rotation, moveDown, softDrop } = this.getCurrentInputs();
             if (horzDirection != 0 || rotation != 0 || moveDown) {
                 this.redraw = true; //A piece has moved, so the game must be redrawn
                 const moveData = this.movePiece(horzDirection, rotation, moveDown);
@@ -76,9 +76,15 @@ class MyGame extends ClientGame {
                 }
 
                 const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
-                const inp = new Input(this.inputId++, currentTime, horzDirection, moveDown, rotation);
+                const inp = new Input(this.inputId++, currentTime, horzDirection, moveDown, rotation, softDrop);
                 this.addInput(inp);
 
+                //If the piece was able to just move down, reset the timer
+                if (moveDown) {
+                    if (softDrop) this.pushDownPoints++; //Pushing down
+                    else this.pushDownPoints = 0;
+                    this.lastMoveDown = this.time;
+                }
                 if (moveData.placePiece) {
                     this.score += this.pushDownPoints;
                     this.pushDownPoints = 0;
@@ -88,9 +94,6 @@ class MyGame extends ClientGame {
 
                     this.zCharged = false; //After a piece is placed, don't rotate the next piece
                     this.xCharged = false;
-                } else {
-                    //If the piece was able to just move down, reset the timer
-                    if (moveDown) this.lastMoveDown = this.time;
                 }
             }
         }
@@ -132,22 +135,14 @@ class MyGame extends ClientGame {
         else if (xPressed) rotation = 1;
         else if (zPressed) rotation = -1;
 
+        let softDrop = false;
         let pieceSpeed = this.pieceSpeed; //The default piece speed based on the current level
         if (keyIsDown(this.controls.down)) {
             //Pressing down moves at 19 speed
             pieceSpeed = min(pieceSpeed, this.softDropSpeed);
+            softDrop = true;
         }
         let moveDown = this.time >= this.lastMoveDown + pieceSpeed;
-        if (moveDown) {
-            //TODO Level 19+ speeds will always register as push down????
-            const timeSinceLastMoveDown = this.time - this.lastMoveDown;
-            const diffFromSoftDrop = Math.abs(timeSinceLastMoveDown - this.softDropSpeed);
-            if (diffFromSoftDrop <= this.softDropAccuracy && this.level < 19) { //Accounts for varying framerate
-                this.pushDownPoints++; //Pushing down
-            } else {
-                this.pushDownPoints = 0;
-            }
-        }
 
         this.downWasPressed = keyIsDown(this.controls.down);
         this.leftWasPressed = keyIsDown(this.controls.left);
@@ -158,7 +153,7 @@ class MyGame extends ClientGame {
         if (!keyIsDown(this.controls.clock)) this.xCharged = false;
 
         return {
-            horzDirection, rotation, moveDown
+            horzDirection, rotation, moveDown, softDrop
         };
     }
 
@@ -180,7 +175,7 @@ class MyGame extends ClientGame {
 
         this.goToGameState(myGameData);
 
-        this.updateToTime(Date.now() - this.startTime); //Recatch-up the game
+        this.updateToTime(Date.now() - this.startTime, false); //Recatch-up the game
         this.lastFrame = Date.now();
     }
 
@@ -192,7 +187,6 @@ class MyGame extends ClientGame {
         this.inputsQueue = []; //Discard inputs that no longer need to be sent
         return inps;
     }
-
 }
 
 module.exports = MyGame;

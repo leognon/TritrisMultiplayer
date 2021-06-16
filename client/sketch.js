@@ -73,6 +73,14 @@ draw = () => {
     showConsole();
 }
 
+playing = 0;
+keyPressed = () => {
+    if (key == 'p') {
+        //A fun compact way to alternate btwn these functions
+        [loop, noLoop][playing^=1]();
+    }
+}
+
 let cLog = [];
 const origConsoleLog = console.log;
 console.log = (a, b, c, d) => {

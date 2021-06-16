@@ -10,17 +10,19 @@ const piecesJSON = require('./pieces.js');
  *  Rename timer variables
  *  Remove extra variables
  *  Fix number of points for double (should be 300)
- *  Add second player
- *  Make push down points consistent
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
  *  Add redraw
  *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
+ *  Fix in game timer display
+ *  Add graphics
  *
  * DONE
  *  Add line clears
  *  Add RNG
  *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
+ *  Add second player
+ *  Make push down points consistent
  */
 
 class Game {
@@ -116,7 +118,7 @@ class Game {
 
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
-        this.lastestState = new GameState(this); //The game state with the highest input id completed
+        this.latestState = new GameState(this); //The game state with the highest input id completed
 
         this.initialGameState = new GameState(this);
     }
@@ -164,14 +166,9 @@ class Game {
         this.lastFrame = Date.now();
     }
 
-    updateFromStartToTime(t) {
-        this.goToStart(); //TODO Don't go to start every time. Instead, save the game state every ~10 seconds and reset to there
-        this.updateToTime(t);
-    }
-
-    updateToTime(t) { //Go from the current time to t and do all inputs that happened during that time
+    updateToTime(t, gravity) { //Go from the current time to t and do all inputs that happened during that time
         if (this.time > t) {
-            console.log('Cannot go backwards to ' + t);
+            console.log('Cannot go backwards to ' + t + ' from ' + this.time);
         }
         let nextInputId = this.inputs.length; //The id of the next input that should be played. If none should be played, it will be inputs.length
 
@@ -181,6 +178,7 @@ class Game {
                 break;
             }
         }
+
         while (this.time < t) {
             //TODO Make deltaTime softDropSpeed??? Currently, any soft drops will be an Input and the nextInput algorithm will jump to them. What if the user doesn't send inputs though?
             let deltaTime = this.pieceSpeed; // this.pieceSpeed/100; //TODO Figure out deltaTime stuff in the server
@@ -198,15 +196,20 @@ class Game {
                     nextInputId++; //Move onto the next input. There is a chance the currentPiece is null and the input will be skipped
                 }
             }
-            this.update(deltaTime, input);
+            //const gravity = !input && nextInputId >= this.inputs.length; //If there are no more inputs to do, then simulate natural gravity
+            this.update(deltaTime, input, gravity);
             if (input && input.id > this.doneInputId) {
                 this.doneInputId = input.id; //Math.max(this.doneInputId, input.id); //Update the highest input id that has been completed
-                this.lastestState = new GameState(this);
+                this.updateGameState();
             }
         }
     }
 
-    update(deltaTime, input) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
+    updateGameState() {
+        this.latestState = new GameState(this);
+    }
+
+    update(deltaTime, input, gravity) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
         this.lastFrame = Date.now();
 
         this.time += deltaTime;
@@ -231,17 +234,11 @@ class Game {
         //Piece Movement
         //TODO Figure out how to make this whole thing a while loop. Or just don't increase deltaTime if inputs are being played...
         if (this.currentPiece !== null) {
-            //Move down based on timer
             if (input) { //It is time for the input to be performed
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
                 if (input.vertDir) {
-                    const timeSinceLastMoveDown = this.time - this.lastMoveDown;
-                    const diffFromSoftDrop = Math.abs(timeSinceLastMoveDown - this.softDropSpeed);
-                    if (diffFromSoftDrop <= this.softDropAccuracy && this.level < 19) { //20ms is an arbitrary number because of inconsistent frame rate
-                        this.pushDownPoints++; //Pushing down
-                    } else {
-                        this.pushDownPoints = 0;
-                    }
+                    if (input.softDrop) this.pushDownPoints++; //Pushing down
+                    else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
                 }
                 if (moveData.placePiece) {
@@ -249,9 +246,19 @@ class Game {
                     this.score += this.pushDownPoints;
                     this.pushDownPoints = 0;
 
-                    this.lastMoveDown = this.time;
+                    //this.lastMoveDown = this.time; //TODO This is unnecessary?
                 }
             } //TODO Once client prediction is implemented, figure out the ordering of playing inputs and moving pieces. What if something happens at the same time?
+        }
+        //Move down based on timer
+        const shouldMoveDown = gravity && this.time >= this.lastMoveDown + this.pieceSpeed;
+        if (this.currentPiece !== null && shouldMoveDown) {
+            const moveData = this.movePiece(0, 0, true);
+            this.pushDownPoints = 0;
+            this.lastMoveDown = this.time;
+            if (moveData.placePiece) {
+                this.placePiece();
+            }
         }
     }
 
@@ -487,12 +494,13 @@ class GameState {
 }
 
 class Input {
-    constructor(id, time, horzDir, vertDir, rot) {
+    constructor(id, time, horzDir, vertDir, rot, softDrop) {
         this.id = id;
         this.time = time;
         this.horzDir = horzDir;
         this.vertDir = vertDir;
         this.rot = rot;
+        this.softDrop = softDrop;
     }
 
     encode() {
@@ -501,13 +509,14 @@ class Input {
             time: this.time, //TODO encode the direction using bits to be much more compact
             horzDir: this.horzDir,
             vertDir: this.vertDir,
-            rot: this.rot
+            rot: this.rot,
+            softDrop: this.softDrop
             //dir: this.horzDir + ',' + this.vertDir + ',' + this.rot
         }
     }
 
     static decode(data) {
-        return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot);
+        return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot, data.softDrop);
     }
 }
 
