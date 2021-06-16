@@ -10,18 +10,19 @@ const piecesJSON = require('./pieces.js');
  *  Rename timer variables
  *  Remove extra variables
  *  Fix number of points for double (should be 300)
- *  Add second player
  *  Make push down points consistent
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
  *  Add redraw
  *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
  *  Fix in game timer display
+ *  Add graphics
  *
  * DONE
  *  Add line clears
  *  Add RNG
  *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
+ *  Add second player
  */
 
 class Game {
