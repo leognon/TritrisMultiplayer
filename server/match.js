@@ -17,6 +17,21 @@ class Match {
         this.players.push(new Player(socket));
     }
 
+    hasPlayer(socket) {
+        for (let p of this.players) {
+            if (p.getId() == socket.id) return true;
+        }
+        return false;
+    }
+
+    disconnected(socket) {
+        for (let p of this.players) {
+            if (p.getId() != socket.id) {
+                p.disconnected();
+            }
+        }
+    }
+
     physicsUpdate() {
         for (const p of this.players) {
             p.physicsUpdate();
@@ -58,6 +73,10 @@ class Player {
         this.serverGame = new ServerGame();
 
         this.socket.on('inputs', this.gotData.bind(this));
+    }
+
+    disconnected() {
+        this.socket.emit('matchOver');
     }
 
     physicsUpdate() {

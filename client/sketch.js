@@ -50,6 +50,11 @@ function createSocket() {
             otherGame.gotData(otherData);
         }, config.FAKE_LATENCY); //Some fake latency
     });
+    socket.on('matchOver', () => {
+        game = null;
+        otherGame = null;
+        state = states.FINDING_MATCH;
+    });
     socket.on('disconnect', () => {
         console.log('Disconnected!!!');
         noLoop();

@@ -25,6 +25,9 @@ io.on('connection', socket => {
         match = new Match(...Object.values(sockets));
     }
     socket.on('disconnect', () => {
+        if (match.hasPlayer(socket)) {
+            match.disconnected(socket);
+        }
         console.log(socket.id + ' disconnected');
         match = undefined;
         delete sockets[socket.id];
