@@ -7,6 +7,10 @@ const piecesJSON = require('./pieces.js');
  *
  *  Rename timer variables
  *  Remove extra variables
+ *  Proper queue system
+ *  Lose games
+ *  Better score display - Show score differential
+ *  Fix lagback on otherGame at beginning of game (and console log about backward by 350)
  *  Fix number of points for double (should be 300)
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
@@ -23,6 +27,7 @@ const piecesJSON = require('./pieces.js');
  *  Add lines clears for other game
  *  Add redraw
  *  Add graphics
+ *  Sound effects
  */
 
 class Game {
@@ -292,14 +297,16 @@ class Game {
         const row = this.currentPiece.getBottomRow();
 
         //Only clear lines if the next piece is not a triangle, or the next piece is a triangle, but it is a new triplet
+        let numLinesCleared;
         if (this.nextPieceIndex != 0 || this.nextSingles == 2) {
-            this.clearLines(); //Clear any complete lines
+            numLinesCleared = this.clearLines(); //Clear any complete lines
         }
 
         const entryDelay = this.calcEntryDelay(row);
         this.spawnNextPiece = this.time + entryDelay;
 
         this.currentPiece = null; //There is an entry delay for the next piece
+        return numLinesCleared;
     }
 
     spawnPiece() {
@@ -334,8 +341,10 @@ class Game {
         this.lines += this.animatingLines.length;
 
         //Increase the level after a certain amt of lines, then every 10 lines
+        let playSound = false;
         if (this.shouldIncreaseLevel()) {
             this.level++;
+            playSound = true;
             this.setSpeed();
         }
         this.score += this.scoreWeights[this.animatingLines.length] * (this.level + 1);
@@ -346,6 +355,7 @@ class Game {
             this.grid.removeLine(row);
         }
         this.animatingLines = [];
+        return playSound;
     }
 
     clearLines() {
@@ -354,11 +364,8 @@ class Game {
             //Set the time for when to stop animating
             this.animationTime = this.time + this.maxAnimationTime;
             this.animatingLines = linesCleared; //Which lines are being animated (and cleared)
-            if (linesCleared.length == 3) {
-                //Tritris!
-                //this.flashTime = this.time + this.maxFlashTime;
-            }
         }
+        return linesCleared.length;
     }
 
     playLineClearingAnimation() {

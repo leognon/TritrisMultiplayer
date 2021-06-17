@@ -33,6 +33,15 @@ class MyGame extends ClientGame {
         this.inputId = 0;
 
         this.lastFrame = Date.now();
+
+        this.soundsToPlay = {
+            move: false,
+            fall: false,
+            clear: false,
+            tritris: false,
+            levelup: false,
+            topout: false, //TODO Add topout sounds
+        }
     }
 
     clientUpdate() {
@@ -42,7 +51,9 @@ class MyGame extends ClientGame {
         if (this.time <= this.animationTime) {
             this.playLineClearingAnimation();
         } else if (this.animatingLines.length > 0) {
-            this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
+            let playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
+            if (playSound)
+                this.soundsToPlay.levelup = true;
         }
 
         if (this.shouldSpawnPiece()) {
@@ -52,6 +63,7 @@ class MyGame extends ClientGame {
                 this.alive = false;
             }
             this.redraw = true;
+            this.soundsToPlay.fall = true;
         }
 
         if (this.currentPiece !== null) {
@@ -62,6 +74,7 @@ class MyGame extends ClientGame {
                 const moveData = this.movePiece(horzDirection, rotation, moveDown);
 
                 if (moveData.playSound) {
+                    this.soundsToPlay.move = true;
                     //Play move sound
                 }
                 if (moveData.chargeDas) {
@@ -91,7 +104,11 @@ class MyGame extends ClientGame {
                     this.pushDownPoints = 0;
 
                     //Place the piece
-                    this.placePiece();
+                    const numLinesCleared = this.placePiece();
+                    if (numLinesCleared == 3)
+                        this.soundsToPlay.tritris = true;
+                    else if (numLinesCleared > 0)
+                        this.soundsToPlay.clear = true;
 
                     this.zCharged = false; //After a piece is placed, don't rotate the next piece
                     this.xCharged = false;
@@ -189,6 +206,16 @@ class MyGame extends ClientGame {
         this.inputsQueue = []; //Discard inputs that no longer need to be sent
         return inps;
     }
+
+    playSounds(sounds) {
+        for (const s in sounds) {
+            if (this.soundsToPlay[s]) {
+                sounds[s].play();
+                this.soundsToPlay[s] = false;
+            }
+        }
+    }
+
 }
 
 module.exports = MyGame;

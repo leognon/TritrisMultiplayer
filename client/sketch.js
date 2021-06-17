@@ -16,6 +16,7 @@ let backgroundColor = 0;
 
 let piecesImage; //The spritesheet
 let pieceImages = []; //The individual images
+let sounds = {};
 
 let nextSendData = 0;
 
@@ -58,15 +59,21 @@ function createSocket() {
 
 setup = () => {
     createCanvas(windowWidth, windowHeight);
-    piecesImage = loadImage('../client/piecesImage.png', () => {
+    piecesImage = loadImage('../client/assets/piecesImage.png', () => {
         pieceImages = loadPieces(piecesImage);
 
         state = states.FINDING_MATCH;
         createSocket();
     });
-    FFF_Forward = loadFont('../client/fff-forward.ttf', () => {
+    FFF_Forward = loadFont('../client/assets/fff-forward.ttf', () => {
         textFont(FFF_Forward);
     });
+    sounds.move = new Sound('../client/assets/move.wav');
+    sounds.fall = new Sound('../client/assets/fall.wav');
+    sounds.clear = new Sound('../client/assets/clear.wav');
+    sounds.tritris = new Sound('../client/assets/tritris.wav');
+    sounds.levelup = new Sound('../client/assets/levelup.wav');
+    sounds.topout = new Sound('../client/assets/topout.wav');
 }
 
 draw = () => {
@@ -102,6 +109,7 @@ function runGame() {
         }
     }
     showGame(game, 10, 10);
+    game.playSounds(sounds);
     showGame(otherGame, 550, 10);
 }
 
@@ -144,6 +152,26 @@ function loadPieces(piecesImage) {
     }
 
     return pieceImages;
+}
+
+//Modified from https://www.w3schools.com/graphics/game_sound.asp
+class Sound {
+    constructor(src) {
+        this.sound = document.createElement('audio');
+        this.sound.src = src;
+        this.sound.setAttribute('preload', 'auto');
+        this.sound.setAttribute('controls', 'none');
+        this.sound.style.display = 'none';
+        document.body.appendChild(this.sound);
+    }
+
+    setVolume(vol) {
+        this.sound.volume = vol;
+    }
+
+    play() {
+        this.sound.play();
+    }
 }
 
 });
