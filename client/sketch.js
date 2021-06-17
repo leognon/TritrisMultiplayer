@@ -12,6 +12,8 @@ let state = states.LOADING;
 let game;
 let otherGame;
 
+let backgroundColor = 0;
+
 let piecesImage; //The spritesheet
 let pieceImages = []; //The individual images
 
@@ -28,7 +30,7 @@ function createSocket() {
             game = new MyGame();
             otherGame = new OtherGame();
             nextSendData = Date.now() + config.CLIENT_SEND_DATA;
-            background(100);
+            setBackground(100);
         }
     });
     socket.on('data', d => {
@@ -69,13 +71,13 @@ setup = () => {
 
 draw = () => {
     if (state == states.LOADING) {
-        background(51);
+        setBackground(51);
         fill(255);
         textSize(20);
         textAlign(CENTER, CENTER);
         text('Loading...', width/2, height/2);
     } else if (state == states.FINDING_MATCH) {
-        background(0);
+        setBackground(0);
         fill(255);
         textSize(20);
         textAlign(CENTER, CENTER);
@@ -87,45 +89,17 @@ draw = () => {
         }
         runGame();
     }
-    //showConsole();
-}
-
-playing = 0;
-keyPressed = () => {
-    if (key == 'p') {
-        //A fun compact way to alternate btwn these functions
-        [loop, noLoop][playing^=1]();
-    }
-}
-
-let cLog = [];
-const origConsoleLog = console.log;
-console.log = (a, b, c, d) => {
-    let str = a + (b ? (', ' + JSON.stringify(b)) : '') + (c ? (', ' + JSON.stringify(c)) : '') + '\n';
-    if (d) str += 'TOO MANY ARGS!!' + '\n';
-    origConsoleLog(str);
-    cLog.push(str);
-    const maxLen = 50;
-    while (cLog.length > maxLen) {
-        cLog.splice(0, 1);
-    }
-}
-function showConsole() {
-    fill(100);
-    rect(855, 0, 300, height);
-    const fontSize = 12;
-    textSize(fontSize);
-    const txt = cLog.join(' ');
-    const txtHeight = cLog.length * (fontSize + 3);
-    fill(0);
-    text(txt, 860, 813 - txtHeight);
 }
 
 function runGame() {
     game.clientUpdate();
     otherGame.interpolateUpdate();
     if (game.isFlashing()) {
-        background(150);
+        setBackground(150);
+    } else {
+        if (backgroundColor != 100) {
+            setBackground(100);
+        }
     }
     showGame(game, 10, 10);
     showGame(otherGame, 550, 10);
@@ -137,6 +111,13 @@ function showGame(g, x, y) {
 
 function sendData() {
     socket.emit('inputs', game.getInputs());
+}
+
+function setBackground(c) {
+    backgroundColor = c;
+    background(c);
+    if (game) game.redraw = true;
+    if (otherGame) otherGame.redraw = true;
 }
 
 function loadPieces(piecesImage) {
