@@ -6,6 +6,20 @@ body {
     overflow-y: hidden;
 }
 
+.box {
+    background-color: rgb(151, 151, 151);
+    border: 2px solid black;
+    padding: 5px;
+}
+
+#joinDiv {
+    position: absolute;
+    top: 30%;
+    left: 45%;
+    right: 45%;
+    text-align: center;
+}
+
 canvas {
     display: block;
 }

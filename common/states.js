@@ -1,6 +1,7 @@
 const states = {
     LOADING: 0,
-    FINDING_MATCH: 1,
-    INGAME: 2
+    MENU: 1,
+    FINDING_MATCH: 2,
+    INGAME: 3
 }
 module.exports = states;

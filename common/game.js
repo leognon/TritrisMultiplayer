@@ -7,7 +7,6 @@ const piecesJSON = require('./pieces.js');
  *
  *  Rename timer variables
  *  Remove extra variables
- *  Proper queue system
  *  Lose games
  *  Better score display - Show score differential
  *  Fix lagback on otherGame at beginning of game (and console log about backward by 350)
@@ -28,6 +27,7 @@ const piecesJSON = require('./pieces.js');
  *  Add redraw
  *  Add graphics
  *  Sound effects
+ *  Proper queue system
  */
 
 class Game {
@@ -485,7 +485,7 @@ class GameState {
         this.h = game.h;
         this.serializedGrid = game.grid.serialized();
         this.tritrisAmt = game.tritrisAmt;
-        this.startTime = game.startTime; //TODO This might be unnecessary
+        //this.startTime = game.startTime; //TODO This might be unnecessary
         this.time = game.time;
 
         this.seed = game.seed;
@@ -510,7 +510,7 @@ class GameState {
 
         this.spawnNextPiece = game.spawnNextPiece;
         this.animationTime = game.animationTime;
-        this.animatingLines = game.animatingLines;
+        this.animatingLines = [...game.animatingLines];
 
         this.doneInputId = game.doneInputId;
     }

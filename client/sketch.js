@@ -18,6 +18,8 @@ let piecesImage; //The spritesheet
 let pieceImages = []; //The individual images
 let sounds = {};
 
+let dom = {};
+
 let nextSendData = 0;
 
 function createSocket() {
@@ -46,14 +48,15 @@ function createSocket() {
                     break;
                 //}
             }
-            game.gotData(myData);
-            otherGame.gotData(otherData);
+            if (game) game.gotData(myData);
+            if (otherGame) otherGame.gotData(otherData);
         }, config.FAKE_LATENCY); //Some fake latency
     });
     socket.on('matchOver', () => {
         game = null;
         otherGame = null;
-        state = states.FINDING_MATCH;
+        state = states.MENU;
+        dom.joinDiv.style('visibility: visible;');
     });
     socket.on('disconnect', () => {
         console.log('Disconnected!!!');
@@ -67,7 +70,7 @@ setup = () => {
     piecesImage = loadImage('../client/assets/piecesImage.png', () => {
         pieceImages = loadPieces(piecesImage);
 
-        state = states.FINDING_MATCH;
+        state = states.MENU;
         createSocket();
     });
     FFF_Forward = loadFont('../client/assets/fff-forward.ttf', () => {
@@ -79,6 +82,15 @@ setup = () => {
     sounds.tritris = new Sound('../client/assets/tritris.wav');
     sounds.levelup = new Sound('../client/assets/levelup.wav');
     sounds.topout = new Sound('../client/assets/topout.wav');
+
+    dom.joinDiv = select('#joinDiv');
+    dom.joinButton = select('#joinButton');
+    dom.joinButton.mousePressed(() => {
+        if (state == states.MENU) {
+            joinGame();
+            dom.joinDiv.style('visibility: hidden;');
+        }
+    });
 }
 
 draw = () => {
@@ -88,7 +100,10 @@ draw = () => {
         textSize(20);
         textAlign(CENTER, CENTER);
         text('Loading...', width/2, height/2);
-    } else if (state == states.FINDING_MATCH) {
+    } else if (state == states.MENU) {
+        setBackground(120);
+        //dom.joinDiv.style('visibility: visible;');
+     } else if (state == states.FINDING_MATCH) {
         setBackground(0);
         fill(255);
         textSize(20);
@@ -101,6 +116,12 @@ draw = () => {
         }
         runGame();
     }
+}
+
+function joinGame() {
+    socket.emit('joinMatch');
+
+    state = states.FINDING_MATCH;
 }
 
 function runGame() {

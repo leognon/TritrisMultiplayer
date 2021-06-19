@@ -18,7 +18,6 @@ class ServerGame extends Game {
         const maxMoveDownTime = this.pieceSpeed*2 + maxTime; //TODO Idk what the formula for this should be. Also, is this even necessary? People can still cheat by lengthening the time between move downs
         if (this.time - maxTime >= this.lastReceivedTime || this.time - maxMoveDownTime >= this.lastClientMoveDown) {
             //If no inputs recieved for 7 seconds, force the state to update
-            //TODO Figure out why latest state jumps up a ton, then goes back down
             this.goToGameState(this.latestState);
             this.updateToTime(Date.now() - this.startTime, true);
             this.updateGameState();
@@ -41,7 +40,7 @@ class ServerGame extends Game {
         if (latestTime >= this.time) //Don't go back in time. Prevents user from sending old inputs
             this.updateToTime(latestTime, false); //Update all of the newly received inputs
         else
-            console.log(`No back ${this.latestState} to ${latestTime}`);
+            console.log(`Not going back from ${this.time} to ${latestTime}`);
         this.physicsUpdate(); //Updates to the current time (simulating gravity)
     }
 

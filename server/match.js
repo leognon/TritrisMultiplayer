@@ -24,6 +24,15 @@ class Match {
         return false;
     }
 
+    gotInputs(socket, data) {
+        for (let p of this.players) {
+            if (p.getId() == socket.id) {
+                p.gotInputs(data);
+                break;
+            }
+        }
+    }
+
     disconnected(socket) {
         for (let p of this.players) {
             if (p.getId() != socket.id) {
@@ -71,8 +80,6 @@ class Player {
     constructor(socket) {
         this.socket = socket;
         this.serverGame = new ServerGame();
-
-        this.socket.on('inputs', this.gotData.bind(this));
     }
 
     disconnected() {
@@ -86,8 +93,10 @@ class Player {
     getId() {
         return this.socket.id;
     }
+    //TODO Only send data from client if inputsQueue is not empty
+    //TODO Should lastFrame be set to Date.now() after receiving data on the client?
 
-    gotData(data) {
+    gotInputs(data) {
         this.serverGame.gotInputs(data);
     }
 

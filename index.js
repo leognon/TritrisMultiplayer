@@ -8,7 +8,8 @@ const config = require('./common/config.js');
 let sockets = {};
 
 const Match = require('./server/match.js');
-let match;
+let matches = [];
+let queue = []; //A list of socket ids in the queue
 
 app.get('/', (_, res) => {
     res.sendFile(path.join(__dirname, '/client/index.html'));
@@ -20,25 +21,66 @@ app.get('/client/*', (req, res) => {
 io.on('connection', socket => {
     console.log(socket.id + ' connected');
     sockets[socket.id] = socket;
-    socket.emit('id', socket.id);
-    if (Object.keys(sockets).length == 2) {
-        match = new Match(...Object.values(sockets));
-    }
+
+    socket.on('joinMatch', () => {
+        enqueue(socket);
+    });
+
+    socket.on('inputs', data => {
+        const match = getMatch(socket);
+        if (match.found) {
+            match.match.gotInputs(socket, data);
+        }
+    });
+
     socket.on('disconnect', () => {
-        if (match.hasPlayer(socket)) {
-            match.disconnected(socket);
+        const match = getMatch(socket);
+        if (match.found) {
+            matches[match.index].disconnected(socket);
+            matches.splice(match.index, 1);
+        }
+        for (let i = queue.length-1; i >= 0; i--) {
+            if (queue[i].id == socket.id) {
+                queue.splice(i, 1);
+            }
         }
         console.log(socket.id + ' disconnected');
-        match = undefined;
         delete sockets[socket.id];
     });
 });
 
+function getMatch(socket) {
+    for (let i = 0; i < matches.length; i++) {
+        if (matches[i].hasPlayer(socket)) {
+            return {
+                found: true,
+                index: i,
+                match: matches[i]
+            };
+        }
+    }
+    return {
+        found: false,
+    }
+}
+
+function enqueue(socket) {
+    queue.push(socket);
+    if (queue.length == 2) {
+        matches.push(new Match(queue[0], queue[1]));
+        queue.splice(0, 2);
+    }
+}
+
 setInterval(() => {
-    if (match) match.physicsUpdate();
+    for (const match of matches) {
+        match.physicsUpdate();
+    }
 }, config.SERVER_PHYSICS_UPDATE); //Physics update at 60fps
 setInterval(() => {
-    if (match) match.clientsUpdate();
+    for (const match of matches) {
+        match.clientsUpdate();
+    }
 }, config.SERVER_SEND_DATA); //Send new game states to clients at 20fps
 
 //An interactive console to make debugging eaiser
@@ -47,7 +89,7 @@ stdin.addListener("data", (d) => {
     d = d.toString().trim();
     try {
         let g = null;
-        if (match) g = match.players[0].serverGame;
+        if (matches.length > 0) g = matches[0].players[0].serverGame;
         console.log(eval(d));
     } catch (e) {
         console.error('Something went wrong.', e);
