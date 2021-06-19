@@ -4,17 +4,24 @@ const ServerGame = require('../server/serverGame.js');
 class Match {
     constructor(socket1, socket2) {
         console.log('Created match between ' + socket1.id + ' and ' + (socket2 ? socket2.id : 'nobody'));
+        this.seed = Math.random();
+        this.level = 9;
+
         this.players = [];
         this.addPlayer(socket1);
         this.addPlayer(socket2);
 
         for (const p of this.players) {
-            p.sendState(states.INGAME);
+            p.sendState({
+                state: states.INGAME,
+                seed: this.seed,
+                level: this.level
+            });
         }
     }
 
     addPlayer(socket) {
-        this.players.push(new Player(socket));
+        this.players.push(new Player(socket, this.seed, this.level));
     }
 
     hasPlayer(socket) {
@@ -50,7 +57,6 @@ class Match {
     //Sends data to the clients
     clientsUpdate() {
         let data = {
-            serverTime: Date.now(), //TODO serverTime might be unnecessary
             players: {},
             yourData: null
         };
@@ -77,9 +83,9 @@ class Match {
 }
 
 class Player {
-    constructor(socket) {
+    constructor(socket, seed, level) {
         this.socket = socket;
-        this.serverGame = new ServerGame();
+        this.serverGame = new ServerGame(seed, level);
     }
 
     disconnected() {
@@ -93,7 +99,6 @@ class Player {
     getId() {
         return this.socket.id;
     }
-    //TODO Only send data from client if inputsQueue is not empty
     //TODO Should lastFrame be set to Date.now() after receiving data on the client?
 
     gotInputs(data) {
@@ -112,8 +117,8 @@ class Player {
         this.socket.emit('data', data);
     }
 
-    sendState(s) {
-        this.socket.emit('state', s);
+    sendState(data) {
+        this.socket.emit('state', data);
     }
 }
 

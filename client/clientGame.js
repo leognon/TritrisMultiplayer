@@ -1,31 +1,17 @@
-const { Grid, Piece, Triangle } = require('../common/classes.js');
-const config = require('../common/config.js');
-const RandomGenerator = require('random-seed');
-const { Game, Input } = require('../common/game.js');
+const { Game } = require('../common/game.js');
 
 class ClientGame extends Game {
-    constructor() {
-        super();
-
-        //TODO Figure out redraw
-        this.colors = [
-            color(255, 0, 0), //Red boomerang
-            color(0, 255, 0), //Green fortune cookie
-            color(255, 255, 0), //Yellow pencil
-            color(255, 0, 255), //Pink boomerang
-            color(0, 255, 255), //Blue pencil
-            color(250, 100, 25), //Orange Razor
-            color(255), //White Ninja
-        ];
+    constructor(seed, level) {
+        super(seed, level);
 
         this.flashAmount = 4;
     }
 
     isFlashing() { //Returns whether or not to flash white
-        if (this.time <= this.animationTime && this.animatingLines.length == 3) {
+        if (this.time <= this.animatingUntil && this.animatingLines.length == 3) {
             //Currently play tritris line clear animation
-            const timePassed = this.animationTime - this.time;
-            const interval = Math.floor(this.flashAmount * timePassed / this.maxFlashTime);
+            const timePassed = this.animatingUntil - this.time;
+            const interval = Math.floor(this.flashAmount * timePassed / this.maxAnimationTime);
             this.redraw = true; //If flashing, redraw each frame
             if (interval % 2 == 0) {
                 return true;

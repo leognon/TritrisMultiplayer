@@ -3,10 +3,8 @@ const config = require('../common/config.js');
 const ClientGame = require('../client/clientGame');
 
 class OtherGame extends ClientGame {
-    constructor() {
-        super();
-        this.prevState = this.initialGameState;
-        this.curState = this.initialGameState;
+    constructor(seed, level) {
+        super(seed, level);
 
         this.lastReceivedInputTime = -1; //The time when the most recent input was received
 
@@ -57,13 +55,6 @@ class OtherGame extends ClientGame {
         }
         if (gameData.time - desTime < tooClose) { //If the interpolation is too close,
             desTime = gameData.time - behindBy; //Go back to the desired amount. This will cause a lagback
-        }
-
-        if (desTime < 0) {
-            //return; //Game has just started. No updates yet
-        }
-        if (desTime == this.time) {
-            //TODO return?? Don't need to go back
         }
 
         //The below code finds a game state that is just before desired time. It then sets it's state to that, then updates to be exactly at desTime

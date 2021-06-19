@@ -27,31 +27,8 @@ function createSocket() {
         reconnection: false //Do not try to reconnect automatically
     });
 
-    socket.on('state', s => {
-        state = s;
-        if (state == states.INGAME) { //TODO Don't wait for server to start game. Make sure to start ahead of server
-            game = new MyGame();
-            otherGame = new OtherGame();
-            nextSendData = Date.now() + config.CLIENT_SEND_DATA;
-            setBackground(100);
-        }
-    });
-    socket.on('data', d => {
-        //game.gotData(d);
-        setTimeout(() => {
-            const games = d.players;
-            const myData = d.yourData;
-            let otherData;
-            for (let id in games) {
-                //if (id != socket.id) {
-                    otherData = games[id];
-                    break;
-                //}
-            }
-            if (game) game.gotData(myData);
-            if (otherGame) otherGame.gotData(otherData);
-        }, config.FAKE_LATENCY); //Some fake latency
-    });
+    socket.on('state', gotState);
+    socket.on('data', gotData);
     socket.on('matchOver', () => {
         game = null;
         otherGame = null;
@@ -143,8 +120,36 @@ function showGame(g, x, y) {
     g.show(x, y, 300, 300*2, pieceImages, true, true, true);
 }
 
+function gotState(data) {
+    state = data.state;
+    if (state == states.INGAME) {
+        game = new MyGame(data.seed, data.level);
+        otherGame = new OtherGame(data.seed, data.level);
+        nextSendData = Date.now() + config.CLIENT_SEND_DATA;
+        setBackground(100);
+    }
+}
+
+function gotData(d) {
+    setTimeout(() => {
+        const games = d.players;
+        const myData = d.yourData;
+        let otherData;
+        for (let id in games) {
+            //if (id != socket.id) {
+                otherData = games[id];
+                break;
+            //}
+        }
+        if (game) game.gotData(myData);
+        if (otherGame) otherGame.gotData(otherData);
+    }, config.FAKE_LATENCY); //Some fake latency
+};
+
 function sendData() {
-    socket.emit('inputs', game.getInputs());
+    const inps = game.getInputs();
+    if (inps.length > 0)
+        socket.emit('inputs', inps);
 }
 
 function setBackground(c) {
@@ -198,6 +203,12 @@ class Sound {
     play() {
         this.sound.play();
     }
+}
+
+windowResized = () => {
+    resizeCanvas(windowWidth, windowHeight);
+    if (game) game.redraw = true;
+    if (otherGame) otherGame.redraw = true;
 }
 
 });

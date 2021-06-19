@@ -1,12 +1,10 @@
-const { Grid, GridCell, Triangle, Piece } = require('./classes.js');
+const { Grid, Piece } = require('./classes.js');
 const RandomGenerator = require('random-seed');
 const piecesJSON = require('./pieces.js');
 
 
 /* TODO
  *
- *  Rename timer variables
- *  Remove extra variables
  *  Lose games
  *  Better score display - Show score differential
  *  Fix lagback on otherGame at beginning of game (and console log about backward by 350)
@@ -14,7 +12,6 @@ const piecesJSON = require('./pieces.js');
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
  *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
- *  Fix in game timer display
  *  Round decimals to make game more deterministic
  *
  * DONE
@@ -28,10 +25,12 @@ const piecesJSON = require('./pieces.js');
  *  Add graphics
  *  Sound effects
  *  Proper queue system
+ *  Rename timer variables
+ *  Remove extra variables
  */
 
 class Game {
-    constructor(level=9, seed = 'abc123') {
+    constructor(seed, level) {
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -56,9 +55,6 @@ class Game {
         this.scoreWeights = { 1: 100, 2: 400, 3: 1200 };
         //TODO The weights should be 1: 100, 2: 300, 3: 1200!!!!!!!!!!!!!!
 
-        //this.piecesType = 3; //How many triangles are in each piece
-        //if (piecesJSON.pieces.length > 7) this.piecesType = 4; //Quadtris
-
         this.piecesJSON = piecesJSON;
 
         const frameRate = 60.0988; //frames per second
@@ -72,13 +68,11 @@ class Game {
         ];
 
         this.currentPiece = null; //The current piece starts as null
-        this.currentPieceIndex = null;
         this.nextPiece = null; //The next piece starts as a random piece that isn't a single triangles
         this.nextPieceIndex = null;
         this.nextSingles = 0;
         this.bag = [];
         this.spawnPiece(); //Sets the next piece
-        this.firstPieceIndex = this.nextPieceIndex; //Used for saving games
         this.spawnPiece(); //Make next piece current, and pick new next
 
         this.levelSpeeds = {
@@ -104,20 +98,18 @@ class Game {
         this.pieceSpeed = 0;
         this.setSpeed(); //This will correctly set pieceSpeed depending on which level it's starting on
 
-        this.softDropSpeed = msPerFrame * 2;
-        this.pushDownPoints = 0;
-        this.softDropAccuracy = 18; //Bc of inconsistent framerate, soft drop speed may vary. This accounts for that
-        this.lastMoveDown = this.time + 750;
+        this.softDropSpeed = msPerFrame * 2; //The speed when holding down
+        this.pushDownPoints = 0; //The current amount of push down points. Increases when holding down, but resets if released
+        this.lastMoveDown = this.time + 750; //When the last move down was
 
         this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
         //TODO This is unnecessary in the server
 
         this.spawnNextPiece = 0;
 
-        this.animationTime = 0;
-        this.animatingLines = [];
-        this.maxAnimationTime = 20 * msPerFrame;
-        this.maxFlashTime = 20 * msPerFrame;
+        this.animatingUntil = 0; //How long until the line clear animation is done
+        this.animatingLines = []; //Which lines are being cleared/animated
+        this.maxAnimationTime = 20 * msPerFrame; //How long the animation should last
 
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
@@ -131,7 +123,6 @@ class Game {
     }
 
     goToGameState(state) {
-        this.seed = state.seed;
         this.gen = new RandomGenerator(this.seed);
         this.numGens = state.numGens;
         for (let i = 0; i < this.numGens; i++)
@@ -159,12 +150,11 @@ class Game {
         this.lastMoveDown = state.lastMoveDown;
 
         this.spawnNextPiece = state.spawnNextPiece;
-        this.animationTime = state.animationTime;
+        this.animatingUntil = state.animatingUntil;
         this.animatingLines = state.animatingLines;
 
         this.time = state.time;
 
-        //this.updateToTime(Date.now() - this.startTime); //Recatch-up the game
         this.lastFrame = Date.now();
     }
 
@@ -182,7 +172,6 @@ class Game {
         }
 
         while (this.time < t) {
-            //TODO Make deltaTime softDropSpeed??? Currently, any soft drops will be an Input and the nextInput algorithm will jump to them. What if the user doesn't send inputs though?
             let deltaTime = this.pieceSpeed; // this.pieceSpeed/100; //TODO Figure out deltaTime stuff in the server
             if (this.time + deltaTime > t) {
                 deltaTime = t - this.time; //Ensure the time does not go over the desired time
@@ -217,7 +206,7 @@ class Game {
         this.time += deltaTime;
         //if (!this.alive) return;
 
-        if (this.time <= this.animationTime) { //Line clear animation
+        if (this.time <= this.animatingUntil) { //Line clear animation
             this.playLineClearingAnimation();
             this.redraw = true;
         } else if (this.animatingLines.length > 0) { //Line clear animation finished
@@ -235,7 +224,6 @@ class Game {
         }
 
         //Piece Movement
-        //TODO Figure out how to make this whole thing a while loop. Or just don't increase deltaTime if inputs are being played...
         if (this.currentPiece !== null) {
             if (input) { //It is time for the input to be performed
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
@@ -248,11 +236,9 @@ class Game {
                     this.placePiece();
                     this.score += this.pushDownPoints;
                     this.pushDownPoints = 0;
-
-                    //this.lastMoveDown = this.time; //TODO This is unnecessary?
                 }
                 this.redraw = true;
-            } //TODO Once client prediction is implemented, figure out the ordering of playing inputs and moving pieces. What if something happens at the same time?
+            }
         }
         //Move down based on timer
         const shouldMoveDown = gravity && this.time >= this.lastMoveDown + this.pieceSpeed;
@@ -289,7 +275,7 @@ class Game {
     shouldSpawnPiece() {
         return this.currentPiece == null &&
                 this.time > this.spawnNextPiece &&
-                this.time > this.animationTime;
+                this.time > this.animatingUntil;
     }
 
     placePiece() {
@@ -316,7 +302,6 @@ class Game {
             }
         }
         this.currentPiece = this.nextPiece; //Assign the new current piece
-        this.currentPieceIndex = this.nextPieceIndex; //TODO This will be out of sync on the client. It shouldn't matter though
         if (this.nextSingles > 0) {
             this.nextPieceIndex = 0; //This will make it spawn 3 single triangles in a row
             this.nextSingles--;
@@ -330,7 +315,6 @@ class Game {
             }
         }
 
-        //this.currentSnapshot.setNext(this.nextPieceIndex);
         this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex]);
     }
 
@@ -362,14 +346,14 @@ class Game {
         let linesCleared = this.grid.clearLines();
         if (linesCleared.length > 0) {
             //Set the time for when to stop animating
-            this.animationTime = this.time + this.maxAnimationTime;
+            this.animatingUntil = this.time + this.maxAnimationTime;
             this.animatingLines = linesCleared; //Which lines are being animated (and cleared)
         }
         return linesCleared.length;
     }
 
     playLineClearingAnimation() {
-        const percentDone = (this.animationTime - this.time) / this.maxAnimationTime;
+        const percentDone = (this.animatingUntil - this.time) / this.maxAnimationTime;
         const clearingCol = Math.floor(percentDone * this.w);
         for (const row of this.animatingLines) {
             //Clear as many cols as necessary
@@ -485,7 +469,6 @@ class GameState {
         this.h = game.h;
         this.serializedGrid = game.grid.serialized();
         this.tritrisAmt = game.tritrisAmt;
-        //this.startTime = game.startTime; //TODO This might be unnecessary
         this.time = game.time;
 
         this.seed = game.seed;
@@ -498,8 +481,7 @@ class GameState {
         this.score = game.score;
         this.currentPieceSerialized = null;
         if (game.currentPiece) this.currentPieceSerialized = game.currentPiece.serialized();
-        this.currentPieceIndex = game.currentPieceIndex;
-        this.nextPiece = game.nextPiece; //TODO Maybe rework how next piece is serialized. Rotations and pos don't matter though
+        this.nextPiece = game.nextPiece;
         this.nextPieceIndex = game.nextPieceIndex;
         this.nextSingles = game.nextSingles;
         this.bag = [...game.bag]; //Save a copy of the current bag
@@ -509,14 +491,10 @@ class GameState {
         this.lastMoveDown = game.lastMoveDown;
 
         this.spawnNextPiece = game.spawnNextPiece;
-        this.animationTime = game.animationTime;
+        this.animatingUntil = game.animatingUntil;
         this.animatingLines = [...game.animatingLines];
 
         this.doneInputId = game.doneInputId;
-    }
-
-    serialize() { //TODO This isn't used
-        return this;
     }
 }
 

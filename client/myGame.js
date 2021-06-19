@@ -2,16 +2,14 @@ const { Input } = require('../common/game.js');
 const ClientGame = require('../client/clientGame');
 
 class MyGame extends ClientGame {
-    constructor() {
-        super();
+    constructor(seed, level) {
+        super(seed, level);
 
         const frameRate = 60.0988; //frames per second
         const msPerFrame = 1000 / frameRate;
         this.das = 0;
         this.dasMax = msPerFrame * 16;
         this.dasCharged = msPerFrame * 10;
-
-        this.downWasPressed = false;
 
         this.leftWasPressed = false;
         this.rightWasPressed = false;
@@ -48,7 +46,7 @@ class MyGame extends ClientGame {
         const deltaTime = Date.now() - this.lastFrame;
         this.time += deltaTime;
 
-        if (this.time <= this.animationTime) {
+        if (this.time <= this.animatingUntil) {
             this.playLineClearingAnimation();
         } else if (this.animatingLines.length > 0) {
             let playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
@@ -89,7 +87,7 @@ class MyGame extends ClientGame {
                     if (rotation == -1 || rotation == 2) this.zCharged = true;
                 }
 
-                const currentTime = Date.now() - this.startTime; //TODO Instead of the real world time it should use this.time because that is what the player sees
+                const currentTime = this.time;
                 const inp = new Input(this.inputId++, currentTime, horzDirection, moveDown, rotation, softDrop);
                 this.addInput(inp);
 
@@ -162,7 +160,6 @@ class MyGame extends ClientGame {
         }
         let moveDown = this.time >= this.lastMoveDown + pieceSpeed;
 
-        this.downWasPressed = keyIsDown(this.controls.down);
         this.leftWasPressed = keyIsDown(this.controls.left);
         this.rightWasPressed = keyIsDown(this.controls.right);
         this.zWasPressed = keyIsDown(this.controls.counterClock); //If Z was pressed

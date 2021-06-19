@@ -249,33 +249,18 @@ class Triangle {
     }
 
     show(x, y, w, h, row, col, pieceImages) {
-        /*if (oldGraphics) {
-            stroke(100);
-            strokeWeight(2);
-            fill(colors[this.clr]);
-            if (row == 0 && col == 0) {
-                triangle(x, y, x + w, y, x, y + h);
-            } else if (row == 0 && col == 1) {
-                triangle(x, y, x + w, y, x + w, y + h);
-            } else if (row == 1 && col == 0) {
-                triangle(x, y, x, y + h, x + w, y + h);
-            } else if (row == 1 && col == 1) {
-                triangle(x, y + h, x + w, y, x + w, y + h);
-            }
-        } else {*/
-            const thisColor = pieceImages[this.clr];
-            let rot;
-            if (row == 0 && col == 0) { //Top left
-                rot = 3;
-            } else if (row == 0 && col == 1) { //Top right
-                rot = 2;
-            } else if (row == 1 && col == 0) { //Bottom left
-                rot = 1;
-            } else if (row == 1 && col == 1) { //Bottom right
-                rot = 0;
-            }
-            image(thisColor[rot], x, y, w, h);
-        //}
+        const thisColor = pieceImages[this.clr];
+        let rot;
+        if (row == 0 && col == 0) { //Top left
+            rot = 3;
+        } else if (row == 0 && col == 1) { //Top right
+            rot = 2;
+        } else if (row == 1 && col == 0) { //Bottom left
+            rot = 1;
+        } else if (row == 1 && col == 1) { //Bottom right
+            rot = 0;
+        }
+        image(thisColor[rot], x, y, w, h);
     }
 }
 

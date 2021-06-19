@@ -1,8 +1,8 @@
 const { Game, Input } = require('../common/game.js');
 
 class ServerGame extends Game {
-    constructor() {
-        super();
+    constructor(seed, level) {
+        super(seed, level);
         this.lastInputSent = -1; //The last input id that was sent to other clients
         this.lastSentTime = -1; //The time of the last game state that was sent to other clients
 
