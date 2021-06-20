@@ -7,7 +7,6 @@ const piecesJSON = require('./pieces.js');
  *
  *  Lose games
  *  Better score display - Show score differential
- *  Fix lagback on otherGame at beginning of game (and console log about backward by 350)
  *  Fix number of points for double (should be 300)
  *  Figure out deltaTime stuff
  *  Make server more authoritative. Validate inputs, ensure piece falls consistently
@@ -27,6 +26,7 @@ const piecesJSON = require('./pieces.js');
  *  Proper queue system
  *  Rename timer variables
  *  Remove extra variables
+ *  Fix lagback on otherGame at beginning of game (and console log about backward by 350)
  */
 
 class Game {
@@ -165,7 +165,8 @@ class Game {
         let nextInputId = this.inputs.length; //The id of the next input that should be played. If none should be played, it will be inputs.length
 
         for (let i = 0; i < this.inputs.length; i++) {
-            if (this.inputs[i].time > this.time) {
+            //If there is an input (its possible an element of the array is null) and its time is greater than the current time
+            if (this.inputs[i] && this.inputs[i].time > this.time) {
                 nextInputId = i; //Find which input has not been played yet
                 break;
             }
