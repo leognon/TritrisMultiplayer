@@ -1,9 +1,10 @@
 const { Game } = require('../common/game.js');
 
 class ClientGame extends Game {
-    constructor(seed, level) {
+    constructor(seed, level, name) {
         super(seed, level);
 
+        this.name = name;
         this.flashAmount = 4;
     }
 
@@ -162,6 +163,12 @@ class ClientGame extends Game {
                 statPos.y + padding + 1.75 * txtSize
             );
         }
+
+        fill(0);
+        noStroke();
+        textSize(25);
+        textAlign(CENTER, TOP);
+        text(this.name, x + w/2, y + h + 10);
 
         this.redraw = false;
     }

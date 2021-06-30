@@ -2,8 +2,8 @@ const { Input } = require('../common/game.js');
 const ClientGame = require('../client/clientGame');
 
 class MyGame extends ClientGame {
-    constructor(seed, level) {
-        super(seed, level);
+    constructor(seed, level, name) {
+        super(seed, level, name);
 
         const frameRate = 60.0988; //frames per second
         const msPerFrame = 1000 / frameRate;

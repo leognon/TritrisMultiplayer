@@ -22,7 +22,9 @@ io.on('connection', socket => {
     console.log(socket.id + ' connected');
     sockets[socket.id] = socket;
 
-    socket.on('joinMatch', () => {
+    socket.on('joinMatch', data => {
+        //TODO Validate and sanitize inputs
+        socket.name = data.name;
         enqueue(socket);
     });
 

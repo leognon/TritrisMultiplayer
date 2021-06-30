@@ -145,12 +145,10 @@ class GridCell {
                 for (let col = 0; col < 2; col++) {
                     let tri = null;
                     if (clr == undefined) { //Each triangle might have a different color
-                        //console.log('No clr. It is ', clr);
                         if (triangles[row][col] != -1) { //-1 means no triangles
                             tri = new Triangle(triangles[row][col]);
                         }
                     } else { //All the triangles are the same color
-                        //console.log('Clr is ', clr);
                         if (triangles[row][col] == 1) {
                             tri = new Triangle(clr);
                         }
@@ -290,9 +288,7 @@ class Piece {
             for (let row = 0; row < pieces.length; row++) {
                 this.grid.push([]);
                 for (let col = 0; col < pieces[0].length; col++) {
-                    //console.log('Creating piece');
                     this.grid[row].push(new GridCell(pieces[row][col], clr));
-                    //console.log(this.grid[row][col]);
                 }
             }
             this.pos = { 

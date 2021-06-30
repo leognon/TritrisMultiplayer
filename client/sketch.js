@@ -60,6 +60,7 @@ setup = () => {
     sounds.levelup = new Sound('../client/assets/levelup.wav');
     sounds.topout = new Sound('../client/assets/topout.wav');
 
+    dom.name = select('#name');
     dom.joinDiv = select('#joinDiv');
     dom.joinButton = select('#joinButton');
     dom.joinButton.mousePressed(() => {
@@ -96,7 +97,9 @@ draw = () => {
 }
 
 function joinGame() {
-    socket.emit('joinMatch');
+    socket.emit('joinMatch', {
+        name: dom.name.value()
+    });
 
     state = states.FINDING_MATCH;
 }
@@ -123,8 +126,15 @@ function showGame(g, x, y) {
 function gotState(data) {
     state = data.state;
     if (state == states.INGAME) {
-        game = new MyGame(data.seed, data.level);
-        otherGame = new OtherGame(data.seed, data.level);
+        let otherId;
+        for (let id in data.names) {
+            if (id != socket.id) {
+                otherId = id;
+                break;
+            }
+        }
+        game = new MyGame(data.seed, data.level, data.names[socket.id]);
+        otherGame = new OtherGame(data.seed, data.level, data.names[otherId]);
         nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         setBackground(100);
     }

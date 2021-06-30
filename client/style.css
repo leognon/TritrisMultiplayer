@@ -1,9 +1,17 @@
+@font-face {
+    font-family: 'fff-forward';
+    src: url('assets/fff-forward.ttf');
+}
+
 html,
 body {
     margin: 0;
     padding: 0;
     background-color: rgb(100, 100, 100);
     overflow-y: hidden;
+}
+h2 {
+    font-family: fff-forward;
 }
 
 .box {
@@ -14,9 +22,11 @@ body {
 
 #joinDiv {
     position: absolute;
+    width: 250px;
     top: 30%;
-    left: 45%;
-    right: 45%;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
     text-align: center;
 }
 

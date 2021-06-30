@@ -3,8 +3,8 @@ const config = require('../common/config.js');
 const ClientGame = require('../client/clientGame');
 
 class OtherGame extends ClientGame {
-    constructor(seed, level) {
-        super(seed, level);
+    constructor(seed, level, name) {
+        super(seed, level, name);
 
         this.lastReceivedInputTime = -1; //The time when the most recent input was received
 

@@ -11,11 +11,17 @@ class Match {
         this.addPlayer(socket1);
         this.addPlayer(socket2);
 
+        this.names = {};
+        for (const p of this.players) {
+            this.names[p.getId()] = p.getName();
+        }
+
         for (const p of this.players) {
             p.sendState({
                 state: states.INGAME,
                 seed: this.seed,
-                level: this.level
+                level: this.level,
+                names: this.names
             });
         }
     }
@@ -98,6 +104,10 @@ class Player {
 
     getId() {
         return this.socket.id;
+    }
+
+    getName() {
+        return this.socket.name;
     }
     //TODO Should lastFrame be set to Date.now() after receiving data on the client?
 
