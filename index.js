@@ -69,7 +69,7 @@ function getMatch(socket) {
 function enqueue(socket) {
     queue.push(socket);
     if (queue.length == 2) {
-        matches.push(new Match(queue[0], queue[1]));
+        matches.push(new Match(level, queue[0], queue[1]));
         queue.splice(0, 2);
     }
 }
@@ -96,6 +96,14 @@ stdin.addListener("data", (d) => {
     } catch (e) {
         console.error('Something went wrong.', e);
     }
+});
+
+let level = 9;
+app.get('/level/*', (req, res) => {
+    try {
+        level = parseInt(req.params[0]);
+    } catch (e) { }
+    res.redirect('/');
 });
 
 console.log('Server started');
