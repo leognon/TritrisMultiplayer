@@ -38,13 +38,18 @@ class MyGame extends ClientGame {
             clear: false,
             tritris: false,
             levelup: false,
-            topout: false, //TODO Add topout sounds
+            topout: false,
         }
     }
 
     clientUpdate() {
         const deltaTime = Date.now() - this.lastFrame;
         this.time += deltaTime;
+
+        if (!this.alive) {
+            this.lastFrame = Date.now();
+            return;
+        }
 
         if (this.time <= this.animatingUntil) {
             this.playLineClearingAnimation();
@@ -59,6 +64,7 @@ class MyGame extends ClientGame {
             this.lastMoveDown = this.time;
             if (!this.isValid(this.currentPiece)) {
                 this.alive = false;
+                this.soundsToPlay.topout = true;
             }
             this.redraw = true;
             this.soundsToPlay.fall = true;

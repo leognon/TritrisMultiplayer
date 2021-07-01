@@ -5,7 +5,6 @@ const piecesJSON = require('./pieces.js');
 
 /* TODO
  *
- *  Lose games
  *  Better score display - Show score differential
  *  Fix number of points for double (should be 300)
  *  Figure out deltaTime stuff
@@ -27,6 +26,7 @@ const piecesJSON = require('./pieces.js');
  *  Rename timer variables
  *  Remove extra variables
  *  Fix lagback on otherGame at beginning of game (and console log about backward by 350)
+ *  Lose games
  */
 
 class Game {
@@ -202,10 +202,10 @@ class Game {
     }
 
     update(deltaTime, input, gravity) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
-        this.lastFrame = Date.now();
-
+        this.lastFrame = Date.now(); //TODO lastFrame is unnecessary in server
         this.time += deltaTime;
-        //if (!this.alive) return;
+
+        if (!this.alive) return;
 
         if (this.time <= this.animatingUntil) { //Line clear animation
             this.playLineClearingAnimation();
@@ -220,6 +220,7 @@ class Game {
             this.lastMoveDown = this.time;
             if (!this.isValid(this.currentPiece)) {
                 this.alive = false; //If the new piece is already blocked, game over
+                this.updateGameState();
             }
             this.redraw = true;
         }

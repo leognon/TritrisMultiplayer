@@ -12,6 +12,7 @@ class ServerGame extends Game {
 
     physicsUpdate() {
         //TODO The line below is slightly pointless. It will get overriden 99.99% of the time. It might only help to check if someone loses??
+        if (!this.alive) return;
         this.updateToTime(Date.now() - this.startTime, true);
         //TODO Make this condition better. 10 seconds will result in an instant top out no matter what...
         const maxTime = 10 * 1000; //If nothing is received for 3 seconds, it will update automatically
