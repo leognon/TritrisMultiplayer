@@ -150,7 +150,7 @@ function gotState(data) {
 }
 
 function gotData(d) {
-    setTimeout(() => {
+    //setTimeout(() => {
         const games = d.players;
         const myData = d.yourData;
         let otherData;
@@ -162,7 +162,7 @@ function gotData(d) {
         }
         if (game) game.gotData(myData);
         if (otherGame) otherGame.gotData(otherData);
-    }, config.FAKE_LATENCY); //Some fake latency
+    //}, config.FAKE_LATENCY); //Some fake latency
 };
 
 function sendData() {
