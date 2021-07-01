@@ -114,13 +114,22 @@ function runGame() {
             setBackground(100);
         }
     }
-    showGame(game, 10, 10);
+    let boardWidth = width/4;
+    let boardHeight = boardWidth*2;
+    if (boardHeight > height * 0.9) {
+        boardHeight = height * 0.9;
+        boardWidth = boardHeight / 2;
+    }
+    const gameWidth = boardWidth + 5*(boardWidth / game.w) + 20;
+    const center = width/2;
+    const spacing = 30;
+    showGame(game, center-gameWidth-spacing/2, 10, boardWidth, boardHeight);
     game.playSounds(sounds);
-    showGame(otherGame, 550, 10);
+    showGame(otherGame, center+spacing/2, 10, boardWidth, boardHeight);
 }
 
-function showGame(g, x, y) {
-    g.show(x, y, 300, 300*2, pieceImages, true, true, true);
+function showGame(g, x, y, w, h) {
+    g.show(x, y, w, h, pieceImages, true, true, true);
 }
 
 function gotState(data) {
