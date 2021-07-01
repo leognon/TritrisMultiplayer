@@ -29,7 +29,9 @@ class ServerGame extends Game {
         let latestTime = 0;
         for (let encodedInp of inps) {
             const inp = Input.decode(encodedInp);
-            this.addInput(inp);
+            const added = this.addInput(inp);
+            if (!added) continue; //Invalid input
+
             if (inp.time > latestTime) latestTime = inp.time;
             if (inp.vertDir && inp.time > this.lastClientMoveDown) {
                 this.lastClientMoveDown = inp.time;
@@ -45,7 +47,16 @@ class ServerGame extends Game {
     }
 
     addInput(inp) {
+        if (!Input.isValid(inp)) { console.log('WRONG:A',inp); return false; }
+        if (this.inputs[inp.id]) { console.log('WRONG:B',inp); return false; }
+        if (this.lastReceivedTime > inp.time) { console.log('WRONG:C',inp); return false; }
+        if (this.inputs.length == 0) {
+            if (inp.id !== 0) { console.log('WRONG:D',inp); return false; }
+        } else {
+            if (this.inputs[this.inputs.length-1].id !== inp.id-1) { console.log('WRONG:E',inp); return false; }
+        }
         this.inputs[inp.id] = inp; //TODO Add validation here to prevent bugs and cheating
+        return true;
     }
 
     getGameStateAndInputs() {

@@ -524,6 +524,22 @@ class Input {
     static decode(data) {
         return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot, data.softDrop);
     }
+
+    static isValid(inp) {
+        if (!inp.hasOwnProperty('id') ||
+            !inp.hasOwnProperty('time') ||
+            !inp.hasOwnProperty('horzDir') ||
+            !inp.hasOwnProperty('vertDir') ||
+            !inp.hasOwnProperty('rot') ||
+            !inp.hasOwnProperty('softDrop')) return false;
+        if (!inp.hasOwnProperty('time') || inp.time < 0) return false;
+        if (inp.horzDir !== 0 && inp.horzDir !== -1 && inp.horzDir !== 1) return false;
+        if (inp.vertDir !== false && inp.vertDir !== true) return false;
+        if (inp.rot !== 0 && inp.rot !== -1 && inp.rot !== 1 && inp.rot !== 2) return false;
+        if (inp.softDrop !== false && inp.softDrop !== true) return false;
+
+        return true;
+    }
 }
 
 module.exports = { Game, Input };
