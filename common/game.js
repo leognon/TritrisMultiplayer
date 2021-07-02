@@ -36,8 +36,9 @@ class Game {
         this.grid = new Grid(this.w, this.h);
 
         this.tritrisAmt = 0; //For statistics
-        this.startTime = Date.now();
-        this.time = 0;
+        const countDownLength = 5 * 1000;
+        this.startTime = Date.now() + countDownLength; //A 5 second countdown before the game starts
+        this.time = -countDownLength;
 
         this.seed = seed;
         this.gen = new RandomGenerator(this.seed);
@@ -100,7 +101,7 @@ class Game {
 
         this.softDropSpeed = msPerFrame * 2; //The speed when holding down
         this.pushDownPoints = 0; //The current amount of push down points. Increases when holding down, but resets if released
-        this.lastMoveDown = this.time + 750; //When the last move down was
+        this.lastMoveDown = 750; //When the last move down was. Originally a 750ms delay for the first piece
 
         this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
         //TODO This is unnecessary in the server
@@ -159,6 +160,10 @@ class Game {
     }
 
     updateToTime(t, gravity) { //Go from the current time to t and do all inputs that happened during that time
+        if (t < 0) {
+            this.time = t; //Just set the time to the desired time.
+            return; //Nothing can happen before 0 so no need to play inputs
+        }
         if (this.time > t) {
             console.log('Cannot go backwards to ' + t + ' from ' + this.time);
         }

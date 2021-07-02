@@ -9,7 +9,7 @@ class OtherGame extends ClientGame {
         this.lastReceivedInputTime = -1; //The time when the most recent input was received
 
         this.previousStates = []; //A list of previous game states sent by the server
-        this.lastReceived = 0; //When the last data was receieved
+        this.lastReceived = this.time; //When the last data was receieved
         this.receivedTimes = []; //An array of the amount of time since the previous time was receieved
         this.totalReceivedTimes = 0; //Used for calculating average
     }

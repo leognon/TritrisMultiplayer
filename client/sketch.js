@@ -107,6 +107,9 @@ function joinGame() {
 function runGame() {
     game.clientUpdate();
     otherGame.interpolateUpdate();
+    if (game.duringCountDown() || Date.now()-300 < game.startTime) { //TODO Make this all better by making the redraw system use p5 graphics
+        setBackground(100);
+    }
     if (game.isFlashing()) {
         setBackground(150);
     } else {
@@ -126,6 +129,15 @@ function runGame() {
     showGame(game, center-gameWidth-spacing/2, 10, boardWidth, boardHeight);
     game.playSounds(sounds);
     showGame(otherGame, center+spacing/2, 10, boardWidth, boardHeight);
+
+    if (game.duringCountDown()) {
+        textSize(50);
+        fill(255);
+        noStroke();
+        textAlign(CENTER, CENTER);
+        const secondsRemaining = 1 + floor(-game.time / 1000);
+        text(secondsRemaining, center - gameWidth - spacing/2 + boardWidth/2, 10+boardHeight/2);
+    }
 }
 
 function showGame(g, x, y, w, h) {

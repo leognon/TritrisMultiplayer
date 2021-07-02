@@ -23,7 +23,15 @@ class ClientGame extends Game {
         return false;
     }
 
+    duringCountDown() {
+        return Date.now() < this.startTime;
+    }
+
     show(x, y, w, h, pieceImages, showGridLines, showStats, showFlash) {
+        if (Date.now() < this.startTime) {
+            this.redraw = true; //During the countdown, keep redrawing to show the display
+        }
+
         if (!this.redraw) return;
 
         noStroke();
@@ -135,8 +143,9 @@ class ClientGame extends Game {
             if (this.lines == 0) tritrisPercent = '--';
             const tritrisPercentText = `Tri ${tritrisPercent}%`;
 
-            const totalSec = Math.floor(this.time / 1000) % 60;
-            const totalM = Math.floor(this.time / (1000*60));
+            const fixedTime = max(this.time, 0);
+            const totalSec = Math.floor(fixedTime / 1000) % 60;
+            const totalM = Math.floor(fixedTime / (1000*60));
             const startLevelText = `Time ${nf(totalM,2)}:${nf(totalSec,2)}`;
 
             const textW = max(

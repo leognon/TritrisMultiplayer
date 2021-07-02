@@ -46,7 +46,8 @@ class MyGame extends ClientGame {
         const deltaTime = Date.now() - this.lastFrame;
         this.time += deltaTime;
 
-        if (!this.alive) {
+        //Dont update if not alive or during countdown
+        if (!this.alive || Date.now() < this.startTime) {
             this.lastFrame = Date.now();
             return;
         }
