@@ -2,13 +2,15 @@ const p5 = require('p5');
 const io = require('socket.io-client');
 const states = require('../common/states.js');
 const config = require('../common/config.js');
-const MyGame = require('../client/myGame.js');
-const OtherGame = require('../client/otherGame.js');
+const ClientRoom = require('./clientRoom.js');
+const MyGame = require('./myGame.js');
+const OtherGame = require('./otherGame.js');
 
 new p5(() => {
 let socket;
 
 let state = states.LOADING;
+let room;
 let game;
 let otherGame;
 
@@ -62,10 +64,18 @@ setup = () => {
 
     dom.name = select('#name');
     dom.joinDiv = select('#joinDiv');
-    dom.joinButton = select('#joinButton');
-    dom.joinButton.mousePressed(() => {
+    dom.quickPlay = select('#quickPlay');
+    dom.quickPlay.mousePressed(() => {
         if (state == states.MENU) {
             joinGame();
+            dom.joinDiv.style('visibility: hidden;');
+        }
+    });
+
+    dom.createRoom = select('#createRoom');
+    dom.createRoom.mousePressed(() => {
+        if (state == states.MENU) {
+            createRoom();
             dom.joinDiv.style('visibility: hidden;');
         }
     });
@@ -87,6 +97,12 @@ draw = () => {
         textSize(20);
         textAlign(CENTER, CENTER);
         text('Finding match...', width/2, height/2);
+    } else if (state == states.LOBBY_OWNER) {
+        setBackground(0);
+        fill(255);
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        text(`You made the lobby\nCode: ${room.roomCode}`, width/2, height/2);
     } else if (state == states.INGAME) {
         if (Date.now() > nextSendData) {
             sendData();
@@ -102,6 +118,13 @@ function joinGame() {
     });
 
     state = states.FINDING_MATCH;
+}
+
+function createRoom() {
+    socket.emit('createRoom', {
+        name: dom.name.value()
+    });
+    //TODO Add loading state for after creating room
 }
 
 function runGame() {
@@ -158,6 +181,9 @@ function gotState(data) {
         otherGame = new OtherGame(data.seed, data.level, data.names[otherId]);
         nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         setBackground(100);
+    } else if (state == states.LOBBY_OWNER) {
+        console.log('Created lobby', data);
+        room = new ClientRoom(data.code);
     }
 }
 

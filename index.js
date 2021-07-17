@@ -8,8 +8,10 @@ const config = require('./common/config.js');
 let sockets = {};
 
 const Match = require('./server/match.js');
+const ServerRoom = require('./server/serverRoom.js');
 let matches = [];
 let queue = []; //A list of socket ids in the queue
+let rooms = {}; //The key is the room code
 
 app.get('/', (_, res) => {
     res.sendFile(path.join(__dirname, '/client/index.html'));
@@ -22,10 +24,15 @@ io.on('connection', socket => {
     console.log(socket.id + ' connected');
     sockets[socket.id] = socket;
 
+    //TODO Validate and sanitize inputs
     socket.on('joinMatch', data => {
-        //TODO Validate and sanitize inputs
         socket.name = data.name;
         enqueue(socket);
+    });
+
+    socket.on('createRoom', data => {
+        socket.name = data.name;
+        createRoom(socket);
     });
 
     socket.on('inputs', data => {
@@ -72,6 +79,25 @@ function enqueue(socket) {
         matches.push(new Match(level, queue[0], queue[1]));
         queue.splice(0, 2);
     }
+}
+
+function createRoom(owner) {
+    let roomCode = generateUniqRoomCode();
+    rooms[roomCode] = new ServerRoom(roomCode, owner);
+}
+
+function generateUniqRoomCode() {
+    let code;
+    do {
+        const min = 'A'.charCodeAt(0);
+        const max = 'Z'.charCodeAt(0);
+        code = '';
+        for (let i = 0; i < 4; i++) {
+            const d = Math.floor(Math.random()*(max-min)) + min;
+            code += String.fromCharCode(d);
+        }
+    } while (rooms.hasOwnProperty(code));
+    return code;
 }
 
 setInterval(() => {

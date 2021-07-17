@@ -1,5 +1,5 @@
 const states = require('../common/states.js');
-const ServerGame = require('../server/serverGame.js');
+const ServerGame = require('./serverGame.js');
 
 class Match {
     constructor(level, socket1, socket2) {

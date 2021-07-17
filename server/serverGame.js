@@ -48,16 +48,24 @@ class ServerGame extends Game {
     }
 
     addInput(inp) {
-        if (!Input.isValid(inp)) { console.log('WRONG:A',inp); return false; }
-        if (this.inputs[inp.id]) { console.log('WRONG:B',inp); return false; }
-        if (this.lastReceivedTime > inp.time) { console.log('WRONG:C',inp); return false; }
-        if (this.inputs.length == 0) {
-            if (inp.id !== 0) { console.log('WRONG:D',inp); return false; }
-        } else {
-            if (this.inputs[this.inputs.length-1].id !== inp.id-1) { console.log('WRONG:E',inp); return false; }
+        if (!Input.isValid(inp)) return false;
+        if (this.inputs[inp.id]) return false;
+        if (this.lastReceivedTime > inp.time) return false;
+        const nextInpId = this.inputs.length == 0 ? 0 : this.inputs[this.inputs.length-1].id+1;
+        if (inp.id < nextInpId) return false;
+        if (inp.id > nextInpId) {
+            //console.log(`Adding id ${inp.id} when des is ${nextInpId}`);
+            for (let id = nextInpId; id < inp.id; id++) {
+                this.inputs[id] = new Input(id, this.time, 0, false, 0, false);
+            }
         }
-        this.inputs[inp.id] = inp; //TODO Add validation here to prevent bugs and cheating
-        return true;
+        /*if (this.inputs.length == 0) {
+            if (inp.id !== 0) return false;
+        } else {
+            if (this.inputs[this.inputs.length-1].id !== inp.id-1) return false;
+        }*/
+         this.inputs[inp.id] = inp; //TODO Add validation here to prevent bugs and cheating
+         return true;
     }
 
     getGameStateAndInputs() {
