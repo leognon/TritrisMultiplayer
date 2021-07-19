@@ -32,7 +32,8 @@ class ClientGame extends Game {
             this.redraw = true; //During the countdown, keep redrawing to show the display
         }
 
-        if (!this.redraw) return;
+        //TODO Remove redraw? It is temporarily disabled
+        //if (!this.redraw) return;
 
         noStroke();
         fill(0);

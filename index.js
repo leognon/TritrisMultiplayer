@@ -3,6 +3,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT);
 const io = require('socket.io')(server);
+const states = require('./common/states.js');
 const config = require('./common/config.js');
 
 let sockets = {};
@@ -30,9 +31,20 @@ io.on('connection', socket => {
         enqueue(socket);
     });
 
-    socket.on('createRoom', data => {
-        socket.name = data.name;
-        createRoom(socket);
+    socket.on('room', data => {
+        if (data.type == 'create') {
+            socket.name = data.name;
+            createRoom(socket);
+        } else if (data.type == 'join') {
+            socket.name = data.name;
+            joinRoom(socket, data.code);
+        } else {
+            console.log('Got ', data);
+            const room = getRoom(socket);
+            if (room.found) {
+                room.room.gotData(socket, data);
+            }
+        }
     });
 
     socket.on('inputs', data => {
@@ -92,12 +104,38 @@ function generateUniqRoomCode() {
         const min = 'A'.charCodeAt(0);
         const max = 'Z'.charCodeAt(0);
         code = '';
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 1; i++) {
             const d = Math.floor(Math.random()*(max-min)) + min;
             code += String.fromCharCode(d);
         }
     } while (rooms.hasOwnProperty(code));
     return code;
+}
+
+function joinRoom(socket, code) {
+    if (rooms.hasOwnProperty(code)) {
+        rooms[code].addPlayer(socket);
+    } else {
+        socket.emit('state', {
+            state: states.MENU,
+            message: 'Invalid room code'
+        });
+    }
+}
+
+function getRoom(socket) {
+    for (let id in rooms) {
+        if (rooms[id].hasPlayer(socket)) {
+            return {
+                found: true,
+                id,
+                room: rooms[id]
+            }
+        }
+    }
+    return {
+        found: false
+    }
 }
 
 setInterval(() => {

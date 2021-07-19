@@ -11,8 +11,6 @@ let socket;
 
 let state = states.LOADING;
 let room;
-let game;
-let otherGame;
 
 let backgroundColor = 0;
 
@@ -21,8 +19,6 @@ let pieceImages = []; //The individual images
 let sounds = {};
 
 let dom = {};
-
-let nextSendData = 0;
 
 function createSocket() {
     socket = io({
@@ -37,6 +33,7 @@ function createSocket() {
         state = states.MENU;
         dom.joinDiv.style('visibility: visible;');
     });
+    socket.on('room', gotRoomData);
     socket.on('disconnect', () => {
         console.log('Disconnected!!!');
         noLoop();
@@ -79,6 +76,17 @@ setup = () => {
             dom.joinDiv.style('visibility: hidden;');
         }
     });
+
+    dom.joinRoom = select('#joinRoom');
+    dom.joinRoom.mousePressed(() => {
+        if (state == states.MENU) {
+            const code = prompt('Please enter the room code to join.');
+            if (code) {
+                joinRoom(code);
+                dom.joinDiv.style('visibility: hidden;');
+            }
+        }
+    });
 }
 
 draw = () => {
@@ -102,13 +110,22 @@ draw = () => {
         fill(255);
         textSize(20);
         textAlign(CENTER, CENTER);
-        text(`You made the lobby\nCode: ${room.roomCode}`, width/2, height/2);
-    } else if (state == states.INGAME) {
-        if (Date.now() > nextSendData) {
-            sendData();
-            nextSendData = Date.now() + config.CLIENT_SEND_DATA;
+        text(`You made the lobby\n\nCode: ${room.roomCode}`, width/2, height/2);
+        for (let i = 0; i < room.players.length; i++) {
+            text('Player ' + room.players[i].id, width/2, height/2 + 100 + i*30);
         }
-        runGame();
+    } else if (state == states.LOBBY) {
+        setBackground(0);
+        fill(255);
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        text(`You joined the lobby\n\nCode: ${room.roomCode}`, width/2, height/2);
+        for (let i = 0; i < room.players.length; i++) {
+            text('Player ' + room.players[i].id, width/2, height/2 + 100 + i*30);
+        }
+    } else if (state == states.INGAME) {
+        room.run(socket);
+        room.show(pieceImages, sounds);
     }
 }
 
@@ -116,61 +133,45 @@ function joinGame() {
     socket.emit('joinMatch', {
         name: dom.name.value()
     });
-
     state = states.FINDING_MATCH;
 }
 
 function createRoom() {
-    socket.emit('createRoom', {
+    socket.emit('room', {
+        type: 'create',
         name: dom.name.value()
     });
     //TODO Add loading state for after creating room
 }
 
-function runGame() {
-    game.clientUpdate();
-    otherGame.interpolateUpdate();
-    if (game.duringCountDown() || Date.now()-300 < game.startTime) { //TODO Make this all better by making the redraw system use p5 graphics
-        setBackground(100);
-    }
-    if (game.isFlashing()) {
-        setBackground(150);
-    } else {
-        if (backgroundColor != 100) {
-            setBackground(100);
-        }
-    }
-    let boardWidth = width/4;
-    let boardHeight = boardWidth*2;
-    if (boardHeight > height * 0.9) {
-        boardHeight = height * 0.9;
-        boardWidth = boardHeight / 2;
-    }
-    const gameWidth = boardWidth + 5*(boardWidth / game.w) + 20;
-    const center = width/2;
-    const spacing = 30;
-    showGame(game, center-gameWidth-spacing/2, 10, boardWidth, boardHeight);
-    game.playSounds(sounds);
-    showGame(otherGame, center+spacing/2, 10, boardWidth, boardHeight);
-
-    if (game.duringCountDown()) {
-        textSize(50);
-        fill(255);
-        noStroke();
-        textAlign(CENTER, CENTER);
-        const secondsRemaining = 1 + floor(-game.time / 1000);
-        text(secondsRemaining, center - gameWidth - spacing/2 + boardWidth/2, 10+boardHeight/2);
+function joinRoom(code) {
+    socket.emit('room', {
+        type: 'join',
+        name: dom.name.value(),
+        code
+    });
+    //TODO Add loading state
+}
+keyPressed = () => {
+    if (state == states.LOBBY_OWNER && keyCode == 32) {
+        socket.emit('room', {
+            type: 'start',
+        });
     }
 }
 
-function showGame(g, x, y, w, h) {
-    g.show(x, y, w, h, pieceImages, true, true, true);
-}
-
+//TODO With namespacing, will this function be needed?
 function gotState(data) {
     state = data.state;
-    if (state == states.INGAME) {
-        let otherId;
+    if (data.hasOwnProperty('message')) {
+        alert(data.message);
+    }
+
+    if (state == states.MENU) {
+        dom.joinDiv.style('visibility: visible;');
+    } else if (state == states.INGAME) {
+        //TODO Figure out quick play with the room system
+        /*let otherId;
         for (let id in data.names) {
             if (id != socket.id) {
                 otherId = id;
@@ -180,10 +181,33 @@ function gotState(data) {
         game = new MyGame(data.seed, data.level, data.names[socket.id]);
         otherGame = new OtherGame(data.seed, data.level, data.names[otherId]);
         nextSendData = Date.now() + config.CLIENT_SEND_DATA;
-        setBackground(100);
-    } else if (state == states.LOBBY_OWNER) {
+        setBackground(100);*/
+    }
+}
+
+function gotRoomData(data) {
+    if (data.type == 'created') {
         console.log('Created lobby', data);
-        room = new ClientRoom(data.code);
+        room = new ClientRoom(data.code, socket.id);
+        room.addPlayer(socket.id); //Add the owner
+        state = states.LOBBY_OWNER;
+    } else if (data.type == 'joined') {
+        console.log('Joined lobby');
+        room = new ClientRoom(data.code, data.ownerId);
+        for (let p of data.players) {
+            room.addPlayer(p);
+        }
+        state = states.LOBBY;
+    } else if (data.type == 'playerJoin') {
+        room.addPlayer(data.id);
+    } else if (data.type == 'startMatch') {
+        console.log('start');
+        state = states.INGAME;
+        room.startMatch(data.seed, data.level);
+
+        //game = new MyGame(data.seed, data.level, data.names[socket.id]);
+        //otherGame = new OtherGame(data.seed, data.level, data.names[otherId]);
+        setBackground(100);
     }
 }
 
@@ -203,17 +227,13 @@ function gotData(d) {
     //}, config.FAKE_LATENCY); //Some fake latency
 };
 
-function sendData() {
-    const inps = game.getInputs();
-    if (inps.length > 0)
-        socket.emit('inputs', inps);
-}
-
 function setBackground(c) {
     backgroundColor = c;
     background(c);
-    if (game) game.redraw = true;
-    if (otherGame) otherGame.redraw = true;
+    if (room && room.myGame) {
+        room.myGame.redraw = true;
+        room.otherGame.redraw = true;
+    }
 }
 
 function loadPieces(piecesImage) {
@@ -264,8 +284,8 @@ class Sound {
 
 windowResized = () => {
     resizeCanvas(windowWidth, windowHeight);
-    if (game) game.redraw = true;
-    if (otherGame) otherGame.redraw = true;
+    //if (game) game.redraw = true;
+    //if (otherGame) otherGame.redraw = true;
 }
 
 });

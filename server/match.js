@@ -11,19 +11,19 @@ class Match {
         this.addPlayer(socket1);
         this.addPlayer(socket2);
 
-        this.names = {};
+        /*this.names = {};
         for (const p of this.players) {
             this.names[p.getId()] = p.getName();
-        }
+        }*/
 
-        for (const p of this.players) {
+        /*for (const p of this.players) {
             p.sendState({
                 state: states.INGAME,
                 seed: this.seed,
                 level: this.level,
                 names: this.names
             });
-        }
+        }*/
     }
 
     addPlayer(socket) {
