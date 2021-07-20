@@ -5,28 +5,30 @@ const piecesJSON = require('./pieces.js');
 
 /* TODO
  *
- *  Better score display - Show score differential
- *  Fix number of points for double (should be 300)
- *  Figure out deltaTime stuff
- *  Make server more authoritative. Validate inputs, ensure piece falls consistently
- *  Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
- *  Round decimals to make game more deterministic
+ *  [ ] Better score display - Show score differential
+ *  [ ] Fix number of points for double (should be 300)
+ *  [ ] Figure out deltaTime stuff
+ *  [ ] Make server more authoritative. Validate inputs, ensure piece falls consistently
+ *  [ ] Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
+ *  [ ] Round decimals to make game more deterministic
+ *  [ ] Game id system
+ *      [X] Create custom lobby
+ *      [ ] Spectate games
  *
- * DONE
- *  Add line clears
- *  Add RNG
- *  Clean up reset code (the same variables being set in Game constructor, goToStart and ClientGame gotData)
- *  Add second player
- *  Make push down points consistent
- *  Add lines clears for other game
- *  Add redraw
- *  Add graphics
- *  Sound effects
- *  Proper queue system
- *  Rename timer variables
- *  Remove extra variables
- *  Fix lagback on otherGame at beginning of game (and console log about backward by 350)
- *  Lose games
+ *      Click create room button
+ *          [X] Creates custom room with id
+ *          [ ] Settings
+ *              [ ] Change gamemode, level start, etc.
+ *              [ ] Set certain players to spectator
+ *      [X] Join room
+ *  More gamemodes
+ *      Quadtris (Bitris?)
+ *      B-Type
+ *      4x8
+ *  How should level starts be chosen?
+ *  Save games / replay games
+ *  Accounts
+ *
  */
 
 class Game {
