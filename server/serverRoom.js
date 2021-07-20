@@ -9,14 +9,15 @@ class ServerRoom extends Room {
         this.players = [];
         //this.spectators = [];
 
-        //this.names = {};
-
         this.match = null;
 
         this.owner.emit('room', {
             type: 'created',
             code: this.roomCode,
-            owner: this.owner.id
+            owner: {
+                id: this.owner.id,
+                name: this.owner.name
+            }
         });
         this.players.push(this.owner);
 
@@ -28,14 +29,20 @@ class ServerRoom extends Room {
             p.emit('room', {
                 type: 'playerJoin',
                 id: socket.id,
+                name: socket.name
             });
         }
         this.players.push(socket);
+
         socket.emit('room', {
             type: 'joined',
             code: this.roomCode,
             ownerId: this.owner.id,
-            players: this.players.map(p => p.id)
+            players: this.players.map(p => {
+                return { //Just get the id and name
+                    id: p.id, name: p.name
+                }
+            })
         });
     }
 

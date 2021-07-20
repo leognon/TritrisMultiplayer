@@ -112,7 +112,7 @@ draw = () => {
         textAlign(CENTER, CENTER);
         text(`You made the lobby\n\nCode: ${room.roomCode}`, width/2, height/2);
         for (let i = 0; i < room.players.length; i++) {
-            text('Player ' + room.players[i].id, width/2, height/2 + 100 + i*30);
+            text('Player ' + room.players[i].name, width/2, height/2 + 100 + i*30);
         }
     } else if (state == states.LOBBY) {
         setBackground(0);
@@ -121,7 +121,7 @@ draw = () => {
         textAlign(CENTER, CENTER);
         text(`You joined the lobby\n\nCode: ${room.roomCode}`, width/2, height/2);
         for (let i = 0; i < room.players.length; i++) {
-            text('Player ' + room.players[i].id, width/2, height/2 + 100 + i*30);
+            text('Player ' + room.players[i].name, width/2, height/2 + 100 + i*30);
         }
     } else if (state == states.INGAME) {
         room.run(socket);
@@ -188,25 +188,21 @@ function gotState(data) {
 function gotRoomData(data) {
     if (data.type == 'created') {
         console.log('Created lobby', data);
-        room = new ClientRoom(data.code, socket.id);
-        room.addPlayer(socket.id); //Add the owner
+        room = new ClientRoom(data.code, data.owner.id, socket.id);
+        room.addPlayer(data.owner.id, data.owner.name); //Add the owner
         state = states.LOBBY_OWNER;
     } else if (data.type == 'joined') {
         console.log('Joined lobby');
-        room = new ClientRoom(data.code, data.ownerId);
+        room = new ClientRoom(data.code, data.ownerId, socket.id);
         for (let p of data.players) {
-            room.addPlayer(p);
+            room.addPlayer(p.id, p.name);
         }
         state = states.LOBBY;
     } else if (data.type == 'playerJoin') {
-        room.addPlayer(data.id);
+        room.addPlayer(data.id, data.name);
     } else if (data.type == 'startMatch') {
-        console.log('start');
         state = states.INGAME;
         room.startMatch(data.seed, data.level);
-
-        //game = new MyGame(data.seed, data.level, data.names[socket.id]);
-        //otherGame = new OtherGame(data.seed, data.level, data.names[otherId]);
         setBackground(100);
     }
 }

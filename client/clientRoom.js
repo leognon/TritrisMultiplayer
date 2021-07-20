@@ -4,9 +4,10 @@ const MyGame = require('./myGame.js');
 const OtherGame = require('./otherGame.js');
 
 class ClientRoom extends Room {
-    constructor(roomCode, ownerId) {
+    constructor(roomCode, ownerId, myId) {
         super(roomCode);
         this.owner = new Player(ownerId);
+        this.myId = myId;
         this.players = [];
 
         //this.match = null;
@@ -16,15 +17,21 @@ class ClientRoom extends Room {
         this.nextSendData = Date.now();
     }
 
-    addPlayer(id) {
+    addPlayer(id, name) {
         console.log('Player ' + id +  ' joined');
-        this.players.push(new Player(id));
+        this.players.push(new Player(id, name));
     }
 
     startMatch(seed, level) {
-        console.log('Starting match');
-        this.myGame = new MyGame(seed, level, 'myName');
-        this.otherGame = new OtherGame(seed, level, 'otherName');
+        let myName;
+        let otherName;
+        for (let p of this.players) {
+            if (p.id == this.myId) myName = p.name;
+            else otherName = p.name;
+        }
+
+        this.myGame = new MyGame(seed, level, myName);
+        this.otherGame = new OtherGame(seed, level,otherName);
     }
 
     run(socket) {
@@ -84,8 +91,8 @@ class ClientRoom extends Room {
                 break;
             //}
         }
-        this.myGame.gotData(myData);
-        this.otherGame.gotData(otherData);
+        if (this.myGame) this.myGame.gotData(myData);
+        if (this.otherGame) this.otherGame.gotData(otherData);
     }
 
     sendData(socket) {
@@ -108,8 +115,9 @@ class ClientRoom extends Room {
 
 //TODO Figure out what a "player" should be
 class Player {
-    constructor(id) {
+    constructor(id, name) {
         this.id = id;
+        this.name = name;
     }
 }
 
