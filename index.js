@@ -39,7 +39,6 @@ io.on('connection', socket => {
             socket.name = data.name;
             joinRoom(socket, data.code);
         } else {
-            console.log('Got ', data);
             const room = getRoom(socket);
             if (room.found) {
                 room.room.gotData(socket, data);
@@ -48,10 +47,10 @@ io.on('connection', socket => {
     });
 
     socket.on('inputs', data => {
-        const match = getMatch(socket);
+        /*const match = getMatch(socket);
         if (match.found) {
             match.match.gotInputs(socket, data);
-        }
+        }*/
     });
 
     socket.on('disconnect', () => {
@@ -138,16 +137,25 @@ function getRoom(socket) {
     }
 }
 
+//Physics update
 setInterval(() => {
-    for (const match of matches) {
+    for (const id in rooms) {
+        rooms[id].physicsUpdate();
+    }
+    /*for (const match of matches) {
         match.physicsUpdate();
-    }
-}, config.SERVER_PHYSICS_UPDATE); //Physics update at 60fps
+    }*/
+}, config.SERVER_PHYSICS_UPDATE);
+
+//Send new game states to clients
 setInterval(() => {
-    for (const match of matches) {
-        match.clientsUpdate();
+    for (const id in rooms) {
+        rooms[id].clientsUpdate();
     }
-}, config.SERVER_SEND_DATA); //Send new game states to clients at 20fps
+    /*for (const match of matches) {
+        match.clientsUpdate();
+    }*/
+}, config.SERVER_SEND_DATA);
 
 //An interactive console to make debugging eaiser
 const stdin = process.openStdin();

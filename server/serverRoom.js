@@ -44,11 +44,15 @@ class ServerRoom extends Room {
             if (socket.id == this.owner.id && this.match === null) {
                 this.newMatch();
             }
+        } else if (data.type == 'inputs') {
+            if (this.match) {
+                this.match.gotInputs(socket, data.inps);
+            }
         }
     }
 
     newMatch() {
-        this.match = new Match(5, this.players[0], this.players[1]);
+        this.match = new Match(19, this.players[0], this.players[1]);
         for (let p of this.players) {
             p.emit('room', {
                 type: 'startMatch',
@@ -58,8 +62,12 @@ class ServerRoom extends Room {
         }
     }
 
-    update() {
+    physicsUpdate() {
+        if (this.match) this.match.physicsUpdate();
+    }
 
+    clientsUpdate() {
+        if (this.match) this.match.clientsUpdate();
     }
 
     hasPlayer(socket) {

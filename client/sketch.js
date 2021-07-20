@@ -212,19 +212,9 @@ function gotRoomData(data) {
 }
 
 function gotData(d) {
-    //setTimeout(() => {
-        const games = d.players;
-        const myData = d.yourData;
-        let otherData;
-        for (let id in games) {
-            //if (id != socket.id) {
-                otherData = games[id];
-                break;
-            //}
-        }
-        if (game) game.gotData(myData);
-        if (otherGame) otherGame.gotData(otherData);
-    //}, config.FAKE_LATENCY); //Some fake latency
+    if (room) {
+        room.gotData(d);
+    }
 };
 
 function setBackground(c) {

@@ -74,9 +74,28 @@ class ClientRoom extends Room {
         }
     }
 
+    gotData(d) {
+        const games = d.players;
+        const myData = d.yourData;
+        let otherData;
+        for (let id in games) {
+            //if (id != socket.id) {
+                otherData = games[id];
+                break;
+            //}
+        }
+        this.myGame.gotData(myData);
+        this.otherGame.gotData(otherData);
+    }
+
     sendData(socket) {
         const inps = this.myGame.getInputs();
-        if (inps.length > 0) socket.emit('inputs', inps);
+        if (inps.length > 0) {
+            socket.emit('room', {
+                type: 'inputs',
+                inps
+            });
+        }
     }
 }
 
