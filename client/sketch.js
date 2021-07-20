@@ -204,6 +204,11 @@ function gotRoomData(data) {
         state = states.INGAME;
         room.startMatch(data.seed, data.level);
         setBackground(100);
+    } else if (data.type == 'endMatch') {
+        if (room.owner.id == socket.id) state = states.LOBBY_OWNER;
+        else state = states.LOBBY;
+
+        room.endMatch();
     }
 }
 

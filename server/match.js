@@ -10,20 +10,6 @@ class Match {
         this.players = [];
         this.addPlayer(socket1);
         this.addPlayer(socket2);
-
-        /*this.names = {};
-        for (const p of this.players) {
-            this.names[p.getId()] = p.getName();
-        }*/
-
-        /*for (const p of this.players) {
-            p.sendState({
-                state: states.INGAME,
-                seed: this.seed,
-                level: this.level,
-                names: this.names
-            });
-        }*/
     }
 
     addPlayer(socket) {
@@ -35,6 +21,13 @@ class Match {
             if (p.getId() == socket.id) return true;
         }
         return false;
+    }
+
+    isOver() {
+        for (let p of this.players) {
+            if (p.serverGame.alive) return false;
+        }
+        return true;
     }
 
     gotInputs(socket, data) {

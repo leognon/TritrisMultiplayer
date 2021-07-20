@@ -11,6 +11,9 @@ class ServerRoom extends Room {
 
         this.match = null;
 
+        this.endMatchAt = 0;
+        this.endMatchDelay = 5000; //Wait 5 seconds before ending the match
+
         this.owner.emit('room', {
             type: 'created',
             code: this.roomCode,
@@ -69,8 +72,32 @@ class ServerRoom extends Room {
         }
     }
 
+    endMatch() {
+        for (let p of this.players) {
+            p.emit('room', {
+                type: 'endMatch'
+            });
+        }
+        this.match = null;
+    }
+
     physicsUpdate() {
-        if (this.match) this.match.physicsUpdate();
+        if (this.match) {
+            this.match.physicsUpdate();
+
+            if (this.match.isOver()) {
+                if (this.endMatchAt == -1) {
+                    //The match just ended
+                    this.endMatchAt = Date.now() + this.endMatchDelay;
+                } else if (Date.now() >= this.endMatchAt) {
+                    //The match is still over, wait is over
+                    this.endMatch();
+                }
+            } else {
+                //Match isn't over yet
+                this.endMatchAt = -1;
+            }
+        }
     }
 
     clientsUpdate() {

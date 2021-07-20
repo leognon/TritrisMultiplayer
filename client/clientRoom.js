@@ -32,6 +32,13 @@ class ClientRoom extends Room {
 
         this.myGame = new MyGame(seed, level, myName);
         this.otherGame = new OtherGame(seed, level,otherName);
+
+        this.nextSendData = Date.now();
+    }
+
+    endMatch() {
+        this.myGame = null;
+        this.otherGame = null;
     }
 
     run(socket) {
