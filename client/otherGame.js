@@ -27,7 +27,7 @@ class OtherGame extends ClientGame {
         this.lastFrame = Date.now();
     }
 
-    gotData(data) {
+    gotGameState(data) {
         const { inputs, gameData } = data;
         const timeSinceLast = gameData.time - this.lastReceived;
         this.lastReceived = gameData.time;

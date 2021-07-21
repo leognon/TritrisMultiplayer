@@ -184,7 +184,7 @@ class MyGame extends ClientGame {
         this.inputs.push(inp);
     }
 
-    gotData(myData) {
+    gotGameState(myData) {
         const myGameData = myData.gameData;
 
         //Remove inputs already processed by the server

@@ -5,9 +5,8 @@ const Room = require('../common/room.js');
 class ServerRoom extends Room {
     constructor(roomCode, owner) {
         super(roomCode, owner.id);
-        this.owner = owner;
-        this.players = [];
-        //this.spectators = [];
+        this.owner = owner; //The socket who created the room
+        this.users = []; //An array of sockets
 
         this.match = null;
 
@@ -22,26 +21,26 @@ class ServerRoom extends Room {
                 name: this.owner.name
             }
         });
-        this.players.push(this.owner);
+        this.users.push(this.owner);
 
         console.log('Created room with code ' + this.roomCode);
     }
 
-    addPlayer(socket) {
-        for (let p of this.players) {
+    addUser(socket) {
+        for (let p of this.users) {
             p.emit('room', {
-                type: 'playerJoin',
+                type: 'playerJoined',
                 id: socket.id,
                 name: socket.name
             });
         }
-        this.players.push(socket);
+        this.users.push(socket);
 
         socket.emit('room', {
             type: 'joined',
             code: this.roomCode,
             ownerId: this.owner.id,
-            players: this.players.map(p => {
+            players: this.users.map(p => {
                 return { //Just get the id and name
                     id: p.id, name: p.name
                 }
@@ -50,20 +49,23 @@ class ServerRoom extends Room {
     }
 
     gotData(socket, data) {
-        if (data.type == 'start') {
-            if (socket.id == this.owner.id && this.match === null) {
-                this.newMatch();
-            }
-        } else if (data.type == 'inputs') {
-            if (this.match) {
-                this.match.gotInputs(socket, data.inps);
-            }
+        switch (data.type) {
+            case 'start':
+                if (socket.id == this.owner.id && this.match === null) {
+                    this.newMatch();
+                }
+                break;
+            case 'inputs':
+                if (this.match) {
+                    this.match.gotInputs(socket, data.inps);
+                }
+                break;
         }
     }
 
     newMatch() {
-        this.match = new Match(19, this.players[0], this.players[1]);
-        for (let p of this.players) {
+        this.match = new Match(19, this.users[0], this.users[1]);
+        for (let p of this.users) {
             p.emit('room', {
                 type: 'startMatch',
                 seed: this.match.seed,
@@ -73,7 +75,7 @@ class ServerRoom extends Room {
     }
 
     endMatch() {
-        for (let p of this.players) {
+        for (let p of this.users) {
             p.emit('room', {
                 type: 'endMatch'
             });
@@ -105,7 +107,7 @@ class ServerRoom extends Room {
     }
 
     hasPlayer(socket) {
-        for (let p of this.players) {
+        for (let p of this.users) {
             if (p.id == socket.id) return true;
         }
         return false;

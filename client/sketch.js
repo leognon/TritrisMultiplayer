@@ -26,7 +26,7 @@ function createSocket() {
     });
 
     socket.on('state', gotState);
-    socket.on('data', gotData);
+    //socket.on('gameState', gotGameState);
     socket.on('matchOver', () => {
         game = null;
         otherGame = null;
@@ -91,42 +91,26 @@ setup = () => {
 
 draw = () => {
     if (state == states.LOADING) {
-        setBackground(51);
+        background(51);
         fill(255);
         textSize(20);
         textAlign(CENTER, CENTER);
         text('Loading...', width/2, height/2);
     } else if (state == states.MENU) {
-        setBackground(120);
+        background(120);
         //dom.joinDiv.style('visibility: visible;');
      } else if (state == states.FINDING_MATCH) {
-        setBackground(0);
+        background(0);
         fill(255);
         textSize(20);
         textAlign(CENTER, CENTER);
         text('Finding match...', width/2, height/2);
-    } else if (state == states.LOBBY_OWNER) {
-        setBackground(0);
-        fill(255);
-        textSize(20);
-        textAlign(CENTER, CENTER);
-        text(`You made the lobby\n\nCode: ${room.roomCode}`, width/2, height/2);
-        for (let i = 0; i < room.players.length; i++) {
-            text('Player ' + room.players[i].name, width/2, height/2 + 100 + i*30);
-        }
-    } else if (state == states.LOBBY) {
-        setBackground(0);
-        fill(255);
-        textSize(20);
-        textAlign(CENTER, CENTER);
-        text(`You joined the lobby\n\nCode: ${room.roomCode}`, width/2, height/2);
-        for (let i = 0; i < room.players.length; i++) {
-            text('Player ' + room.players[i].name, width/2, height/2 + 100 + i*30);
-        }
-    } else if (state == states.INGAME) {
+    } else if (state == states.LOBBY_OWNER || state == states.LOBBY) {
+        room.run(socket, pieceImages, sounds);
+    } /*else if (state == states.INGAME) {
         room.run(socket);
         room.show(pieceImages, sounds);
-    }
+    }*/
 }
 
 function joinGame() {
@@ -186,37 +170,26 @@ function gotState(data) {
 }
 
 function gotRoomData(data) {
-    if (data.type == 'created') {
-        console.log('Created lobby', data);
-        room = new ClientRoom(data.code, data.owner.id, socket.id);
-        room.addPlayer(data.owner.id, data.owner.name); //Add the owner
-        state = states.LOBBY_OWNER;
-    } else if (data.type == 'joined') {
-        console.log('Joined lobby');
-        room = new ClientRoom(data.code, data.ownerId, socket.id);
-        for (let p of data.players) {
-            room.addPlayer(p.id, p.name);
-        }
-        state = states.LOBBY;
-    } else if (data.type == 'playerJoin') {
-        room.addPlayer(data.id, data.name);
-    } else if (data.type == 'startMatch') {
-        state = states.INGAME;
-        room.startMatch(data.seed, data.level);
-        setBackground(100);
-    } else if (data.type == 'endMatch') {
-        if (room.owner.id == socket.id) state = states.LOBBY_OWNER;
-        else state = states.LOBBY;
-
-        room.endMatch();
+    switch (data.type) {
+        case 'created': //You just created a lobby
+            console.log('Created lobby', data);
+            room = new ClientRoom(data.code, data.owner.id, socket.id);
+            room.addUser(data.owner.id, data.owner.name); //Add the owner
+            state = states.LOBBY_OWNER;
+            break;
+        case 'joined': //You just joined a lobby
+            console.log('Joined lobby');
+            room = new ClientRoom(data.code, data.ownerId, socket.id);
+            for (let p of data.players) { //Add all of the already joined players
+                room.addUser(p.id, p.name);
+            }
+            state = states.LOBBY;
+            break;
+        default:
+            if (room) room.gotData(data);
+            break;
     }
 }
-
-function gotData(d) {
-    if (room) {
-        room.gotData(d);
-    }
-};
 
 function setBackground(c) {
     backgroundColor = c;

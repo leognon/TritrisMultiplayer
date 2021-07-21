@@ -32,25 +32,22 @@ io.on('connection', socket => {
     });
 
     socket.on('room', data => {
-        if (data.type == 'create') {
-            socket.name = data.name;
-            createRoom(socket);
-        } else if (data.type == 'join') {
-            socket.name = data.name;
-            joinRoom(socket, data.code);
-        } else {
-            const room = getRoom(socket);
-            if (room.found) {
-                room.room.gotData(socket, data);
-            }
+        switch (data.type) {
+            case 'create':
+                socket.name = data.name;
+                createRoom(socket);
+                break;
+            case 'join':
+                socket.name = data.name;
+                joinRoom(socket, data.code);
+                break;
+            default:
+                const room = getRoom(socket);
+                if (room.found) {
+                    room.room.gotData(socket, data);
+                }
+                break;
         }
-    });
-
-    socket.on('inputs', data => {
-        /*const match = getMatch(socket);
-        if (match.found) {
-            match.match.gotInputs(socket, data);
-        }*/
     });
 
     socket.on('disconnect', () => {
@@ -113,7 +110,7 @@ function generateUniqRoomCode() {
 
 function joinRoom(socket, code) {
     if (rooms.hasOwnProperty(code)) {
-        rooms[code].addPlayer(socket);
+        rooms[code].addUser(socket);
     } else {
         socket.emit('state', {
             state: states.MENU,

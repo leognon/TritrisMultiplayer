@@ -1,4 +1,5 @@
 const config = require('../common/config.js');
+const states = require('../common/states.js');
 const Room = require('../common/room.js');
 const MyGame = require('./myGame.js');
 const OtherGame = require('./otherGame.js');
@@ -6,9 +7,9 @@ const OtherGame = require('./otherGame.js');
 class ClientRoom extends Room {
     constructor(roomCode, ownerId, myId) {
         super(roomCode);
-        this.owner = new Player(ownerId);
+        this.owner = new ClientPlayer(ownerId);
         this.myId = myId;
-        this.players = [];
+        this.users = [];
 
         //this.match = null;
         this.myGame = null;
@@ -17,15 +18,15 @@ class ClientRoom extends Room {
         this.nextSendData = Date.now();
     }
 
-    addPlayer(id, name) {
+    addUser(id, name) {
         console.log('Player ' + id +  ' joined');
-        this.players.push(new Player(id, name));
+        this.users.push(new ClientPlayer(id, name));
     }
 
     startMatch(seed, level) {
         let myName;
         let otherName;
-        for (let p of this.players) {
+        for (let p of this.users) {
             if (p.id == this.myId) myName = p.name;
             else otherName = p.name;
         }
@@ -41,20 +42,51 @@ class ClientRoom extends Room {
         this.otherGame = null;
     }
 
-    run(socket) {
+    //Do everything necessary (update, show)
+    run(socket, pieceImages, sounds) {
+        if (this.myGame !== null && this.otherGame !== null) {
+            this.update(socket);
+            this.showGame(pieceImages, sounds);
+        } else if (this.owner.id == this.myId) {
+            this.showLobbyOwner();
+        } else {
+            this.showLobby();
+        }
+    }
+
+    //Update the current game
+    update(socket) {
         if (Date.now() > this.nextSendData) {
             this.sendData(socket);
             this.nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         }
-        this.update();
-    }
-
-    update() {
         this.myGame.clientUpdate();
         this.otherGame.interpolateUpdate();
     }
 
-    show(pieceImages, sounds) {
+    showLobbyOwner() {
+        background(0);
+        fill(255);
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        text(`You made the lobby\n\nCode: ${this.roomCode}`, width/2, height/2);
+        for (let i = 0; i < this.users.length; i++) {
+            text('Player ' + this.users[i].name, width/2, height/2 + 100 + i*30);
+        }
+    }
+
+    showLobby() {
+        background(0);
+        fill(255);
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        text(`You joined the lobby\n\nCode: ${this.roomCode}`, width/2, height/2);
+        for (let i = 0; i < this.users.length; i++) {
+            text('Player ' + this.users[i].name, width/2, height/2 + 100 + i*30);
+        }
+    }
+
+    showGame(pieceImages, sounds) {
         if (this.myGame.duringCountDown() || Date.now()-300 < this.myGame.startTime) { //TODO Make this all better by making the redraw system use p5 graphics
             background(100);
         }
@@ -88,7 +120,24 @@ class ClientRoom extends Room {
         }
     }
 
-    gotData(d) {
+    gotData(data) {
+        switch (data.type) {
+            case 'startMatch':
+                this.startMatch(data.seed, data.level);
+                break;
+            case 'endMatch':
+                this.endMatch();
+                break;
+            case 'playerJoined':
+                this.addUser(data.id, data.name);
+                break;
+            case 'gotGameState':
+                this.gotGameState(data.data);
+                break;
+        }
+    }
+
+    gotGameState(d) {
         const games = d.players;
         const myData = d.yourData;
         let otherData;
@@ -98,8 +147,8 @@ class ClientRoom extends Room {
                 break;
             //}
         }
-        if (this.myGame) this.myGame.gotData(myData);
-        if (this.otherGame) this.otherGame.gotData(otherData);
+        if (this.myGame) this.myGame.gotGameState(myData);
+        if (this.otherGame) this.otherGame.gotGameState(otherData);
     }
 
     sendData(socket) {
@@ -121,7 +170,7 @@ class ClientRoom extends Room {
 }*/
 
 //TODO Figure out what a "player" should be
-class Player {
+class ClientPlayer {
     constructor(id, name) {
         this.id = id;
         this.name = name;

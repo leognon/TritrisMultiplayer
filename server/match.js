@@ -13,16 +13,10 @@ class Match {
     }
 
     addPlayer(socket) {
-        this.players.push(new Player(socket, this.seed, this.level));
+        this.players.push(new ServerPlayer(socket, this.seed, this.level));
     }
 
-    hasPlayer(socket) {
-        for (let p of this.players) {
-            if (p.getId() == socket.id) return true;
-        }
-        return false;
-    }
-
+    //If all players have lost
     isOver() {
         for (let p of this.players) {
             if (p.serverGame.alive) return false;
@@ -30,6 +24,7 @@ class Match {
         return true;
     }
 
+    //When inputs have been received from a player
     gotInputs(socket, data) {
         for (let p of this.players) {
             if (p.getId() == socket.id) {
@@ -39,14 +34,7 @@ class Match {
         }
     }
 
-    disconnected(socket) {
-        for (let p of this.players) {
-            if (p.getId() != socket.id) {
-                p.disconnected();
-            }
-        }
-    }
-
+    //Update the boards
     physicsUpdate() {
         for (const p of this.players) {
             p.physicsUpdate();
@@ -81,14 +69,10 @@ class Match {
     }
 }
 
-class Player {
+class ServerPlayer {
     constructor(socket, seed, level) {
         this.socket = socket;
         this.serverGame = new ServerGame(seed, level);
-    }
-
-    disconnected() {
-        this.socket.emit('matchOver');
     }
 
     physicsUpdate() {
@@ -99,9 +83,6 @@ class Player {
         return this.socket.id;
     }
 
-    getName() {
-        return this.socket.name;
-    }
     //TODO Should lastFrame be set to Date.now() after receiving data on the client?
 
     gotInputs(data) {
@@ -117,11 +98,10 @@ class Player {
     }
 
     sendData(data) {
-        this.socket.emit('data', data);
-    }
-
-    sendState(data) {
-        this.socket.emit('state', data);
+        this.socket.emit('room', {
+            type: 'gotGameState',
+            data //TODO Rework this data.data stuff
+        });
     }
 }
 
