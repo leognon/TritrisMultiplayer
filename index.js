@@ -8,10 +8,8 @@ const config = require('./common/config.js');
 
 let sockets = {};
 
-const Match = require('./server/match.js');
 const ServerRoom = require('./server/serverRoom.js');
-let matches = [];
-let queue = []; //A list of socket ids in the queue
+//let queue = []; //A list of socket ids in the queue
 let rooms = {}; //The key is the room code
 
 app.get('/', (_, res) => {
@@ -51,7 +49,7 @@ io.on('connection', socket => {
     });
 
     socket.on('disconnect', () => {
-        const match = getMatch(socket);
+        /*const match = getMatch(socket);
         if (match.found) {
             matches[match.index].disconnected(socket);
             matches.splice(match.index, 1);
@@ -62,10 +60,11 @@ io.on('connection', socket => {
             }
         }
         console.log(socket.id + ' disconnected');
-        delete sockets[socket.id];
+        delete sockets[socket.id];*/
     });
 });
 
+/*
 function getMatch(socket) {
     for (let i = 0; i < matches.length; i++) {
         if (matches[i].hasPlayer(socket)) {
@@ -79,14 +78,16 @@ function getMatch(socket) {
     return {
         found: false,
     }
-}
+}*/
 
 function enqueue(socket) {
+    /*
     queue.push(socket);
     if (queue.length == 2) {
         matches.push(new Match(level, queue[0], queue[1]));
         queue.splice(0, 2);
     }
+    */
 }
 
 function createRoom(owner) {
@@ -159,8 +160,8 @@ const stdin = process.openStdin();
 stdin.addListener("data", (d) => {
     d = d.toString().trim();
     try {
-        let g = null;
-        if (matches.length > 0) g = matches[0].players[0].serverGame;
+        //let g = null;
+        //if (matches.length > 0) g = matches[0].players[0].serverGame;
         console.log(eval(d));
     } catch (e) {
         console.error('Something went wrong.', e);

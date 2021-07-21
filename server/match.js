@@ -1,7 +1,7 @@
 const states = require('../common/states.js');
 const ServerGame = require('./serverGame.js');
 
-class Match {
+class ServerMatch {
     constructor(level, socket1, socket2) {
         console.log('Created match between ' + socket1.id + ' and ' + (socket2 ? socket2.id : 'nobody'));
         this.seed = Math.random();
@@ -105,4 +105,4 @@ class ServerPlayer {
     }
 }
 
-module.exports = Match;
+module.exports = ServerMatch;

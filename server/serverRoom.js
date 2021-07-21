@@ -1,7 +1,8 @@
 const states = require('../common/states.js');
-const Match = require('./match.js');
+const ServerMatch = require('./match.js');
 const Room = require('../common/room.js');
 
+//TODO Make the Room class more useful with inheritance
 class ServerRoom extends Room {
     constructor(roomCode, owner) {
         super(roomCode, owner.id);
@@ -64,7 +65,7 @@ class ServerRoom extends Room {
     }
 
     newMatch() {
-        this.match = new Match(19, this.users[0], this.users[1]);
+        this.match = new ServerMatch(19, this.users[0], this.users[1]);
         for (let p of this.users) {
             p.emit('room', {
                 type: 'startMatch',
