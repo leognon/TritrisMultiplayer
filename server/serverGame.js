@@ -10,14 +10,14 @@ class ServerGame extends Game {
         this.lastClientMoveDown = 0; //The time of the last move down received from the client
     }
 
-    physicsUpdate() {
+    physicsUpdate(forceMove) {
         //TODO The line below is slightly pointless. It will get overriden 99.99% of the time. It might only help to check if someone loses??
         if (!this.alive) return;
         this.updateToTime(Date.now() - this.startTime, true);
         //TODO Make this condition better. 10 seconds will result in an instant top out no matter what...
         const maxTime = 10 * 1000; //If nothing is received for 3 seconds, it will update automatically
         const maxMoveDownTime = this.pieceSpeed*2 + maxTime; //TODO Idk what the formula for this should be. Also, is this even necessary? People can still cheat by lengthening the time between move downs
-        if (this.time - maxTime >= this.lastReceivedTime || this.time - maxMoveDownTime >= this.lastClientMoveDown) {
+        if (forceMove || this.time - maxTime >= this.lastReceivedTime || this.time - maxMoveDownTime >= this.lastClientMoveDown) {
             //If no inputs recieved for 7 seconds, force the state to update
             this.goToGameState(this.latestState);
             this.updateToTime(Date.now() - this.startTime, true);
@@ -44,7 +44,7 @@ class ServerGame extends Game {
             this.updateToTime(latestTime, false); //Update all of the newly received inputs
         else
             console.log(`Not going back from ${this.time} to ${latestTime}`);
-        this.physicsUpdate(); //Updates to the current time (simulating gravity)
+        this.physicsUpdate(false); //Updates to the current time (simulating gravity)
     }
 
     addInput(inp) {

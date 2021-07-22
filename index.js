@@ -24,10 +24,10 @@ io.on('connection', socket => {
     sockets[socket.id] = socket;
 
     //TODO Validate and sanitize inputs
-    socket.on('joinMatch', data => {
+    /*socket.on('joinMatch', data => {
         socket.name = data.name;
         enqueue(socket);
-    });
+    });*/
 
     socket.on('room', data => {
         switch (data.type) {
@@ -49,6 +49,13 @@ io.on('connection', socket => {
     });
 
     socket.on('disconnect', () => {
+        const room = getRoom(socket);
+        if (room.found) {
+            const shouldDisband = room.room.disconnected(socket);
+            if (shouldDisband) {
+                delete rooms[room.id];
+            }
+        }
         /*const match = getMatch(socket);
         if (match.found) {
             matches[match.index].disconnected(socket);

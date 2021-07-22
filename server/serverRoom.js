@@ -49,6 +49,35 @@ class ServerRoom extends Room {
         });
     }
 
+    disconnected(socket) {
+        for (let i = this.users.length-1; i >= 0; i--) {
+            if (this.users[i].id == socket.id) {
+                this.users.splice(i, 1);
+            } else {
+                this.users[i].emit('room', {
+                    type: 'playerDisconnected',
+                    id: socket.id
+                });
+            }
+        }
+
+        if (this.users.length == 0) {
+            return true; //Disband room
+        } else if (socket.id == this.owner.id) {
+            //Pick new owner
+            const newOwner = this.users[0];
+            this.owner = newOwner;
+            for (let u of this.users) {
+                u.emit('room', {
+                    type: 'newOwner',
+                    id: this.owner.id
+                });
+            }
+        }
+
+        return false;
+    }
+
     gotData(socket, data) {
         switch (data.type) {
             case 'start':

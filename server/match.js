@@ -76,7 +76,7 @@ class ServerPlayer {
     }
 
     physicsUpdate() {
-        this.serverGame.physicsUpdate();
+        this.serverGame.physicsUpdate(this.socket.disconnected);
     }
 
     getId() {

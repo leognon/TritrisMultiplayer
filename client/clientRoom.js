@@ -21,6 +21,14 @@ class ClientRoom extends Room {
         //this.users.push(new ClientPlayer(id, name));
     }
 
+    disconnected(id) {
+        for (let i = 0; i < this.users.length; i++) {
+            if (this.users[i].id == id) {
+                this.users.splice(i, 1);
+            }
+        }
+    }
+
     startMatch(seed, level) {
         let me;
         let others = [];
@@ -94,8 +102,14 @@ class ClientRoom extends Room {
             case 'playerJoined':
                 this.addUser(data.id, data.name);
                 break;
+            case 'playerDisconnected':
+                this.disconnected(data.id);
+                break;
             case 'gotGameState':
                 this.gotGameState(data.data);
+                break;
+            case 'newOwner':
+                this.ownerId = data.id;
                 break;
         }
     }
