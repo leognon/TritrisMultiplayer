@@ -1,14 +1,15 @@
 const config = require('../common/config.js');
 const states = require('../common/states.js');
-const Room = require('../common/room.js');
 const MyGame = require('./myGame.js');
 const OtherGame = require('./otherGame.js');
 
-class ClientRoom extends Room {
+class ClientRoom {
     constructor(roomCode, ownerId, myId) {
-        super(roomCode);
+        this.roomCode = roomCode;
+
         this.ownerId = ownerId;
         this.myId = myId;
+
         this.users = [];
 
         this.match = null;

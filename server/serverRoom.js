@@ -1,11 +1,11 @@
 const states = require('../common/states.js');
 const ServerMatch = require('./match.js');
-const Room = require('../common/room.js');
 
 //TODO Make the Room class more useful with inheritance
-class ServerRoom extends Room {
+class ServerRoom {
     constructor(roomCode, owner) {
-        super(roomCode, owner.id);
+        this.roomCode = roomCode;
+
         this.owner = owner; //The socket who created the room
         this.users = []; //An array of sockets
 
