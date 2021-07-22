@@ -11,6 +11,8 @@ class ServerRoom extends Room {
 
         this.match = null;
 
+        this.state = states.LOBBY;
+
         this.endMatchAt = 0;
         this.endMatchDelay = 5000; //Wait 5 seconds before ending the match
 
@@ -81,12 +83,12 @@ class ServerRoom extends Room {
     gotData(socket, data) {
         switch (data.type) {
             case 'start':
-                if (socket.id == this.owner.id && this.match === null) {
+                if (socket.id == this.owner.id && this.state == states.LOBBY) {
                     this.newMatch();
                 }
                 break;
             case 'inputs':
-                if (this.match) {
+                if (this.state == states.INGAME && this.match) {
                     this.match.gotInputs(socket, data.inps);
                 }
                 break;
@@ -94,7 +96,7 @@ class ServerRoom extends Room {
     }
 
     newMatch() {
-        this.match = new ServerMatch(19, this.users[0], this.users[1]);
+        this.match = new ServerMatch(15, this.users[0], this.users[1]);
         for (let p of this.users) {
             p.emit('room', {
                 type: 'startMatch',
@@ -102,6 +104,7 @@ class ServerRoom extends Room {
                 level: this.match.level
             });
         }
+        this.state = states.INGAME;
     }
 
     endMatch() {
@@ -111,10 +114,11 @@ class ServerRoom extends Room {
             });
         }
         this.match = null;
+        this.state = states.LOBBY;
     }
 
     physicsUpdate() {
-        if (this.match) {
+        if (this.state == states.INGAME && this.match) {
             this.match.physicsUpdate();
 
             if (this.match.isOver()) {
@@ -133,7 +137,7 @@ class ServerRoom extends Room {
     }
 
     clientsUpdate() {
-        if (this.match) this.match.clientsUpdate();
+        if (this.state == states.INGAME && this.match) this.match.clientsUpdate();
     }
 
     hasPlayer(socket) {

@@ -1,18 +1,13 @@
 const p5 = require('p5');
 const io = require('socket.io-client');
 const states = require('../common/states.js');
-const config = require('../common/config.js');
 const ClientRoom = require('./clientRoom.js');
-const MyGame = require('./myGame.js');
-const OtherGame = require('./otherGame.js');
 
 new p5(() => {
 let socket;
 
 let state = states.LOADING;
-let room;
-
-let backgroundColor = 0;
+let room = null;
 
 let piecesImage; //The spritesheet
 let pieceImages = []; //The individual images
@@ -105,7 +100,7 @@ draw = () => {
         textSize(20);
         textAlign(CENTER, CENTER);
         text('Finding match...', width/2, height/2);
-    } else if (state == states.LOBBY_OWNER || state == states.LOBBY) {
+    } else if (state == states.ROOM) {
         room.run(socket, pieceImages, sounds);
     } /*else if (state == states.INGAME) {
         room.run(socket);
@@ -137,7 +132,7 @@ function joinRoom(code) {
     //TODO Add loading state
 }
 keyPressed = () => {
-    if (state == states.LOBBY_OWNER && keyCode == 32) {
+    if (state == states.ROOM && room && socket.id == room.ownerId && keyCode == 32) {
         socket.emit('room', {
             type: 'start',
         });
@@ -153,19 +148,7 @@ function gotState(data) {
 
     if (state == states.MENU) {
         dom.joinDiv.style('visibility: visible;');
-    } else if (state == states.INGAME) {
-        //TODO Figure out quick play with the room system
-        /*let otherId;
-        for (let id in data.names) {
-            if (id != socket.id) {
-                otherId = id;
-                break;
-            }
-        }
-        game = new MyGame(data.seed, data.level, data.names[socket.id]);
-        otherGame = new OtherGame(data.seed, data.level, data.names[otherId]);
-        nextSendData = Date.now() + config.CLIENT_SEND_DATA;
-        setBackground(100);*/
+        room = null;
     }
 }
 
@@ -175,7 +158,7 @@ function gotRoomData(data) {
             console.log('Created lobby', data);
             room = new ClientRoom(data.code, data.owner.id, socket.id);
             room.addUser(data.owner.id, data.owner.name); //Add the owner
-            state = states.LOBBY_OWNER;
+            state = states.ROOM;
             break;
         case 'joined': //You just joined a lobby
             console.log('Joined lobby');
@@ -183,20 +166,11 @@ function gotRoomData(data) {
             for (let p of data.players) { //Add all of the already joined players
                 room.addUser(p.id, p.name);
             }
-            state = states.LOBBY;
+            state = states.ROOM;
             break;
         default:
             if (room) room.gotData(data);
             break;
-    }
-}
-
-function setBackground(c) {
-    backgroundColor = c;
-    background(c);
-    if (room && room.myGame) {
-        room.myGame.redraw = true;
-        room.otherGame.redraw = true;
     }
 }
 

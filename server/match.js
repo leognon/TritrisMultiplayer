@@ -1,4 +1,3 @@
-const states = require('../common/states.js');
 const ServerGame = require('./serverGame.js');
 
 class ServerMatch {

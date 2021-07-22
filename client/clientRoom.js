@@ -8,11 +8,12 @@ class ClientRoom extends Room {
     constructor(roomCode, ownerId, myId) {
         super(roomCode);
         this.ownerId = ownerId;
-            //new ClientPlayer(ownerId);
         this.myId = myId;
         this.users = [];
 
         this.match = null;
+
+        this.state = states.LOBBY;
     }
 
     addUser(id, name) {
@@ -38,15 +39,19 @@ class ClientRoom extends Room {
         }
 
         this.match = new ClientMatch(level, seed, me, others);
+
+        this.state = states.INGAME;
     }
 
     endMatch() {
         this.match = null;
+
+        this.state = states.LOBBY;
     }
 
     //Do everything necessary (update, show)
     run(socket, pieceImages, sounds) {
-        if (this.match !== null) {
+        if (this.state == states.INGAME) {
             this.update(socket);
             this.showGame(pieceImages, sounds);
         } else if (this.ownerId == this.myId) {
@@ -58,7 +63,7 @@ class ClientRoom extends Room {
 
     //Update the current game
     update(socket) {
-        if (this.match) {
+        if (this.state == states.INGAME && this.match) {
             this.match.update(socket);
         }
     }
@@ -86,7 +91,7 @@ class ClientRoom extends Room {
     }
 
     showGame(pieceImages, sounds) {
-        if (this.match) {
+        if (this.state == states.INGAME && this.match) {
             this.match.show(pieceImages, sounds);
         }
     }
@@ -115,7 +120,7 @@ class ClientRoom extends Room {
     }
 
     gotGameState(d) {
-        if (this.match) {
+        if (this.state == states.INGAME && this.match) {
             this.match.gotGameState(d);
         }
     }
