@@ -6,20 +6,12 @@
         <title>Tritris</title>
     </head>
     <body>
-        <!-- Load React. -->
-        <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
-        <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
-        <script src="client/bundle.js"></script>
 
         <div id="root"></div>
 
+        <script src="build/main.min.js"></script>
 
-        <script type="text/babel" src="client/components/app.jsx"></script>
-
-        <div class="box" id="joinDiv">
+        <!-- <div class="box" id="joinDiv">
             <h2>Tritris</h2>
             <label for="name">Name</label>
             <input id="name" style="width: 100px"></input>
@@ -29,9 +21,6 @@
             <br>
             <button id="createRoom">Create Room</button>
             <button id="joinRoom">Join Room</button>
-
-
-        </div>
-
+        </div> --!>
     </body>
 </html>

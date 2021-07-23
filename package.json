@@ -1,25 +1,44 @@
 {
-  "name": "tritrio",
-  "version": "1.0.0",
-  "description": "Online multiplayer Tritris (Tetris with  Triangles)",
-  "main": "index.js",
-  "scripts": {
-    "build": "browserify client/sketch.js -o client/bundle.js",
-    "buildDebug": "browserify --debug client/sketch.js -o client/bundle.js",
-    "start": "npm run build && node index.js",
-    "dev": "nodemon -i client/bundle.js --exec 'npm run buildDebug && { afplay ~/Desktop/youtube/tritris/tritris/assets/move.wav & } && node index.js'"
-  },
-  "author": "Goel",
-  "license": "ISC",
-  "dependencies": {
-    "browserify": "^17.0.0",
-    "express": "^4.17.1",
-    "p5": "^1.3.1",
-    "random-seed": "^0.3.0",
-    "socket.io": "^4.1.2",
-    "socket.io-client": "^4.1.2"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.7"
-  }
+    "name": "tritrio",
+    "version": "1.0.0",
+    "description": "Online multiplayer Tritris (Tetris with  Triangles)",
+    "main": "index.js",
+    "scripts": {
+        "build": "gulp build-react --production",
+        "buildDebug": "gulp build-react",
+        "start": "npm run build && node index.js",
+        "playSound": "afplay ~/Desktop/youtube/tritris/tritris/assets/move.wav &",
+        "dev": "nodemon -i build --exec 'npm run buildDebug && npm run playSound && node index.js'",
+        "devDebug": "nodemon -i build --exec 'npm run buildDebug && npm run playSound && node --inspect index.js'"
+    },
+    "author": "Goel",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.17.1",
+        "p5": "^1.3.1",
+        "random-seed": "^0.3.0",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "socket.io": "^4.1.2",
+        "socket.io-client": "^4.1.2"
+    },
+    "devDependencies": {
+        "@babel/preset-env": "^7.14.8",
+        "@babel/preset-react": "^7.14.5",
+        "babelify": "^10.0.0",
+        "browserify": "^17.0.0",
+        "gulp": "^4.0.2",
+        "gulp-if": "^3.0.0",
+        "gulp-uglify": "^3.0.2",
+        "nodemon": "^2.0.7",
+        "vinyl-buffer": "^1.0.1",
+        "vinyl-source-stream": "^2.0.0",
+        "yargs": "^7.1.2"
+    },
+    "babel": {
+        "presets": [
+            "@babel/preset-env",
+            "@babel/preset-react"
+        ]
+    }
 }

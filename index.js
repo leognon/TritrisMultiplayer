@@ -18,6 +18,9 @@ app.get('/', (_, res) => {
 app.get('/client/*', (req, res) => { //TODO This might not be the best way to do it
     res.sendFile(path.join(__dirname, `/client/${req.params[0]}`));
 });
+app.get('/build/*', (req, res) => { //TODO This might not be the best way to do it
+    res.sendFile(path.join(__dirname, `/build/${req.params[0]}`));
+});
 
 io.on('connection', socket => {
     console.log(socket.id + ' connected');
