@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.min.js"></script>-->
-        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/addons/p5.dom.min.js"></script>-->
-        <!--<script src="/socket.io/socket.io.js"></script>-->
-
         <link rel="stylesheet" type="text/css" href="client/style.css" />
         <meta charset="utf-8" />
         <title>Tritris</title>
     </head>
     <body>
+        <!-- Load React. -->
+        <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+        <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
         <script src="client/bundle.js"></script>
+
+        <div id="root"></div>
+
+
+        <script type="text/babel" src="client/components/app.jsx"></script>
 
         <div class="box" id="joinDiv">
             <h2>Tritris</h2>

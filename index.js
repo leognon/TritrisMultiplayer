@@ -15,7 +15,7 @@ let rooms = {}; //The key is the room code
 app.get('/', (_, res) => {
     res.sendFile(path.join(__dirname, '/client/index.html'));
 });
-app.get('/client/*', (req, res) => {
+app.get('/client/*', (req, res) => { //TODO This might not be the best way to do it
     res.sendFile(path.join(__dirname, `/client/${req.params[0]}`));
 });
 
