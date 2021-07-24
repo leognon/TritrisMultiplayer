@@ -27,7 +27,7 @@ class ClientGame extends Game {
         return Date.now() < this.startTime;
     }
 
-    show(x, y, w, h, pieceImages, showGridLines, showStats, showFlash) {
+    show(p5, x, y, w, h, pieceImages, showGridLines, showStats, showFlash) {
         if (Date.now() < this.startTime) {
             this.redraw = true; //During the countdown, keep redrawing to show the display
         }
@@ -35,23 +35,23 @@ class ClientGame extends Game {
         //TODO Remove redraw? It is temporarily disabled
         //if (!this.redraw) return;
 
-        noStroke();
-        fill(0);
-        rect(x, y, w, h);
+        p5.noStroke();
+        p5.fill(0);
+        p5.rect(x, y, w, h);
 
         const cellW = w / this.w;
         const cellH = h / this.h;
 
-        this.grid.show(x, y, w, h, pieceImages, showGridLines);
+        this.grid.show(p5, x, y, w, h, pieceImages, showGridLines);
         if (this.currentPiece) {
-            this.currentPiece.show(x, y, cellW, cellH, pieceImages);
+            this.currentPiece.show(p5, x, y, cellW, cellH, pieceImages);
         }
 
         const txtSize = 20;
-        textSize(txtSize);
-        textAlign(LEFT, TOP);
+        p5.textSize(txtSize);
+        p5.textAlign(p5.LEFT, p5.TOP);
         const padding = 10;
-        const scorePos = createVector(x + w + cellW, y + cellH);
+        const scorePos = p5.createVector(x + w + cellW, y + cellH);
         let scoreDim;
 
         let normal = this.score % 100000;
@@ -73,47 +73,48 @@ class ClientGame extends Game {
         const scoreTxt = `Score ${formattedScore}`;
         const linesTxt = `Lines  ${this.lines}`;
         const levelTxt = `Level  ${this.level}`;
-        const textW = max(
-            textWidth(scoreTxt),
-            textWidth(linesTxt),
-            textWidth(levelTxt),
+        const textW = Math.max(
+            p5.textWidth(scoreTxt),
+            p5.textWidth(linesTxt),
+            p5.textWidth(levelTxt),
             4 * cellW
         );
-        scoreDim = createVector(
+        scoreDim = p5.createVector(
             textW + padding + 10,
             txtSize * 4.5 + padding * 2
         );
-        fill(100);
-        stroke(0);
-        strokeWeight(3);
+        p5.fill(100);
+        p5.stroke(0);
+        p5.strokeWeight(3);
         //The box outline
-        rect(scorePos.x, scorePos.y, scoreDim.x, scoreDim.y);
-        noStroke();
-        fill(0);
-        text(scoreTxt, scorePos.x + padding, scorePos.y + padding);
-        text(
+        p5.rect(scorePos.x, scorePos.y, scoreDim.x, scoreDim.y);
+        p5.noStroke();
+        p5.fill(0);
+        p5.text(scoreTxt, scorePos.x + padding, scorePos.y + padding);
+        p5.text(
             linesTxt,
             scorePos.x + padding,
             scorePos.y + padding + 1.75 * txtSize
         );
-        text(
+        p5.text(
             levelTxt,
             scorePos.x + padding,
             scorePos.y + padding + 3.5 * txtSize
         );
 
-        const nextPiecePos = createVector(
+        const nextPiecePos = p5.createVector(
             scorePos.x,
             scorePos.y + scoreDim.y + cellH
         );
-        const nextPieceDim = createVector(cellW * 3, cellW * 3);
-        fill(100);
-        stroke(0);
-        strokeWeight(3);
-        rect(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y);
+        const nextPieceDim = p5.createVector(cellW * 3, cellW * 3);
+        p5.fill(100);
+        p5.stroke(0);
+        p5.strokeWeight(3);
+        p5.rect(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y);
         if (this.nextPiece) {
             if (this.nextSingles == 0) { //Show next piece normally
                 this.nextPiece.showAt(
+                    p5,
                     nextPiecePos.x,
                     nextPiecePos.y,
                     nextPieceDim.x,
@@ -123,19 +124,19 @@ class ClientGame extends Game {
             } else if (this.nextSingles == 2) { //Show 3 Ninjas coming up
                 const spacingX = nextPieceDim.x / 7;
                 const spacingY = nextPieceDim.y / 7;
-                this.nextPiece.showAt(nextPiecePos.x - spacingX, nextPiecePos.y - spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
-                this.nextPiece.showAt(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y, pieceImages);
-                this.nextPiece.showAt(nextPiecePos.x + spacingX, nextPiecePos.y + spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(p5, nextPiecePos.x - spacingX, nextPiecePos.y - spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(p5, nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(p5, nextPiecePos.x + spacingX, nextPiecePos.y + spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
             } else if (this.nextSingles == 1) { //Show 2 ninjas coming up
                 const spacingX = nextPieceDim.x / 7;
                 const spacingY = nextPieceDim.y / 7;
-                this.nextPiece.showAt(nextPiecePos.x - spacingX/2, nextPiecePos.y - spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
-                this.nextPiece.showAt(nextPiecePos.x + spacingX/2, nextPiecePos.y + spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(p5, nextPiecePos.x - spacingX/2, nextPiecePos.y - spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
+                this.nextPiece.showAt(p5, nextPiecePos.x + spacingX/2, nextPiecePos.y + spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
             }
         }
 
         if (showStats) {
-            const statPos = createVector(
+            const statPos = p5.createVector(
                 scorePos.x,
                 nextPiecePos.y + nextPieceDim.y + cellH
             );
@@ -144,41 +145,41 @@ class ClientGame extends Game {
             if (this.lines == 0) tritrisPercent = '--';
             const tritrisPercentText = `Tri ${tritrisPercent}%`;
 
-            const fixedTime = max(this.time, 0);
+            const fixedTime = Math.max(this.time, 0);
             const totalSec = Math.floor(fixedTime / 1000) % 60;
             const totalM = Math.floor(fixedTime / (1000*60));
-            const startLevelText = `Time ${nf(totalM,2)}:${nf(totalSec,2)}`;
+            const startLevelText = `Time ${p5.nf(totalM,2)}:${p5.nf(totalSec,2)}`;
 
-            const textW = max(
-                textWidth(tritrisPercentText),
-                textWidth(startLevelText),
+            const textW = Math.max(
+                p5.textWidth(tritrisPercentText),
+                p5.textWidth(startLevelText),
                 4 * cellW
             );
 
-            const statDim = createVector(
+            const statDim = p5.createVector(
                 textW + padding + 10,
                 txtSize * 2.75 + padding * 2
             );
-            fill(100);
-            stroke(0);
-            strokeWeight(3);
+            p5.fill(100);
+            p5.stroke(0);
+            p5.strokeWeight(3);
             //The box outline
-            rect(statPos.x, statPos.y, statDim.x, statDim.y);
-            noStroke();
-            fill(0);
-            text(tritrisPercentText, statPos.x + padding, statPos.y + padding);
-            text(
+            p5.rect(statPos.x, statPos.y, statDim.x, statDim.y);
+            p5.noStroke();
+            p5.fill(0);
+            p5.text(tritrisPercentText, statPos.x + padding, statPos.y + padding);
+            p5.text(
                 startLevelText,
                 statPos.x + padding,
                 statPos.y + padding + 1.75 * txtSize
             );
         }
 
-        fill(0);
-        noStroke();
-        textSize(25);
-        textAlign(CENTER, TOP);
-        text(this.name, x + w/2, y + h + 10);
+        p5.fill(0);
+        p5.noStroke();
+        p5.textSize(25);
+        p5.textAlign(p5.CENTER, p5.TOP);
+        p5.text(this.name, x + w/2, y + h + 10);
 
         this.redraw = false;
     }

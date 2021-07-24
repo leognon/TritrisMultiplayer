@@ -93,25 +93,26 @@ class Grid {
         return true;
     }
 
-    show(x, y, w, h, pieceImages, showGridLines) {
+    show(p5, x, y, w, h, pieceImages, showGridLines) {
         const cellW = w / this.w;
         const cellH = h / this.h;
 
         if (showGridLines) {
             //Draws the grid outline
-            stroke(100);
-            strokeWeight(2);
+            p5.stroke(100);
+            p5.strokeWeight(2);
             //Vertical lines
             for (let i = 0; i <= this.w; i++)
-                line(x + i * cellW, y, x + i * cellW, y + h);
+                p5.line(x + i * cellW, y, x + i * cellW, y + h);
             //Horizontal lines
             for (let j = 0; j <= this.h; j++)
-                line(x, y + j * cellH, x + w, y + j * cellH);
+                p5.line(x, y + j * cellH, x + w, y + j * cellH);
         }
         //Draws the triangles in the grid
         for (let i = 0; i < this.h; i++) {
             for (let j = 0; j < this.w; j++) {
                 this.grid[i][j].show(
+                    p5,
                     x + j * cellW,
                     y + i * cellH,
                     cellW,
@@ -122,12 +123,12 @@ class Grid {
         }
 
         //Draws only the outside borders on top of the pieces, so they don't stick out of the board
-        stroke(100);
-        strokeWeight(2);
-        line(x, y, x, y + h);
-        line(x + this.w * cellW, y, x + this.w * cellW, y + h);
-        line(x, y, x + w, y);
-        line(x, y + this.h * cellH, x + w, y + this.h * cellH);
+        p5.stroke(100);
+        p5.strokeWeight(2);
+        p5.line(x, y, x, y + h);
+        p5.line(x + this.w * cellW, y, x + this.w * cellW, y + h);
+        p5.line(x, y, x + w, y);
+        p5.line(x, y + this.h * cellH, x + w, y + this.h * cellH);
     }
 }
 
@@ -231,11 +232,11 @@ class GridCell {
         return false;
     }
 
-    show(x, y, w, h, pieceImages) {
+    show(p5, x, y, w, h, pieceImages) {
         for (let row = 0; row < this.tris.length; row++) {
             for (let col = 0; col < this.tris[0].length; col++) {
                 if (this.tris[row][col])
-                    this.tris[row][col].show(x, y, w, h, row, col, pieceImages);
+                    this.tris[row][col].show(p5, x, y, w, h, row, col, pieceImages);
             }
         }
     }
@@ -246,7 +247,7 @@ class Triangle {
         this.clr = clr;
     }
 
-    show(x, y, w, h, row, col, pieceImages) {
+    show(p5, x, y, w, h, row, col, pieceImages) {
         const thisColor = pieceImages[this.clr];
         let rot;
         if (row == 0 && col == 0) { //Top left
@@ -258,7 +259,7 @@ class Triangle {
         } else if (row == 1 && col == 1) { //Bottom right
             rot = 0;
         }
-        image(thisColor[rot], x, y, w, h);
+        p5.image(thisColor[rot], x, y, w, h);
     }
 }
 
@@ -377,7 +378,7 @@ class Piece {
         }
     }
 
-    showAt(x, y, w, h, pieceImages) {
+    showAt(p5, x, y, w, h, pieceImages) {
         const dim = 3;//max(this.grid.length, this.grid[0].length);
         const cellW = w / dim;
         const cellH = h / dim;
@@ -387,6 +388,7 @@ class Piece {
         const centerY = topRight + cellH*(3-this.grid.length)/2;
         //Centers the piece in the middle of the next box
         this.show(
+            p5,
             centerX,
             centerY,
             w / dim,
@@ -395,12 +397,13 @@ class Piece {
         );
     }
 
-    show(originX, originY, cellW, cellH, pieceImages) {
+    show(p5, originX, originY, cellW, cellH, pieceImages) {
         originX += this.pos.x * cellW;
         originY += this.pos.y * cellH;
         for (let row = 0; row < this.grid.length; row++) {
             for (let col = 0; col < this.grid[0].length; col++) {
                 this.grid[row][col].show(
+                    p5,
                     originX + col * cellW,
                     originY + row * cellH,
                     cellW,

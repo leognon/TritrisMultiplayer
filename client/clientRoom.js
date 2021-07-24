@@ -20,7 +20,6 @@ class ClientRoom {
     addUser(id, name) {
         console.log('Player ' + id +  ' joined');
         this.users.push({ id, name });
-        //this.users.push(new ClientPlayer(id, name));
     }
 
     disconnected(id) {
@@ -51,49 +50,49 @@ class ClientRoom {
     }
 
     //Do everything necessary (update, show)
-    run(socket, pieceImages, sounds) {
+    run(p5, socket, pieceImages, sounds) {
         if (this.state == states.INGAME) {
-            this.update(socket);
-            this.showGame(pieceImages, sounds);
+            this.update(p5, socket);
+            this.showGame(p5, pieceImages, sounds);
         } else if (this.ownerId == this.myId) {
-            this.showLobbyOwner();
+            this.showLobbyOwner(p5);
         } else {
-            this.showLobby();
+            this.showLobby(p5);
         }
     }
 
     //Update the current game
-    update(socket) {
+    update(p5, socket) {
         if (this.state == states.INGAME && this.match) {
-            this.match.update(socket);
+            this.match.update(p5, socket);
         }
     }
 
-    showLobbyOwner() {
-        background(0);
-        fill(255);
-        textSize(20);
-        textAlign(CENTER, CENTER);
-        text(`You made the lobby\n\nCode: ${this.roomCode}`, width/2, height/2);
+    showLobbyOwner(p5) {
+        p5.background(0);
+        p5.fill(255);
+        p5.textSize(20);
+        p5.textAlign(p5.CENTER, p5.CENTER);
+        p5.text(`You made the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
         for (let i = 0; i < this.users.length; i++) {
-            text('Player ' + this.users[i].name, width/2, height/2 + 100 + i*30);
+            p5.text('Player ' + this.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
         }
     }
 
-    showLobby() {
-        background(0);
-        fill(255);
-        textSize(20);
-        textAlign(CENTER, CENTER);
-        text(`You joined the lobby\n\nCode: ${this.roomCode}`, width/2, height/2);
+    showLobby(p5) {
+        p5.background(0);
+        p5.fill(255);
+        p5.textSize(20);
+        p5.textAlign(p5.CENTER, p5.CENTER);
+        p5.text(`You joined the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
         for (let i = 0; i < this.users.length; i++) {
-            text('Player ' + this.users[i].name, width/2, height/2 + 100 + i*30);
+            p5.text('Player ' + this.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
         }
     }
 
-    showGame(pieceImages, sounds) {
+    showGame(p5, pieceImages, sounds) {
         if (this.state == states.INGAME && this.match) {
-            this.match.show(pieceImages, sounds);
+            this.match.show(p5, pieceImages, sounds);
         }
     }
 
@@ -146,13 +145,13 @@ class ClientMatch {
         this.players.push(new OtherPlayer(p.id, p.name, this.seed, this.level));
     }
 
-    update(socket) {
+    update(p5, socket) {
         if (Date.now() > this.nextSendData) {
             this.sendData(socket);
             this.nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         }
 
-        this.myGame.clientUpdate();
+        this.myGame.clientUpdate(p5);
         for (let other of this.otherPlayers) {
             other.interpolateUpdate();
         }
@@ -179,38 +178,38 @@ class ClientMatch {
         }
     }
 
-    show(pieceImages, sounds) {
+    show(p5, pieceImages, sounds) {
         if (this.myGame.duringCountDown() || Date.now()-300 < this.myGame.startTime) { //TODO Make this all better by making the redraw system use p5 graphics
-            background(100);
+            p5.background(100);
         }
         if (this.myGame.isFlashing()) {
-            background(150);
+            p5.background(150);
         } else {
-            background(100);
+            p5.background(100);
         }
-        let boardWidth = width/4;
+        let boardWidth = p5.width/4;
         let boardHeight = boardWidth*2;
-        if (boardHeight > height * 0.9) {
-            boardHeight = height * 0.9;
+        if (boardHeight > p5.height * 0.9) {
+            boardHeight = p5.height * 0.9;
             boardWidth = boardHeight / 2;
         }
         const gameWidth = boardWidth + 5*(boardWidth / this.myGame.w) + 20;
-        const center = width/2;
+        const center = p5.width/2;
         const spacing = 30;
 
-        this.myGame.show(center-gameWidth-spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
-        this.otherPlayers[0].game.show(center+spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
+        this.myGame.show(p5, center-gameWidth-spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
+        this.otherPlayers[0].game.show(p5, center+spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
         //TODO Display multiple other players!
 
         this.myGame.playSounds(sounds);
 
         if (this.myGame.duringCountDown()) {
-            textSize(50);
-            fill(255);
-            noStroke();
-            textAlign(CENTER, CENTER);
-            const secondsRemaining = 1 + floor(-this.myGame.time / 1000);
-            text(secondsRemaining, center - gameWidth - spacing/2 + boardWidth/2, 10+boardHeight/2);
+            p5.textSize(50);
+            p5.fill(255);
+            p5.noStroke();
+            p5.textAlign(p5.CENTER, p5.CENTER);
+            const secondsRemaining = 1 + Math.floor(-this.myGame.time / 1000);
+            p5.text(secondsRemaining, center - gameWidth - spacing/2 + boardWidth/2, 10+boardHeight/2);
         }
     }
 }
