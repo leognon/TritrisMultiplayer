@@ -8,8 +8,34 @@ body {
     margin: 0;
     padding: 0;
     background-color: rgb(100, 100, 100);
-    overflow-y: hidden;
+    height: 100%;
 }
+
+#root {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    grid-template-rows: 1fr 0.75fr 1fr;
+    grid-template-columns: 1fr 0.75fr 1fr;
+    grid-template-areas:
+        "a b c"
+        "d center f"
+        "g h i";
+    text-align: center;
+}
+
+.center {
+    grid-area: center;
+    z-index: 1;
+}
+
+.react-p5 {
+    z-index: 0;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
 h2 {
     font-family: fff-forward;
 }
@@ -28,8 +54,4 @@ h2 {
     -webkit-transform: translateX(-50%);
     transform: translateX(-50%);
     text-align: center;
-}
-
-canvas {
-    display: block;
 }
