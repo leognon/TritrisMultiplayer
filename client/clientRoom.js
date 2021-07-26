@@ -1,40 +1,66 @@
-const config = require('../common/config.js');
-const states = require('../common/states.js');
-const MyGame = require('./myGame.js');
-const OtherGame = require('./otherGame.js');
+import React from 'react';
+import Lobby from './components/lobby.js';
+import config from '../common/config.js';
+import states from '../common/states.js';
+import MyGame from './myGame.js';
+import OtherGame from './otherGame.js';
 
-class ClientRoom {
-    constructor(roomCode, ownerId, myId) {
-        this.roomCode = roomCode;
+export default class ClientRoom extends React.Component {
+    constructor(props) { //roomCode, ownerId, myId) {
+        super(props);
+        console.log('Instantiaing room!!!');
+        this.state = {
+            state: states.LOBBY,
+            users: this.props.originalUsers
+        }
 
-        this.ownerId = ownerId;
-        this.myId = myId;
-
-        this.users = [];
+        //this.ownerId = this.props.ownerId;
 
         this.match = null;
 
-        this.state = states.LOBBY;
+        this.props.socket.on('room', this.gotData.bind(this));
+
+        //TODO I should probably move the p5 sketch into this or make another component
+        setInterval(() => {
+            this.run(this.props.p5, this.props.socket, this.props.pieceImages, this.props.sounds);
+        }, 250);
+    }
+
+    render() {
+        switch (this.state.state) {
+            case states.LOBBY:
+                return <Lobby
+                    roomCode={this.props.roomCode}
+                    users={this.state.users} />
+            case states.INGAME:
+                return null;
+            default:
+                console.log('No state for clientRoom', this.state.state);
+                return null;
+        }
     }
 
     addUser(id, name) {
         console.log('Player ' + id +  ' joined');
-        this.users.push({ id, name });
+        const newUser = { id, name };
+        this.setState({
+            users: [...this.state.users, newUser]
+        });
     }
 
     disconnected(id) {
-        for (let i = 0; i < this.users.length; i++) {
-            if (this.users[i].id == id) {
-                this.users.splice(i, 1);
-            }
-        }
+        //Make a new list without the user that left
+        let newUsers = this.state.users.filter(u => u.id != id);
+        this.setState({
+            users: newUsers
+        });
     }
 
     startMatch(seed, level) {
         let me;
         let others = [];
         for (let p of this.users) {
-            if (p.id == this.myId) me = p;
+            if (p.id == this.props.socket.id) me = p;
             else others.push(p);
         }
 
@@ -54,7 +80,7 @@ class ClientRoom {
         if (this.state == states.INGAME) {
             this.update(p5, socket);
             this.showGame(p5, pieceImages, sounds);
-        } else if (this.ownerId == this.myId) {
+        } else if (this.props.ownerId == this.props.socket.id) {
             this.showLobbyOwner(p5);
         } else {
             this.showLobby(p5);
@@ -74,8 +100,8 @@ class ClientRoom {
         p5.textSize(20);
         p5.textAlign(p5.CENTER, p5.CENTER);
         p5.text(`You made the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
-        for (let i = 0; i < this.users.length; i++) {
-            p5.text('Player ' + this.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
+        for (let i = 0; i < this.state.users.length; i++) {
+            p5.text('Player ' + this.state.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
         }
     }
 
@@ -85,8 +111,8 @@ class ClientRoom {
         p5.textSize(20);
         p5.textAlign(p5.CENTER, p5.CENTER);
         p5.text(`You joined the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
-        for (let i = 0; i < this.users.length; i++) {
-            p5.text('Player ' + this.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
+        for (let i = 0; i < this.state.users.length; i++) {
+            p5.text('Player ' + this.state.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
         }
     }
 
@@ -114,6 +140,7 @@ class ClientRoom {
                 this.gotGameState(data.data);
                 break;
             case 'newOwner':
+                //TODO OWNER NEEDS TO BE IN STATE????
                 this.ownerId = data.id;
                 break;
         }
@@ -233,5 +260,3 @@ class OtherPlayer {
     //gotGameState
     //sendData
 }
-
-module.exports = ClientRoom;

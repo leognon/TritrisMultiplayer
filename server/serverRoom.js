@@ -16,7 +16,7 @@ class ServerRoom {
         this.endMatchAt = 0;
         this.endMatchDelay = 5000; //Wait 5 seconds before ending the match
 
-        this.owner.emit('room', {
+        this.owner.emit('newRoom', {
             type: 'created',
             code: this.roomCode,
             owner: {
@@ -39,7 +39,7 @@ class ServerRoom {
         }
         this.users.push(socket);
 
-        socket.emit('room', {
+        socket.emit('newRoom', {
             type: 'joined',
             code: this.roomCode,
             ownerId: this.owner.id,

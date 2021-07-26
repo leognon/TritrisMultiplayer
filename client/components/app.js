@@ -13,8 +13,16 @@ class App extends React.Component {
         super(props);
         this.state = {
             state: states.LOADING,
-            name: 'yourname'
+            name: 'player' + Math.floor(Math.random()*99+1),
+            roomData: {
+                roomCode: '',
+                ownerId: '',
+                originalUsers: []
+            }
         }
+
+        this.p5 = null;
+
 
         this.socket = io({
             reconnection: false //Do not try to reconnect automatically
@@ -22,45 +30,53 @@ class App extends React.Component {
 
         this.socket.on('state', this.gotState);
         //this.socket.on('gameState', gotGameState);
-        this.socket.on('matchOver', () => {
-            /*game = null;
-            otherGame = null;
-            state = states.MENU;
-            dom.joinDiv.style('visibility: visible;');*/
-        });
-        this.socket.on('room', this.gotRoomData);
+        //this.socket.on('matchOver', () => { });
+        this.socket.on('newRoom', this.newRoom);
         this.socket.on('disconnect', () => {
             console.log('Disconnected!!!');
-            //noLoop();
-            //window.location.href = window.location.href;
+            this.setState({
+                state: -1
+            });
         });
 
         this.pieceImages = null;
-        this.sounds = {};
 
-        this.room = null;
-
-        this.sounds.move = new Sound('../client/assets/move.wav');
-        this.sounds.fall = new Sound('../client/assets/fall.wav');
-        this.sounds.clear = new Sound('../client/assets/clear.wav');
-        this.sounds.tritris = new Sound('../client/assets/tritris.wav');
-        this.sounds.levelup = new Sound('../client/assets/levelup.wav');
-        this.sounds.topout = new Sound('../client/assets/topout.wav');
+        this.sounds = {
+            move: new Sound('../client/assets/move.wav'),
+            fall: new Sound('../client/assets/fall.wav'),
+            clear: new Sound('../client/assets/clear.wav'),
+            tritris: new Sound('../client/assets/tritris.wav'),
+            levelup: new Sound('../client/assets/levelup.wav'),
+            topout: new Sound('../client/assets/topout.wav')
+        };
     }
 
     loadedSpriteSheet = (img) => {
         this.pieceImages = loadPieces(img);
         this.setState({ state: states.MENU });
-        console.log('done');
     }
 
     setup = (p5, canvasParentRef) => {
+        this.p5 = p5;
         p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
-        console.log('Setup');
         p5.loadImage('../client/assets/piecesImage.png', this.loadedSpriteSheet);
         p5.loadFont('../client/assets/fff-forward.ttf', fnt => {
             p5.textFont(fnt);
         });
+    }
+
+    draw = (p5) => {
+        if (this.state.state == -1) {
+            p5.noLoop();
+        }
+        if (this.state.state != states.ROOM) {
+            p5.background(
+                100 + 155*p5.noise(p5.frameCount/320, 0),
+                100 + 155*p5.noise(p5.frameCount/250, 20),
+                100 + 155*p5.noise(p5.frameCount/280, 30));
+        } else {
+            //this.state.room.run(p5, this.socket, this.pieceImages, this.sounds);
+        }
     }
 
     nameChanged = evnt => {
@@ -69,16 +85,6 @@ class App extends React.Component {
         });
     }
 
-    draw = (p5) => {
-        if (this.state.state != states.ROOM) {
-            p5.background(
-                100 + 155*p5.noise(p5.frameCount/50, 0),
-                100 + 155*p5.noise(p5.frameCount/30, 20),
-                100 + 155*p5.noise(p5.frameCount/100, 30));
-        } else {
-            this.room.run(p5, this.socket, this.pieceImages, this.sounds);
-        }
-    }
 
     joinGame = () => {
         /*this.socket.emit('joinMatch', {
@@ -100,7 +106,6 @@ class App extends React.Component {
     }
 
     createRoom = () => {
-        console.log('Create');
         this.socket.emit('room', {
             type: 'create',
             name: this.state.name
@@ -119,60 +124,69 @@ class App extends React.Component {
     }
 
     keyPressed = evnt => {
-        if (this.state.state == states.ROOM && this.room && this.socket.id == this.room.ownerId && evnt.keyCode == 32) {
+        if (this.state.state == states.ROOM && this.state.room && this.socket.id == this.state.room.ownerId && evnt.keyCode == 32) {
             this.socket.emit('room', {
                 type: 'start',
             });
         }
     }
 
-    gotRoomData = (data) => {
-        switch (data.type) {
-            case 'created': //You just created a lobby
-                console.log('Created lobby', data);
-                this.room = new ClientRoom(data.code, data.owner.id, this.socket.id);
-                this.room.addUser(data.owner.id, data.owner.name); //Add the owner
-                this.setState({ state: states.ROOM });
-                break;
-            case 'joined': //You just joined a lobby
-                console.log('Joined lobby');
-                this.room = new ClientRoom(data.code, data.ownerId, this.socket.id);
-                for (let p of data.players) { //Add all of the already joined players
-                    this.room.addUser(p.id, p.name);
-                }
-                this.setState({ state: states.ROOM });
-                break;
-            default:
-                if (this.room) this.room.gotData(data);
-                break;
+    newRoom = (data) => {
+        let originalUsers = [];
+        if (data.type == 'created') {
+            originalUsers = [{
+                id: data.owner.id, //Add the owner
+                name: data.owner.name
+            }];
+        } else if (data.type == 'joined') {
+            originalUsers = data.players;
         }
+
+        this.setState({
+            state: states.ROOM,
+            roomData: {
+                roomCode: data.code,
+                ownerId: data.ownerId,
+                originalUsers
+            }
+        });
     }
 
-    getUI = () => {
+    render = () => {
+        let UI;
         switch (this.state.state) {
             case states.LOADING:
-                return <Loading />;
+                UI = <Loading />;
+                break;
             case states.MENU:
-                return <Menu quickPlay={this.quickPlay}
+                UI = <Menu quickPlay={this.quickPlay}
                     createRoom={this.createRoom}
                     joinRoom={this.joinRoom}
                     name={this.state.name}
                     nameChanged={this.nameChanged}
                     />;
+                break;
             case states.ROOM:
-                //p5 will take care of everything
+                console.log('Rendering client room from App');
+                UI = <ClientRoom
+                    roomCode={this.state.roomData.roomCode}
+                    ownerId={this.state.roomData.ownerId}
+                    originalUsers={this.state.roomData.originalUsers}
+                    p5={this.p5}
+                    socket={this.socket}
+                    pieceImages={this.pieceImages}
+                    sounds={this.sounds}
+                    />
                 break;
             default:
                 console.log('State was ' + this.state.state);
-                return <h2 className="center box">State: {this.state.state}</h2>;
+                UI = <h2 className="center box">State: {this.state.state}</h2>;
+                break;
         }
-    }
-
-    render = () => {
         return (
             <>
                 <Sketch setup={this.setup} draw={this.draw} keyPressed={this.keyPressed} windowResized={this.windowResized} />
-                { this.getUI() }
+                { UI }
             </>
         );
     }
@@ -230,20 +244,3 @@ class Sound {
 }
 
 ReactDOM.render(<App />, document.querySelector('#root'));
-/*
-App
-    Loading
-        Text in center saying loading
-    Home
-        Box in center
-            Title
-            Name input
-            Play buttons
-    Room
-        Lobby
-            Box in center
-                Room code
-                List of players
-        Ingame
-            Empty
-*/
