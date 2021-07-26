@@ -86,7 +86,7 @@ class App extends React.Component {
     }
 
 
-    joinGame = () => {
+    quickPlay = () => {
         /*this.socket.emit('joinMatch', {
             name: dom.name.value()
         });
@@ -123,31 +123,13 @@ class App extends React.Component {
         //TODO Add loading state
     }
 
-    keyPressed = evnt => {
-        if (this.state.state == states.ROOM && this.state.room && this.socket.id == this.state.room.ownerId && evnt.keyCode == 32) {
-            this.socket.emit('room', {
-                type: 'start',
-            });
-        }
-    }
-
     newRoom = (data) => {
-        let originalUsers = [];
-        if (data.type == 'created') {
-            originalUsers = [{
-                id: data.owner.id, //Add the owner
-                name: data.owner.name
-            }];
-        } else if (data.type == 'joined') {
-            originalUsers = data.players;
-        }
-
         this.setState({
             state: states.ROOM,
             roomData: {
                 roomCode: data.code,
                 ownerId: data.ownerId,
-                originalUsers
+                originalUsers: data.players
             }
         });
     }
@@ -162,6 +144,7 @@ class App extends React.Component {
                 UI = <Menu quickPlay={this.quickPlay}
                     createRoom={this.createRoom}
                     joinRoom={this.joinRoom}
+                    quickPlay={this.quickPlay}
                     name={this.state.name}
                     nameChanged={this.nameChanged}
                     />;
@@ -185,7 +168,7 @@ class App extends React.Component {
         }
         return (
             <>
-                <Sketch setup={this.setup} draw={this.draw} keyPressed={this.keyPressed} windowResized={this.windowResized} />
+                <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
                 { UI }
             </>
         );

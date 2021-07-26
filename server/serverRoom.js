@@ -8,6 +8,7 @@ class ServerRoom {
 
         this.owner = owner; //The socket who created the room
         this.users = []; //An array of sockets
+        this.users.push(this.owner);
 
         this.match = null;
 
@@ -19,12 +20,13 @@ class ServerRoom {
         this.owner.emit('newRoom', {
             type: 'created',
             code: this.roomCode,
-            owner: {
-                id: this.owner.id,
-                name: this.owner.name
-            }
+            ownerId: this.owner.id,
+            players: this.users.map(p => { //When the room is created this will just be the owner
+                return { //Just get the id and name
+                    id: p.id, name: p.name
+                }
+            })
         });
-        this.users.push(this.owner);
 
         console.log('Created room with code ' + this.roomCode);
     }
@@ -99,7 +101,7 @@ class ServerRoom {
         this.match = new ServerMatch(15, this.users[0], this.users[1]);
         for (let p of this.users) {
             p.emit('room', {
-                type: 'startMatch',
+                type: 'matchStarted',
                 seed: this.match.seed,
                 level: this.match.level
             });

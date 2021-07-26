@@ -9,7 +9,11 @@ export default class Lobby extends React.Component {
     render = () => {
         return (
             <div id="lobbyDiv" className="center box">
-                <h2>Lobby</h2>
+                {
+                    this.props.isOwner
+                        ? <h2>Created Lobby</h2>
+                        : <h2>Joined Lobby</h2>
+                }
                 <p>Code: {this.props.roomCode}</p>
                 {
                     this.props.users.map((p, index) => {
@@ -18,6 +22,11 @@ export default class Lobby extends React.Component {
                             name={p.name}
                             />;
                     })
+                }
+                {
+                    this.props.isOwner ?
+                    <button onClick={this.props.startGame}>Start Game</button>
+                    : ''
                 }
             </div>
         );

@@ -18,20 +18,22 @@ export default class ClientRoom extends React.Component {
 
         this.match = null;
 
-        this.props.socket.on('room', this.gotData.bind(this));
+        this.props.socket.on('room', this.gotData);
 
         //TODO I should probably move the p5 sketch into this or make another component
         setInterval(() => {
             this.run(this.props.p5, this.props.socket, this.props.pieceImages, this.props.sounds);
-        }, 250);
+        }, 17);
     }
 
-    render() {
+    render = () => {
         switch (this.state.state) {
             case states.LOBBY:
                 return <Lobby
                     roomCode={this.props.roomCode}
-                    users={this.state.users} />
+                    users={this.state.users}
+                    isOwner={this.props.ownerId == this.props.socket.id}
+                    startGame={this.startGame} />
             case states.INGAME:
                 return null;
             default:
@@ -40,7 +42,7 @@ export default class ClientRoom extends React.Component {
         }
     }
 
-    addUser(id, name) {
+    addUser = (id, name) => {
         console.log('Player ' + id +  ' joined');
         const newUser = { id, name };
         this.setState({
@@ -48,7 +50,7 @@ export default class ClientRoom extends React.Component {
         });
     }
 
-    disconnected(id) {
+    disconnected = (id) => {
         //Make a new list without the user that left
         let newUsers = this.state.users.filter(u => u.id != id);
         this.setState({
@@ -56,28 +58,34 @@ export default class ClientRoom extends React.Component {
         });
     }
 
-    startMatch(seed, level) {
+    startGame = () => {
+        this.props.socket.emit('room', {
+            type: 'start',
+        });
+    }
+
+    matchStarted = (seed, level) => {
         let me;
         let others = [];
-        for (let p of this.users) {
-            if (p.id == this.props.socket.id) me = p;
-            else others.push(p);
+        for (let user of this.state.users) {
+            if (user.id == this.props.socket.id) me = user;
+            else others.push(user);
         }
 
         this.match = new ClientMatch(level, seed, me, others);
 
-        this.state = states.INGAME;
+        this.setState({ state: states.INGAME });
     }
 
-    endMatch() {
+    endMatch = () => {
         this.match = null;
 
-        this.state = states.LOBBY;
+        this.setState({ state: states.LOBBY });
     }
 
     //Do everything necessary (update, show)
-    run(p5, socket, pieceImages, sounds) {
-        if (this.state == states.INGAME) {
+    run = (p5, socket, pieceImages, sounds) => {
+        if (this.state.state == states.INGAME) {
             this.update(p5, socket);
             this.showGame(p5, pieceImages, sounds);
         } else if (this.props.ownerId == this.props.socket.id) {
@@ -88,44 +96,44 @@ export default class ClientRoom extends React.Component {
     }
 
     //Update the current game
-    update(p5, socket) {
-        if (this.state == states.INGAME && this.match) {
+    update = (p5, socket) => {
+        if (this.state.state == states.INGAME && this.match) {
             this.match.update(p5, socket);
         }
     }
 
-    showLobbyOwner(p5) {
-        p5.background(0);
+    showLobbyOwner = (p5) => {
+        /*p5.background(0);
         p5.fill(255);
         p5.textSize(20);
         p5.textAlign(p5.CENTER, p5.CENTER);
         p5.text(`You made the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
-        for (let i = 0; i < this.state.users.length; i++) {
-            p5.text('Player ' + this.state.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
-        }
+        for (let i = 0; i < this.state.state.users.length; i++) {
+            p5.text('Player ' + this.state.state.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
+        }*/
     }
 
-    showLobby(p5) {
-        p5.background(0);
+    showLobby = (p5) => {
+        /*p5.background(0);
         p5.fill(255);
         p5.textSize(20);
         p5.textAlign(p5.CENTER, p5.CENTER);
         p5.text(`You joined the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
         for (let i = 0; i < this.state.users.length; i++) {
             p5.text('Player ' + this.state.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
-        }
+        }*/
     }
 
-    showGame(p5, pieceImages, sounds) {
-        if (this.state == states.INGAME && this.match) {
+    showGame = (p5, pieceImages, sounds) => {
+        if (this.state.state == states.INGAME && this.match) {
             this.match.show(p5, pieceImages, sounds);
         }
     }
 
-    gotData(data) {
+    gotData = (data) => {
         switch (data.type) {
-            case 'startMatch':
-                this.startMatch(data.seed, data.level);
+            case 'matchStarted':
+                this.matchStarted(data.seed, data.level);
                 break;
             case 'endMatch':
                 this.endMatch();
@@ -146,8 +154,8 @@ export default class ClientRoom extends React.Component {
         }
     }
 
-    gotGameState(d) {
-        if (this.state == states.INGAME && this.match) {
+    gotGameState = (d) => {
+        if (this.state.state == states.INGAME && this.match) {
             this.match.gotGameState(d);
         }
     }
