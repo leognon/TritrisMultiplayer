@@ -1,4 +1,5 @@
 import React from 'react';
+import Sketch from 'react-p5';
 import Lobby from './components/lobby.js';
 import config from '../common/config.js';
 import states from '../common/states.js';
@@ -19,11 +20,24 @@ export default class ClientRoom extends React.Component {
         this.match = null;
 
         this.props.socket.on('room', this.gotData);
+    }
 
-        //TODO I should probably move the p5 sketch into this or make another component
-        setInterval(() => {
-            this.run(this.props.p5, this.props.socket, this.props.pieceImages, this.props.sounds);
-        }, 17);
+    setup = (p5, canvasParentRef) => {
+        console.log('setup...');
+        p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
+        p5.textFont(this.props.font);
+    }
+    windowResized = p5 => {
+        p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
+        p5.redraw();
+    }
+
+    draw = p5 => {
+        //Do everything necessary (update, show)
+        if (this.state.state == states.INGAME) {
+            this.update(p5);
+            this.showGame(p5, this.props.pieceImages, this.props.sounds);
+        }
     }
 
     render = () => {
@@ -35,7 +49,7 @@ export default class ClientRoom extends React.Component {
                     isOwner={this.props.ownerId == this.props.socket.id}
                     startGame={this.startGame} />
             case states.INGAME:
-                return null;
+                return <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized}/>
             default:
                 console.log('No state for clientRoom', this.state.state);
                 return null;
@@ -83,22 +97,10 @@ export default class ClientRoom extends React.Component {
         this.setState({ state: states.LOBBY });
     }
 
-    //Do everything necessary (update, show)
-    run = (p5, socket, pieceImages, sounds) => {
-        if (this.state.state == states.INGAME) {
-            this.update(p5, socket);
-            this.showGame(p5, pieceImages, sounds);
-        } else if (this.props.ownerId == this.props.socket.id) {
-            this.showLobbyOwner(p5);
-        } else {
-            this.showLobby(p5);
-        }
-    }
-
     //Update the current game
-    update = (p5, socket) => {
+    update = p5 => {
         if (this.state.state == states.INGAME && this.match) {
-            this.match.update(p5, socket);
+            this.match.update(p5, this.props.socket);
         }
     }
 

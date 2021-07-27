@@ -21,9 +21,6 @@ class App extends React.Component {
             }
         }
 
-        this.p5 = null;
-
-
         this.socket = io({
             reconnection: false //Do not try to reconnect automatically
         });
@@ -51,32 +48,28 @@ class App extends React.Component {
         };
     }
 
-    loadedSpriteSheet = (img) => {
-        this.pieceImages = loadPieces(img);
-        this.setState({ state: states.MENU });
-    }
-
     setup = (p5, canvasParentRef) => {
-        this.p5 = p5;
+        console.log('App setup');
         p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
-        p5.loadImage('../client/assets/piecesImage.png', this.loadedSpriteSheet);
+        p5.loadImage('../client/assets/piecesImage.png', img => {
+            this.pieceImages = loadPieces(img);
+            this.setState({ state: states.MENU });
+        });
         p5.loadFont('../client/assets/fff-forward.ttf', fnt => {
             p5.textFont(fnt);
+            this.font = fnt;
         });
     }
 
-    draw = (p5) => {
+    draw = p5 => {
         if (this.state.state == -1) {
             p5.noLoop();
         }
-        if (this.state.state != states.ROOM) {
-            p5.background(
-                100 + 155*p5.noise(p5.frameCount/320, 0),
-                100 + 155*p5.noise(p5.frameCount/250, 20),
-                100 + 155*p5.noise(p5.frameCount/280, 30));
-        } else {
-            //this.state.room.run(p5, this.socket, this.pieceImages, this.sounds);
-        }
+        p5.background(
+            100 + 155*p5.noise(p5.frameCount/320, 0),
+            100 + 155*p5.noise(p5.frameCount/250, 20),
+            100 + 155*p5.noise(p5.frameCount/280, 30)
+        );
     }
 
     nameChanged = evnt => {
@@ -135,43 +128,38 @@ class App extends React.Component {
     }
 
     render = () => {
-        let UI;
         switch (this.state.state) {
             case states.LOADING:
-                UI = <Loading />;
-                break;
+                return (
+                    <>
+                        <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
+                        <Loading />;
+                    </>);
             case states.MENU:
-                UI = <Menu quickPlay={this.quickPlay}
-                    createRoom={this.createRoom}
-                    joinRoom={this.joinRoom}
-                    quickPlay={this.quickPlay}
-                    name={this.state.name}
-                    nameChanged={this.nameChanged}
-                    />;
-                break;
+                return (<>
+                        <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
+                        <Menu quickPlay={this.quickPlay}
+                            createRoom={this.createRoom}
+                            joinRoom={this.joinRoom}
+                            quickPlay={this.quickPlay}
+                            name={this.state.name}
+                            nameChanged={this.nameChanged} />
+                    </>);
             case states.ROOM:
                 console.log('Rendering client room from App');
-                UI = <ClientRoom
+                return <ClientRoom
                     roomCode={this.state.roomData.roomCode}
                     ownerId={this.state.roomData.ownerId}
                     originalUsers={this.state.roomData.originalUsers}
-                    p5={this.p5}
                     socket={this.socket}
                     pieceImages={this.pieceImages}
                     sounds={this.sounds}
+                    font={this.font}
                     />
-                break;
             default:
                 console.log('State was ' + this.state.state);
-                UI = <h2 className="center box">State: {this.state.state}</h2>;
-                break;
+                return <h2 className="center box">State: {this.state.state}</h2>;
         }
-        return (
-            <>
-                <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
-                { UI }
-            </>
-        );
     }
 
     windowResized = (p5) => {
