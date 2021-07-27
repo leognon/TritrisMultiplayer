@@ -50,7 +50,6 @@ class App extends React.Component {
     }
 
     setup = (p5, canvasParentRef) => {
-        console.log('App setup');
         p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
         p5.loadImage('../client/assets/piecesImage.png', img => {
             this.pieceImages = loadPieces(img);
@@ -153,7 +152,6 @@ class App extends React.Component {
                             nameChanged={this.nameChanged} />
                     </>);
             case states.ROOM:
-                console.log('Rendering client room from App');
                 return <ClientRoom
                     roomCode={this.state.roomData.roomCode}
                     ownerId={this.state.roomData.ownerId}
@@ -164,7 +162,6 @@ class App extends React.Component {
                     font={this.font}
                     />
             default:
-                console.log('State was ' + this.state.state);
                 return <h2 className="center box">State: {this.state.state}</h2>;
         }
     }

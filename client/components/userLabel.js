@@ -6,8 +6,9 @@ export default class UserLabel extends React.Component {
     }
 
     render = () => {
+        const title = this.props.isOwner ? 'Owner' : 'User';
         return (
-            <p>User: {this.props.name}</p>
+            <p>{title}: {this.props.name}</p>
         );
     }
 }

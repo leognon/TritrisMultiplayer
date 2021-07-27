@@ -9,7 +9,6 @@ import OtherGame from './otherGame.js';
 export default class ClientRoom extends React.Component {
     constructor(props) {
         super(props);
-        console.log('Instantiaing room!!!');
         this.state = {
             state: states.LOBBY,
             users: this.props.originalUsers,
@@ -25,7 +24,6 @@ export default class ClientRoom extends React.Component {
     }
 
     setup = (p5, canvasParentRef) => {
-        console.log('setup...');
         p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
         p5.textFont(this.props.font);
     }
@@ -48,7 +46,8 @@ export default class ClientRoom extends React.Component {
                 return <Lobby
                     roomCode={this.state.roomCode}
                     users={this.state.users}
-                    isOwner={this.state.ownerId == this.socket.id}
+                    myId={this.socket.id}
+                    ownerId={this.state.ownerId}
                     startGame={this.startGame}
                     leaveRoom={this.leaveRoom} />
             case states.INGAME:
@@ -60,12 +59,10 @@ export default class ClientRoom extends React.Component {
     }
 
     componentWillUnmount = () => {
-        console.log('Removed room listener for room ' + this.state.roomCode);
         this.socket.removeListener('room');
     }
 
     addUser = (id, name) => {
-        console.log('Player ' + id +  ' joined');
         const newUser = { id, name };
         this.setState({
             users: [...this.state.users, newUser]

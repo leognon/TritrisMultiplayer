@@ -1,5 +1,5 @@
 import React from 'react';
-import UserLabel from './playerLabel.js';
+import UserLabel from './userLabel.js';
 
 export default class Lobby extends React.Component {
     constructor(props) {
@@ -10,7 +10,7 @@ export default class Lobby extends React.Component {
         return (
             <div id="lobbyDiv" className="center box">
                 {
-                    this.props.isOwner
+                    this.props.myId == this.props.ownerId
                         ? <h2>Created Lobby</h2>
                         : <h2>Joined Lobby</h2>
                 }
@@ -20,11 +20,12 @@ export default class Lobby extends React.Component {
                         return <UserLabel
                             key={index}
                             name={p.name}
+                            isOwner={this.props.ownerId == p.id}
                             />;
                     })
                 }
                 {
-                    this.props.isOwner ?
+                    this.props.myId == this.props.ownerId ?
                     <button onClick={this.props.startGame}>Start Game</button>
                     : ''
                 }
