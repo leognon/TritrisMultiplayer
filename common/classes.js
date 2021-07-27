@@ -1,4 +1,4 @@
-class Grid {
+export class Grid {
     constructor(a, height) {
         if (a instanceof Array) {
             const gridData = a;
@@ -132,7 +132,7 @@ class Grid {
     }
 }
 
-class GridCell {
+export class GridCell {
     constructor(triangles, clr) {
         if (triangles == undefined) {
             this.tris = [
@@ -242,7 +242,7 @@ class GridCell {
     }
 }
 
-class Triangle {
+export class Triangle {
     constructor(clr) {
         this.clr = clr;
     }
@@ -263,7 +263,7 @@ class Triangle {
     }
 }
 
-class Piece {
+export class Piece {
     constructor(data) {
         if (data.hasOwnProperty('grid')) {
             //It is a serialized version
@@ -292,7 +292,7 @@ class Piece {
                     this.grid[row].push(new GridCell(pieces[row][col], clr));
                 }
             }
-            this.pos = { 
+            this.pos = {
                 x: Math.ceil((8 - this.grid[0].length) / 2),
                 y: 0
             };
@@ -414,5 +414,3 @@ class Piece {
         }
     }
 }
-
-module.exports = { Grid, GridCell, Triangle, Piece };

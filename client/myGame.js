@@ -1,7 +1,7 @@
-const { Input } = require('../common/game.js');
-const ClientGame = require('../client/clientGame');
+import { Input } from '../common/game.js';
+import ClientGame from '../client/clientGame';
 
-class MyGame extends ClientGame {
+export default class MyGame extends ClientGame {
     constructor(seed, level, name) {
         super(seed, level, name);
 
@@ -221,5 +221,3 @@ class MyGame extends ClientGame {
     }
 
 }
-
-module.exports = MyGame;

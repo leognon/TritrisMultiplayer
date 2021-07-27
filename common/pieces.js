@@ -1,4 +1,4 @@
-module.exports = [
+const piecesJSON = [
     {
         "color": 6,
         "pieces": [
@@ -157,3 +157,4 @@ module.exports = [
         ]
     }
 ];
+export default piecesJSON

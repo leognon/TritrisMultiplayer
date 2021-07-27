@@ -1,6 +1,6 @@
-const { Grid, Piece } = require('./classes.js');
-const RandomGenerator = require('random-seed');
-const piecesJSON = require('./pieces.js');
+import { Grid, Piece } from './classes.js';
+import RandomGenerator from 'random-seed';
+import piecesJSON from './pieces.js';
 
 
 /* TODO
@@ -31,7 +31,7 @@ const piecesJSON = require('./pieces.js');
  *
  */
 
-class Game {
+export class Game {
     constructor(seed, level) {
         this.w = 8;
         this.h = 16;
@@ -507,7 +507,7 @@ class GameState {
     }
 }
 
-class Input {
+export class Input {
     constructor(id, time, horzDir, vertDir, rot, softDrop) {
         this.id = id;
         this.time = time;
@@ -549,5 +549,3 @@ class Input {
         return true;
     }
 }
-
-module.exports = { Game, Input };

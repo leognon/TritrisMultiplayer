@@ -1,8 +1,8 @@
-const { Input } = require('../common/game.js');
-const config = require('../common/config.js');
-const ClientGame = require('../client/clientGame');
+import { Input } from '../common/game.js';
+import config from '../common/config.js';
+import ClientGame from '../client/clientGame';
 
-class OtherGame extends ClientGame {
+export default class OtherGame extends ClientGame {
     constructor(seed, level, name) {
         super(seed, level, name);
 
@@ -84,5 +84,3 @@ class OtherGame extends ClientGame {
         this.redraw = true;
     }
 }
-
-module.exports = OtherGame;

@@ -1,6 +1,6 @@
-const { Game } = require('../common/game.js');
+import { Game } from '../common/game.js';
 
-class ClientGame extends Game {
+export default class ClientGame extends Game {
     constructor(seed, level, name) {
         super(seed, level);
 
@@ -184,5 +184,3 @@ class ClientGame extends Game {
         this.redraw = false;
     }
 }
-
-module.exports = ClientGame;

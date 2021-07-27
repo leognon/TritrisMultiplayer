@@ -1,4 +1,3 @@
-//TODO Refactor states? Room is able to handle most stuff
 const states = {
     LOADING: 0,
     MENU: 1,
@@ -7,4 +6,4 @@ const states = {
     ROOM: 4,
     LOBBY: 5
 }
-module.exports = states;
+export default states;

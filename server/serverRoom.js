@@ -1,8 +1,8 @@
-const states = require('../common/states.js');
-const ServerMatch = require('./match.js');
+import states from '../common/states.js';
+import ServerMatch from './match.js';
 
 //TODO Make the Room class more useful with inheritance
-class ServerRoom {
+export default class ServerRoom {
     constructor(roomCode, owner) {
         this.roomCode = roomCode;
 
@@ -150,5 +150,3 @@ class ServerRoom {
         return false;
     }
 }
-
-module.exports = ServerRoom;

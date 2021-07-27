@@ -1,6 +1,6 @@
-const ServerGame = require('./serverGame.js');
+import ServerGame from './serverGame.js';
 
-class ServerMatch {
+export default class ServerMatch {
     constructor(level, socket1, socket2) {
         console.log('Created match between ' + socket1.id + ' and ' + (socket2 ? socket2.id : 'nobody'));
         this.seed = Math.random();
@@ -103,5 +103,3 @@ class ServerPlayer {
         });
     }
 }
-
-module.exports = ServerMatch;

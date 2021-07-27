@@ -1,6 +1,6 @@
-const { Game, Input } = require('../common/game.js');
+import { Game, Input } from '../common/game.js';
 
-class ServerGame extends Game {
+export default class ServerGame extends Game {
     constructor(seed, level) {
         super(seed, level);
         this.lastInputSent = -1; //The last input id that was sent to other clients
@@ -101,5 +101,3 @@ class ServerGame extends Game {
         }
     }
 }
-
-module.exports = ServerGame;

@@ -35,6 +35,7 @@
         "vinyl-source-stream": "^2.0.0",
         "yargs": "^7.1.2"
     },
+    "type": "module",
     "babel": {
         "presets": [
             "@babel/preset-env",

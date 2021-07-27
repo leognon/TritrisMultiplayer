@@ -1,12 +1,13 @@
 //From https://gist.github.com/lukin0110/47d75c7defad0bf413ab
-var argv = require('yargs').argv;
-var gulpif = require('gulp-if');
-var gulp = require('gulp');
-var browserify = require('browserify');
-var babelify = require('babelify');
-var source = require('vinyl-source-stream');
-var uglify = require('gulp-uglify');
-var buffer = require('vinyl-buffer');
+import yargs from 'yargs';
+const { argv } = yargs;
+import gulpif from 'gulp-if';
+import gulp from 'gulp';
+import browserify from 'browserify';
+import babelify from 'babelify';
+import source from 'vinyl-source-stream';
+import uglify from 'gulp-uglify';
+import buffer from 'vinyl-buffer';
 
 /**
  * Build an output file. Babelify is used to transform 'jsx' code to JavaScript code.

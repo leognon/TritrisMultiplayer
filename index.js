@@ -1,25 +1,32 @@
-const app = require('express')();
-const path = require('path');
+import express from 'express';
+import { Server as SocketIOServer } from 'socket.io';
+
+import states from './common/states.js';
+import config from './common/config.js';
+
 const PORT = process.env.PORT || 3000;
+const app = express();
 const server = app.listen(PORT);
-const io = require('socket.io')(server);
-const states = require('./common/states.js');
-const config = require('./common/config.js');
+const io = new SocketIOServer(server);
+
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let sockets = {};
 
-const ServerRoom = require('./server/serverRoom.js');
+import ServerRoom from './server/serverRoom.js';
 //let queue = []; //A list of socket ids in the queue
 let rooms = {}; //The key is the room code
 
 app.get('/', (_, res) => {
-    res.sendFile(path.join(__dirname, '/client/index.html'));
+    res.sendFile('/client/index.html', { root: __dirname });
 });
 app.get('/client/*', (req, res) => { //TODO This might not be the best way to do it
-    res.sendFile(path.join(__dirname, `/client/${req.params[0]}`));
+    res.sendFile(`/client/${req.params[0]}`, { root: __dirname });
 });
 app.get('/build/*', (req, res) => { //TODO This might not be the best way to do it
-    res.sendFile(path.join(__dirname, `/build/${req.params[0]}`));
+    res.sendFile(`/build/${req.params[0]}`, { root: __dirname });
 });
 
 io.on('connection', socket => {
