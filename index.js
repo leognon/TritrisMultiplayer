@@ -42,6 +42,9 @@ io.on('connection', socket => {
                 socket.name = data.name;
                 joinRoom(socket, data.code);
                 break;
+            case 'leave':
+                leaveRoom(socket);
+                break;
             default:
                 const room = getRoom(socket);
                 if (room.found) {
@@ -52,25 +55,7 @@ io.on('connection', socket => {
     });
 
     socket.on('disconnect', () => {
-        const room = getRoom(socket);
-        if (room.found) {
-            const shouldDisband = room.room.disconnected(socket);
-            if (shouldDisband) {
-                delete rooms[room.id];
-            }
-        }
-        /*const match = getMatch(socket);
-        if (match.found) {
-            matches[match.index].disconnected(socket);
-            matches.splice(match.index, 1);
-        }
-        for (let i = queue.length-1; i >= 0; i--) {
-            if (queue[i].id == socket.id) {
-                queue.splice(i, 1);
-            }
-        }
-        console.log(socket.id + ' disconnected');
-        delete sockets[socket.id];*/
+        leaveRoom(socket);
     });
 });
 
@@ -127,6 +112,16 @@ function joinRoom(socket, code) {
             state: states.MENU,
             message: 'Invalid room code'
         });
+    }
+}
+
+function leaveRoom(socket) {
+    const room = getRoom(socket);
+    if (room.found) {
+        const shouldDisband = room.room.removeUser(socket);
+        if (shouldDisband) {
+            delete rooms[room.id];
+        }
     }
 }
 

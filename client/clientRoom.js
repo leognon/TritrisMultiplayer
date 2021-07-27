@@ -7,19 +7,21 @@ import MyGame from './myGame.js';
 import OtherGame from './otherGame.js';
 
 export default class ClientRoom extends React.Component {
-    constructor(props) { //roomCode, ownerId, myId) {
+    constructor(props) {
         super(props);
         console.log('Instantiaing room!!!');
         this.state = {
             state: states.LOBBY,
-            users: this.props.originalUsers
+            users: this.props.originalUsers,
+            ownerId: this.props.ownerId,
+            roomCode: this.props.roomCode,
         }
 
-        //this.ownerId = this.props.ownerId;
+        this.socket = this.props.socket;
 
         this.match = null;
 
-        this.props.socket.on('room', this.gotData);
+        this.socket.on('room', this.gotData);
     }
 
     setup = (p5, canvasParentRef) => {
@@ -44,16 +46,22 @@ export default class ClientRoom extends React.Component {
         switch (this.state.state) {
             case states.LOBBY:
                 return <Lobby
-                    roomCode={this.props.roomCode}
+                    roomCode={this.state.roomCode}
                     users={this.state.users}
-                    isOwner={this.props.ownerId == this.props.socket.id}
-                    startGame={this.startGame} />
+                    isOwner={this.state.ownerId == this.socket.id}
+                    startGame={this.startGame}
+                    leaveRoom={this.leaveRoom} />
             case states.INGAME:
                 return <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized}/>
             default:
                 console.log('No state for clientRoom', this.state.state);
                 return null;
         }
+    }
+
+    componentWillUnmount = () => {
+        console.log('Removed room listener for room ' + this.state.roomCode);
+        this.socket.removeListener('room');
     }
 
     addUser = (id, name) => {
@@ -64,7 +72,7 @@ export default class ClientRoom extends React.Component {
         });
     }
 
-    disconnected = (id) => {
+    removeUser = (id) => {
         //Make a new list without the user that left
         let newUsers = this.state.users.filter(u => u.id != id);
         this.setState({
@@ -72,8 +80,14 @@ export default class ClientRoom extends React.Component {
         });
     }
 
+    leaveRoom = () => {
+        this.socket.emit('room', {
+            type: 'leave'
+        });
+    }
+
     startGame = () => {
-        this.props.socket.emit('room', {
+        this.socket.emit('room', {
             type: 'start',
         });
     }
@@ -82,7 +96,7 @@ export default class ClientRoom extends React.Component {
         let me;
         let others = [];
         for (let user of this.state.users) {
-            if (user.id == this.props.socket.id) me = user;
+            if (user.id == this.socket.id) me = user;
             else others.push(user);
         }
 
@@ -100,7 +114,7 @@ export default class ClientRoom extends React.Component {
     //Update the current game
     update = p5 => {
         if (this.state.state == states.INGAME && this.match) {
-            this.match.update(p5, this.props.socket);
+            this.match.update(p5, this.socket);
         }
     }
 
@@ -143,15 +157,16 @@ export default class ClientRoom extends React.Component {
             case 'playerJoined':
                 this.addUser(data.id, data.name);
                 break;
-            case 'playerDisconnected':
-                this.disconnected(data.id);
+            case 'playerLeft':
+                this.removeUser(data.id);
                 break;
             case 'gotGameState':
                 this.gotGameState(data.data);
                 break;
             case 'newOwner':
-                //TODO OWNER NEEDS TO BE IN STATE????
-                this.ownerId = data.id;
+                this.setState({
+                    ownerId: data.id
+                });
                 break;
         }
     }

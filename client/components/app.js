@@ -29,6 +29,7 @@ class App extends React.Component {
         //this.socket.on('gameState', gotGameState);
         //this.socket.on('matchOver', () => { });
         this.socket.on('newRoom', this.newRoom);
+        this.socket.on('leftRoom', this.leaveRoom);
         this.socket.on('disconnect', () => {
             console.log('Disconnected!!!');
             this.setState({
@@ -124,6 +125,12 @@ class App extends React.Component {
                 ownerId: data.ownerId,
                 originalUsers: data.players
             }
+        });
+    }
+
+    leaveRoom = () => {
+        this.setState({
+            state: states.MENU
         });
     }
 

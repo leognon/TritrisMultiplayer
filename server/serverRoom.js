@@ -53,13 +53,14 @@ class ServerRoom {
         });
     }
 
-    disconnected(socket) {
+    removeUser(socket) {
         for (let i = this.users.length-1; i >= 0; i--) {
             if (this.users[i].id == socket.id) {
+                this.users[i].emit('leftRoom');
                 this.users.splice(i, 1);
             } else {
                 this.users[i].emit('room', {
-                    type: 'playerDisconnected',
+                    type: 'playerLeft',
                     id: socket.id
                 });
             }

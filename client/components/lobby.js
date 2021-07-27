@@ -28,6 +28,7 @@ export default class Lobby extends React.Component {
                     <button onClick={this.props.startGame}>Start Game</button>
                     : ''
                 }
+                <button onClick={this.props.leaveRoom}>Leave Room</button>
             </div>
         );
     }
