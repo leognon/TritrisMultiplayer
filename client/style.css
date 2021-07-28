@@ -46,12 +46,6 @@ h2 {
     padding: 5px;
 }
 
-#joinDiv {
-    position: absolute;
-    width: 250px;
-    top: 30%;
-    left: 50%;
-    -webkit-transform: translateX(-50%);
-    transform: translateX(-50%);
-    text-align: center;
+.myLabel {
+    font-weight: bold;
 }

@@ -1,14 +1,12 @@
 import states from '../common/states.js';
 import ServerMatch from './match.js';
 
-//TODO Make the Room class more useful with inheritance
 export default class ServerRoom {
     constructor(roomCode, owner) {
         this.roomCode = roomCode;
 
-        this.owner = owner; //The socket who created the room
-        this.users = []; //An array of sockets
-        this.users.push(this.owner);
+        this.owner = new User(owner); //The socket who created the room
+        this.users = []; //An array of users
 
         this.match = null;
 
@@ -17,37 +15,27 @@ export default class ServerRoom {
         this.endMatchAt = 0;
         this.endMatchDelay = 5000; //Wait 5 seconds before ending the match
 
-        this.owner.emit('newRoom', {
-            type: 'created',
-            code: this.roomCode,
-            ownerId: this.owner.id,
-            players: this.users.map(p => { //When the room is created this will just be the owner
-                return { //Just get the id and name
-                    id: p.id, name: p.name
-                }
-            })
-        });
+        this.addUser(owner);
 
         console.log('Created room with code ' + this.roomCode);
     }
 
     addUser(socket) {
-        for (let p of this.users) {
-            p.emit('room', {
+        for (let u of this.users) {
+            u.socket.emit('room', {
                 type: 'playerJoined',
                 id: socket.id,
                 name: socket.name
             });
         }
-        this.users.push(socket);
+        this.users.push(new User(socket));
 
-        socket.emit('newRoom', {
-            type: 'joined',
+        socket.emit('joinedRoom', {
             code: this.roomCode,
             ownerId: this.owner.id,
-            players: this.users.map(p => {
-                return { //Just get the id and name
-                    id: p.id, name: p.name
+            users: this.users.map(u => {
+                return { //Just get the id and name and isSpectator
+                    id: u.id, name: u.name, isSpectator: u.isSpectator
                 }
             })
         });
@@ -56,10 +44,10 @@ export default class ServerRoom {
     removeUser(socket) {
         for (let i = this.users.length-1; i >= 0; i--) {
             if (this.users[i].id == socket.id) {
-                this.users[i].emit('leftRoom');
+                this.users[i].socket.emit('leftRoom');
                 this.users.splice(i, 1);
             } else {
-                this.users[i].emit('room', {
+                this.users[i].socket.emit('room', {
                     type: 'playerLeft',
                     id: socket.id
                 });
@@ -73,7 +61,7 @@ export default class ServerRoom {
             const newOwner = this.users[0];
             this.owner = newOwner;
             for (let u of this.users) {
-                u.emit('room', {
+                u.socket.emit('room', {
                     type: 'newOwner',
                     id: this.owner.id
                 });
@@ -90,6 +78,11 @@ export default class ServerRoom {
                     this.newMatch();
                 }
                 break;
+            case 'changeSpectator':
+                if (socket.id == this.owner.id) {
+                    this.changeSpectator(data.id, data.isSpectator);
+                }
+                break;
             case 'inputs':
                 if (this.state == states.INGAME && this.match) {
                     this.match.gotInputs(socket, data.inps);
@@ -99,10 +92,12 @@ export default class ServerRoom {
     }
 
     newMatch() {
-        this.match = new ServerMatch(15, this.users[0], this.users[1]);
-        for (let p of this.users) {
-            p.emit('room', {
+        const players = this.users.filter(u => !u.isSpectator).map(u => u.socket);
+        this.match = new ServerMatch(15, ...players);
+        for (let u of this.users) {
+            u.socket.emit('room', {
                 type: 'matchStarted',
+                playerIds: players.map(p => p.id),
                 seed: this.match.seed,
                 level: this.match.level
             });
@@ -111,13 +106,28 @@ export default class ServerRoom {
     }
 
     endMatch() {
-        for (let p of this.users) {
-            p.emit('room', {
+        for (let u of this.users) {
+            u.socket.emit('room', {
                 type: 'endMatch'
             });
         }
         this.match = null;
         this.state = states.LOBBY;
+    }
+
+    changeSpectator(id, isSpectator) {
+        for (const u of this.users) {
+            if (u.id == id) {
+                u.isSpectator = isSpectator;
+            }
+        }
+        for (const u of this.users) {
+            u.socket.emit('room', {
+                type: 'spectatorChanged',
+                id,
+                isSpectator
+            });
+        }
     }
 
     physicsUpdate() {
@@ -140,13 +150,25 @@ export default class ServerRoom {
     }
 
     clientsUpdate() {
-        if (this.state == states.INGAME && this.match) this.match.clientsUpdate();
+        if (this.state == states.INGAME && this.match) {
+            const spectatorSockets = this.users.filter(u => u.isSpectator).map(s => s.socket);
+            this.match.clientsUpdate(spectatorSockets);
+        }
     }
 
     hasPlayer(socket) {
-        for (let p of this.users) {
-            if (p.id == socket.id) return true;
+        for (let u of this.users) {
+            if (u.id == socket.id) return true;
         }
         return false;
+    }
+}
+
+class User {
+    constructor(socket) {
+        this.socket = socket;
+        this.name = socket.name;
+        this.id = socket.id;
+        this.isSpectator = false;
     }
 }

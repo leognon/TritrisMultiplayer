@@ -28,7 +28,7 @@ class App extends React.Component {
         this.socket.on('state', this.gotState);
         //this.socket.on('gameState', gotGameState);
         //this.socket.on('matchOver', () => { });
-        this.socket.on('newRoom', this.newRoom);
+        this.socket.on('joinedRoom', this.joinedRoom);
         this.socket.on('leftRoom', this.leaveRoom);
         this.socket.on('disconnect', () => {
             console.log('Disconnected!!!');
@@ -116,13 +116,13 @@ class App extends React.Component {
         //TODO Add loading state
     }
 
-    newRoom = (data) => {
+    joinedRoom = data => {
         this.setState({
             state: states.ROOM,
             roomData: {
                 roomCode: data.code,
                 ownerId: data.ownerId,
-                originalUsers: data.players
+                originalUsers: data.users
             }
         });
     }
@@ -139,7 +139,7 @@ class App extends React.Component {
                 return (
                     <>
                         <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
-                        <Loading />;
+                        <Loading />
                     </>);
             case states.MENU:
                 return (<>

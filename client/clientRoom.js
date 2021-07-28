@@ -11,7 +11,7 @@ export default class ClientRoom extends React.Component {
         super(props);
         this.state = {
             state: states.LOBBY,
-            users: this.props.originalUsers,
+            users: this.props.originalUsers.map(u => new User(u.name, u.id, u.isSpectator)),
             ownerId: this.props.ownerId,
             roomCode: this.props.roomCode,
         }
@@ -48,6 +48,7 @@ export default class ClientRoom extends React.Component {
                     users={this.state.users}
                     myId={this.socket.id}
                     ownerId={this.state.ownerId}
+                    toggleSpectator={this.changeSpectator}
                     startGame={this.startGame}
                     leaveRoom={this.leaveRoom} />
             case states.INGAME:
@@ -63,7 +64,7 @@ export default class ClientRoom extends React.Component {
     }
 
     addUser = (id, name) => {
-        const newUser = { id, name };
+        const newUser = new User(name, id, false);
         this.setState({
             users: [...this.state.users, newUser]
         });
@@ -89,12 +90,32 @@ export default class ClientRoom extends React.Component {
         });
     }
 
-    matchStarted = (seed, level) => {
-        let me;
+    changeSpectator = id => {
+        if (this.socket.id == this.state.ownerId) {
+            this.socket.emit('room', {
+                type: 'changeSpectator',
+                isSpectator: !this.state.users.filter(u => u.id == id)[0].isSpectator,
+                id
+            });
+        }
+    }
+
+    spectatorChanged = (id, isSpectator) => {
+        const newUsers = [...this.state.users];
+        for (let i = 0; i < newUsers.length; i++) {
+            if (newUsers[i].id == id) {
+                newUsers[i] = new User(newUsers[i].name, newUsers[i].id, isSpectator);
+            }
+        }
+        this.setState({ users: newUsers });
+    }
+
+    matchStarted = (playerIds, seed, level) => {
+        let me = null;
         let others = [];
-        for (let user of this.state.users) {
-            if (user.id == this.socket.id) me = user;
-            else others.push(user);
+        for (let id of playerIds) {
+            if (id == this.socket.id) me = this.getUserById(id);
+            else others.push(this.getUserById(id));
         }
 
         this.match = new ClientMatch(level, seed, me, others);
@@ -115,38 +136,16 @@ export default class ClientRoom extends React.Component {
         }
     }
 
-    showLobbyOwner = (p5) => {
-        /*p5.background(0);
-        p5.fill(255);
-        p5.textSize(20);
-        p5.textAlign(p5.CENTER, p5.CENTER);
-        p5.text(`You made the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
-        for (let i = 0; i < this.state.state.users.length; i++) {
-            p5.text('Player ' + this.state.state.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
-        }*/
-    }
-
-    showLobby = (p5) => {
-        /*p5.background(0);
-        p5.fill(255);
-        p5.textSize(20);
-        p5.textAlign(p5.CENTER, p5.CENTER);
-        p5.text(`You joined the lobby\n\nCode: ${this.roomCode}`, p5.width/2, p5.height/2);
-        for (let i = 0; i < this.state.users.length; i++) {
-            p5.text('Player ' + this.state.users[i].name, p5.width/2, p5.height/2 + 100 + i*30);
-        }*/
-    }
-
     showGame = (p5, pieceImages, sounds) => {
         if (this.state.state == states.INGAME && this.match) {
             this.match.show(p5, pieceImages, sounds);
         }
     }
 
-    gotData = (data) => {
+    gotData = data => {
         switch (data.type) {
             case 'matchStarted':
-                this.matchStarted(data.seed, data.level);
+                this.matchStarted(data.playerIds, data.seed, data.level);
                 break;
             case 'endMatch':
                 this.endMatch();
@@ -165,13 +164,31 @@ export default class ClientRoom extends React.Component {
                     ownerId: data.id
                 });
                 break;
+            case 'spectatorChanged':
+                this.spectatorChanged(data.id, data.isSpectator);
+                break;
         }
     }
 
-    gotGameState = (d) => {
+    gotGameState = d => {
         if (this.state.state == states.INGAME && this.match) {
             this.match.gotGameState(d);
         }
+    }
+
+    getUserById = id => {
+        for (let u of this.state.users) {
+            if (u.id == id) return u;
+        }
+        return null;
+    }
+}
+
+class User {
+    constructor(name, id, isSpectator) {
+        this.name = name;
+        this.id = id;
+        this.isSpectator = isSpectator;
     }
 }
 
@@ -180,8 +197,12 @@ class ClientMatch {
         this.seed = seed;
         this.level = level;
 
-        this.myId = me.id;
-        this.myGame = new MyGame(this.seed, this.level, me.name);
+        if (me === null) this.myId = null;
+        else this.myId = me.id;
+
+        if (me !== null) this.myGame = new MyGame(this.seed, this.level, me.name);
+        else this.myGame = null;
+
         this.otherPlayers = [];
         for (let other of others) {
             this.otherPlayers.push(new OtherPlayer(other.id, other.name, this.seed, this.level));
@@ -190,17 +211,13 @@ class ClientMatch {
         this.nextSendData = Date.now();
     }
 
-    addPlayer(p) {
-        this.players.push(new OtherPlayer(p.id, p.name, this.seed, this.level));
-    }
-
     update(p5, socket) {
-        if (Date.now() > this.nextSendData) {
+        if (this.myGame !== null && Date.now() > this.nextSendData) {
             this.sendData(socket);
             this.nextSendData = Date.now() + config.CLIENT_SEND_DATA;
         }
 
-        this.myGame.clientUpdate(p5);
+        if (this.myGame !== null) this.myGame.clientUpdate(p5);
         for (let other of this.otherPlayers) {
             other.interpolateUpdate();
         }
@@ -220,7 +237,7 @@ class ClientMatch {
         const games = d.players;
         const myData = d.yourData;
 
-        this.myGame.gotGameState(myData);
+        if (myData !== null) this.myGame.gotGameState(myData);
         for (let other of this.otherPlayers) {
             const otherData = games[other.id];
             other.gotGameState(otherData);
@@ -228,31 +245,30 @@ class ClientMatch {
     }
 
     show(p5, pieceImages, sounds) {
-        if (this.myGame.duringCountDown() || Date.now()-300 < this.myGame.startTime) { //TODO Make this all better by making the redraw system use p5 graphics
-            p5.background(100);
-        }
-        if (this.myGame.isFlashing()) {
-            p5.background(150);
-        } else {
-            p5.background(100);
-        }
+        let gamesToDisplay = [];
+        if (this.myGame !== null) gamesToDisplay.push(this.myGame);
+        gamesToDisplay.push(...this.otherPlayers.map(p => p.game));
+
+        if (gamesToDisplay[0].isFlashing()) p5.background(150);
+        else p5.background(100);
+
         let boardWidth = p5.width/4;
         let boardHeight = boardWidth*2;
         if (boardHeight > p5.height * 0.9) {
             boardHeight = p5.height * 0.9;
             boardWidth = boardHeight / 2;
         }
-        const gameWidth = boardWidth + 5*(boardWidth / this.myGame.w) + 20;
+        const gameWidth = boardWidth + 5*(boardWidth / gamesToDisplay[0].w) + 20;
         const center = p5.width/2;
         const spacing = 30;
 
-        this.myGame.show(p5, center-gameWidth-spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
-        this.otherPlayers[0].game.show(p5, center+spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
+        gamesToDisplay[0].show(p5, center-gameWidth-spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
+        gamesToDisplay[1].show(p5, center+spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
         //TODO Display multiple other players!
 
-        this.myGame.playSounds(sounds);
+        if (this.myGame !== null) this.myGame.playSounds(sounds);
 
-        if (this.myGame.duringCountDown()) {
+        if (this.myGame !== null && this.myGame.duringCountDown()) {
             p5.textSize(50);
             p5.fill(255);
             p5.noStroke();
@@ -278,7 +294,4 @@ class OtherPlayer {
     gotGameState(d) {
         this.game.gotGameState(d);
     }
-
-    //gotGameState
-    //sendData
 }

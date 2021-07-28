@@ -27,7 +27,7 @@ export default class ClientGame extends Game {
         return Date.now() < this.startTime;
     }
 
-    show(p5, x, y, w, h, pieceImages, showGridLines, showStats, showFlash) {
+    show(p5, x, y, w, h, pieceImages, showGridLines, showStats) {
         if (Date.now() < this.startTime) {
             this.redraw = true; //During the countdown, keep redrawing to show the display
         }

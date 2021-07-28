@@ -219,5 +219,4 @@ export default class MyGame extends ClientGame {
             }
         }
     }
-
 }

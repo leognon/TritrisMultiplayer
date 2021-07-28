@@ -41,7 +41,7 @@ export default class ServerMatch {
     }
 
     //Sends data to the clients
-    clientsUpdate() {
+    clientsUpdate(spectatorSockets) {
         let data = {
             players: {},
             yourData: null
@@ -51,6 +51,12 @@ export default class ServerMatch {
             //sent. The player will go to a previous state that had been sent, then
             //begin performing inputs to take them to this state.
             data.players[p.getId()] = p.getGameStateAndInputs();
+        }
+        for (const s of spectatorSockets) {
+            s.emit('room', {
+                type: 'gotGameState',
+                data
+            });
         }
         for (const p of this.players) {
             //The authoratative state at time t, and the input id that has been received
