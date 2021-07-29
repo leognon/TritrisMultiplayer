@@ -2,7 +2,6 @@ import { Grid, Piece } from './classes.js';
 import RandomGenerator from 'random-seed';
 import piecesJSON from './pieces.js';
 
-
 /* TODO
  *
  *  [ ] Better score display - Show score differential
@@ -11,9 +10,9 @@ import piecesJSON from './pieces.js';
  *  [ ] Make server more authoritative. Validate inputs, ensure piece falls consistently
  *  [ ] Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
  *  [ ] Round decimals to make game more deterministic
- *  [ ] Game id system
+ *  [X] Game id system
  *      [X] Create custom lobby
- *      [ ] Spectate games
+ *      [X] Spectate games
  *
  *      Click create room button
  *          [X] Creates custom room with id
@@ -38,7 +37,7 @@ export class Game {
         this.grid = new Grid(this.w, this.h);
 
         this.tritrisAmt = 0; //For statistics
-        const countDownLength = 5 * 1000;
+        const countDownLength = 3 * 1000;
         this.startTime = Date.now() + countDownLength; //A 5 second countdown before the game starts
         this.time = -countDownLength;
 
@@ -218,7 +217,10 @@ export class Game {
             this.playLineClearingAnimation();
             this.redraw = true;
         } else if (this.animatingLines.length > 0) { //Line clear animation finished
-            this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
+            const playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
+            if (playSound) {
+                this.addSound('levelup');
+            }
         }
 
         //Spawn the next piece after entry delay
@@ -228,23 +230,32 @@ export class Game {
             if (!this.isValid(this.currentPiece)) {
                 this.alive = false; //If the new piece is already blocked, game over
                 this.updateGameState();
+                this.addSound('topout');
             }
             this.redraw = true;
+            this.addSound('fall');
         }
 
         //Piece Movement
         if (this.currentPiece !== null) {
             if (input) { //It is time for the input to be performed
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
+                if (moveData.playSound) this.addSound('move');
                 if (input.vertDir) {
                     if (input.softDrop) this.pushDownPoints++; //Pushing down
                     else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
                 }
                 if (moveData.placePiece) {
-                    this.placePiece();
+                    const numLinesCleared = this.placePiece();
                     this.score += this.pushDownPoints;
                     this.pushDownPoints = 0;
+
+                    if (numLinesCleared == 3)
+                        this.addSound('tritris');
+                    else if (numLinesCleared > 0) {
+                        this.addSound('clear');
+                    }
                 }
                 this.redraw = true;
             }
@@ -292,7 +303,7 @@ export class Game {
         const row = this.currentPiece.getBottomRow();
 
         //Only clear lines if the next piece is not a triangle, or the next piece is a triangle, but it is a new triplet
-        let numLinesCleared;
+        let numLinesCleared = 0;
         if (this.nextPieceIndex != 0 || this.nextSingles == 2) {
             numLinesCleared = this.clearLines(); //Clear any complete lines
         }
@@ -380,6 +391,10 @@ export class Game {
             }
         }
         this.redraw = true;
+    }
+
+    addSound(s) {
+        //Do nohing. Sounds aren't played on the server
     }
 
     setSpeed() {

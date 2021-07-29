@@ -6,6 +6,15 @@ export default class ClientGame extends Game {
 
         this.name = name;
         this.flashAmount = 4;
+
+        this.soundsToPlay = {
+            move: false,
+            fall: false,
+            clear: false,
+            tritris: false,
+            levelup: false,
+            topout: false,
+        }
     }
 
     isFlashing() { //Returns whether or not to flash white
@@ -25,6 +34,15 @@ export default class ClientGame extends Game {
 
     duringCountDown() {
         return Date.now() < this.startTime;
+    }
+
+    playSounds(sounds) {
+        for (const s in sounds) {
+            if (this.soundsToPlay[s]) {
+                sounds[s].play();
+                this.soundsToPlay[s] = false;
+            }
+        }
     }
 
     show(p5, x, y, w, h, pieceImages, showGridLines, showStats) {

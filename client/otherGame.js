@@ -14,22 +14,30 @@ export default class OtherGame extends ClientGame {
         this.totalReceivedTimes = 0; //Used for calculating average
     }
 
-    interpolateUpdate() {
-        const deltaTime = Date.now() - this.lastFrame;
+    addSound(s) {
+        this.soundsToPlay[s] = true;
+    }
 
+    interpolateUpdate() {
         if (!this.frozen) {
             //Simulate gravity if there are no more inputs to simulate
             let gravity = false;
             if (this.time > this.lastReceivedInputTime) gravity = true;
-            this.updateToTime(this.time + deltaTime, gravity);
-        }
 
-        this.lastFrame = Date.now();
+            for (const s in this.soundsToPlay) this.soundsToPlay[s] = false; //Only play new sounds
+            const avgUpdateEvery = this.totalReceivedTimes / this.receivedTimes.length;
+            const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
+            const curTime = Date.now() - this.startTime - behindBy; //Update with a 350ms buffer
+            if (curTime > this.time) {
+                this.updateToTime(curTime, gravity);
+            }
+        }
     }
 
     gotGameState(data) {
         const { inputs, gameData } = data;
         const timeSinceLast = gameData.time - this.lastReceived;
+
         this.lastReceived = gameData.time;
         this.receivedTimes.push(timeSinceLast);
         this.totalReceivedTimes += timeSinceLast;
@@ -37,7 +45,8 @@ export default class OtherGame extends ClientGame {
             this.totalReceivedTimes -= this.receivedTimes[0];
             this.receivedTimes.splice(0, 1);
         }
-        let avgUpdateEvery = this.totalReceivedTimes / this.receivedTimes.length;
+        const avgUpdateEvery = this.totalReceivedTimes / this.receivedTimes.length;
+        const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
         //TODO Is avgUpdateEvery necessary? Just use config.SERVER_SEND_DATA
 
         //TODO Delete inputs that are before the previous state
@@ -48,16 +57,13 @@ export default class OtherGame extends ClientGame {
                 this.lastReceivedInputTime = decoded.time;
         }
 
-        const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
-        let desTime = gameData.time - behindBy; //What time to go to
+        //let desTime = gameData.time - behindBy; //What time to go to
+        let desTime = this.time; //Try to stay at a constant time. This time will be about 350ms behind gameData.time
 
-        if (desTime < this.time) { //Don't go backwards in time. This will stop any lag backs from appearing, however the interpolation may get closer to the actual time
-            desTime = this.time;
-        }
         if (gameData.time < desTime) { //If the interpolation is too close, freeze
             this.frozen = true;
         }
-        if (gameData.time >= behindBy + desTime) { //Once the inteprolation is far enough away, unfreeze
+        if (gameData.time >= behindBy + desTime) { //Once the interpolation is far enough away, unfreeze
             this.frozen = false;
         }
 
@@ -70,6 +76,7 @@ export default class OtherGame extends ClientGame {
                     mostRecentStateBeforeDesTimeIndex = i;
                 }
             }
+
             if (mostRecentStateBeforeDesTimeIndex != -1) {
                 const state = this.previousStates[mostRecentStateBeforeDesTimeIndex];
                 this.goToGameState(state); //Go to that state (authoritative from the server)
@@ -77,10 +84,10 @@ export default class OtherGame extends ClientGame {
             } else {
                 this.goToStart();
             }
+
             this.updateToTime(desTime, false); //Jump from the state just before desTime to exactly at desTime, replaying any inputs that happened during that time
         }
 
-        this.lastFrame = Date.now();
         this.redraw = true;
     }
 }

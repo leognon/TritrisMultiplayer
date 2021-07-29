@@ -93,7 +93,7 @@ export default class ServerRoom {
 
     newMatch() {
         const players = this.users.filter(u => !u.isSpectator).map(u => u.socket);
-        this.match = new ServerMatch(15, ...players);
+        this.match = new ServerMatch(0, ...players);
         for (let u of this.users) {
             u.socket.emit('room', {
                 type: 'matchStarted',

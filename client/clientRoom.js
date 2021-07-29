@@ -266,7 +266,7 @@ class ClientMatch {
         gamesToDisplay[1].show(p5, center+spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
         //TODO Display multiple other players!
 
-        if (this.myGame !== null) this.myGame.playSounds(sounds);
+        gamesToDisplay[0].playSounds(sounds);
 
         if (this.myGame !== null && this.myGame.duringCountDown()) {
             p5.textSize(50);

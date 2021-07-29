@@ -31,15 +31,6 @@ export default class MyGame extends ClientGame {
         this.inputId = 0;
 
         this.lastFrame = Date.now();
-
-        this.soundsToPlay = {
-            move: false,
-            fall: false,
-            clear: false,
-            tritris: false,
-            levelup: false,
-            topout: false,
-        }
     }
 
     clientUpdate(p5) {
@@ -209,14 +200,5 @@ export default class MyGame extends ClientGame {
         }
         this.inputsQueue = []; //Discard inputs that no longer need to be sent
         return inps;
-    }
-
-    playSounds(sounds) {
-        for (const s in sounds) {
-            if (this.soundsToPlay[s]) {
-                sounds[s].play();
-                this.soundsToPlay[s] = false;
-            }
-        }
     }
 }
