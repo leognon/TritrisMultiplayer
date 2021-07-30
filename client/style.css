@@ -7,30 +7,34 @@ html,
 body {
     margin: 0;
     padding: 0;
-    background-color: rgb(100, 100, 100);
-    height: 100%;
+    overflow: hidden;
+    display: table;
 }
 
 #root {
-    display: grid;
-    width: 100%;
-    height: 100%;
-    grid-template-rows: 1fr 0.75fr 1fr;
-    grid-template-columns: 1fr 0.75fr 1fr;
-    grid-template-areas:
-        "a b c"
-        "d center f"
-        "g h i";
-    text-align: center;
+    width: 100vw;
+    height: 100vh;
+    display: table-cell;
+    vertical-align: middle;
 }
 
-.center {
-    grid-area: center;
-    z-index: 1;
+.main {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    /*background-color: red;*/
+}
+
+.box {
+    background-color: rgb(151, 151, 151);
+    text-align: center;
+    border: 2px solid black;
+    padding: 5px;
+    margin: 10px;
 }
 
 .react-p5 {
-    z-index: 0;
+    z-index: -1;
     position: absolute;
     top: 0px;
     left: 0px;
@@ -38,12 +42,6 @@ body {
 
 h2 {
     font-family: fff-forward;
-}
-
-.box {
-    background-color: rgb(151, 151, 151);
-    border: 2px solid black;
-    padding: 5px;
 }
 
 .myLabel {

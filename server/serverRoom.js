@@ -75,7 +75,7 @@ export default class ServerRoom {
         switch (data.type) {
             case 'start':
                 if (socket.id == this.owner.id && this.state == states.LOBBY) {
-                    this.newMatch();
+                    this.newMatch(data.settings);
                 }
                 break;
             case 'changeSpectator':
@@ -91,9 +91,11 @@ export default class ServerRoom {
         }
     }
 
-    newMatch() {
+    newMatch(settings) {
+        const startLevel = settings.startLevel;
+
         const players = this.users.filter(u => !u.isSpectator).map(u => u.socket);
-        this.match = new ServerMatch(0, ...players);
+        this.match = new ServerMatch(startLevel, ...players);
         for (let u of this.users) {
             u.socket.emit('room', {
                 type: 'matchStarted',

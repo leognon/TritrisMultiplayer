@@ -25,8 +25,11 @@ import piecesJSON from './pieces.js';
  *      B-Type
  *      4x8
  *  How should level starts be chosen?
- *  Save games / replay games
- *  Accounts
+ *  Database
+ *      Save games / replay games
+ *      Accounts
+ *          Sign in with Google?
+ *          Ranked matches - ELO
  *
  */
 

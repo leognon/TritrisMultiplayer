@@ -28,6 +28,7 @@ export default class OtherGame extends ClientGame {
             const avgUpdateEvery = this.totalReceivedTimes / this.receivedTimes.length;
             const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
             const curTime = Date.now() - this.startTime - behindBy; //Update with a 350ms buffer
+            //TODO Is it good to go to curTime??? What if gameData.time gets behind?
             if (curTime > this.time) {
                 this.updateToTime(curTime, gravity);
             }

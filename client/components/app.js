@@ -32,9 +32,9 @@ class App extends React.Component {
         this.socket.on('leftRoom', this.leaveRoom);
         this.socket.on('disconnect', () => {
             console.log('Disconnected!!!');
-            this.setState({
+            /*this.setState({
                 state: -1
-            });
+            });*/
         });
 
         this.pieceImages = null;
@@ -137,12 +137,13 @@ class App extends React.Component {
         switch (this.state.state) {
             case states.LOADING:
                 return (
-                    <>
+                    <div className="main">
                         <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
                         <Loading />
-                    </>);
+                    </div>);
             case states.MENU:
-                return (<>
+                return (
+                    <div className="main">
                         <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
                         <Menu quickPlay={this.quickPlay}
                             createRoom={this.createRoom}
@@ -150,19 +151,22 @@ class App extends React.Component {
                             quickPlay={this.quickPlay}
                             name={this.state.name}
                             nameChanged={this.nameChanged} />
-                    </>);
+                    </div>);
             case states.ROOM:
-                return <ClientRoom
-                    roomCode={this.state.roomData.roomCode}
-                    ownerId={this.state.roomData.ownerId}
-                    originalUsers={this.state.roomData.originalUsers}
-                    socket={this.socket}
-                    pieceImages={this.pieceImages}
-                    sounds={this.sounds}
-                    font={this.font}
-                    />
+                return (
+                    <div className="main">
+                        <ClientRoom
+                        roomCode={this.state.roomData.roomCode}
+                        ownerId={this.state.roomData.ownerId}
+                        originalUsers={this.state.roomData.originalUsers}
+                        socket={this.socket}
+                        pieceImages={this.pieceImages}
+                        sounds={this.sounds}
+                        font={this.font}
+                        />
+                    </div>);
             default:
-                return <h2 className="center box">State: {this.state.state}</h2>;
+                return '';
         }
     }
 
@@ -202,11 +206,13 @@ function loadPieces(spriteSheet) {
 class Sound {
     constructor(src) {
         this.sound = document.createElement('audio');
+
         this.sound.src = src;
         this.sound.setAttribute('preload', 'auto');
         this.sound.setAttribute('controls', 'none');
         this.sound.style.display = 'none';
-        document.body.appendChild(this.sound);
+
+        document.querySelector('#sound').appendChild(this.sound);
     }
 
     setVolume(vol) {

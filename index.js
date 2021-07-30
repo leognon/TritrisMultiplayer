@@ -180,12 +180,4 @@ stdin.addListener("data", (d) => {
     }
 });
 
-let level = 9;
-app.get('/level/*', (req, res) => {
-    try {
-        level = parseInt(req.params[0]);
-    } catch (e) { }
-    res.redirect('/');
-});
-
 console.log('Server started');

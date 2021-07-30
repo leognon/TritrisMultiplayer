@@ -7,7 +7,7 @@ export default class Loading extends React.Component {
 
     render = () => {
         return (
-            <div className="center box">
+            <div className="box">
                 <h1>Loading...</h1>
             </div>
         );

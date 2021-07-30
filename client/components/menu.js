@@ -8,7 +8,7 @@ export default class Menu extends React.Component {
 
     render = () => {
         return (
-            <div id="joinDiv" className="center box">
+            <div id="joinDiv" className="box">
                 <h2>Tritris</h2>
                 <label htmlFor="name">Name</label>
                 <NameInput name={this.props.name} nameChanged={this.props.nameChanged} />

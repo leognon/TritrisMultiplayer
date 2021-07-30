@@ -18,11 +18,13 @@ export default class Lobby extends React.Component {
     }
 
     render = () => {
-        const title = this.props.myId == this.props.ownerId ? 'Created Lobby' : 'Joined Lobby';
+        const isOwner = this.props.myId == this.props.ownerId;
+        const title = isOwner ? 'Created Lobby' : 'Joined Lobby';
         const playerList = this.props.users.filter(u => !u.isSpectator).map(this.getUserLabel);
         const spectatorList = this.props.users.filter(u => u.isSpectator).map(this.getUserLabel);
         return (
-            <div id="lobbyDiv" className="center box">
+            <>
+            <div id="lobbyDiv" className="box">
                 <h1>{ title }</h1>
                 <p>Code: {this.props.roomCode}</p>
                 <h3>Players</h3> { playerList }
@@ -36,6 +38,7 @@ export default class Lobby extends React.Component {
                 }
                 <button onClick={this.props.leaveRoom}>Leave Room</button>
             </div>
+            </>
         );
     }
 }

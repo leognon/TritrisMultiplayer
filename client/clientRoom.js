@@ -1,6 +1,7 @@
 import React from 'react';
 import Sketch from 'react-p5';
 import Lobby from './components/lobby.js';
+import LobbySettings from './components/lobbySettings.js';
 import config from '../common/config.js';
 import states from '../common/states.js';
 import MyGame from './myGame.js';
@@ -14,6 +15,7 @@ export default class ClientRoom extends React.Component {
             users: this.props.originalUsers.map(u => new User(u.name, u.id, u.isSpectator)),
             ownerId: this.props.ownerId,
             roomCode: this.props.roomCode,
+            startLevel: 0
         }
 
         this.socket = this.props.socket;
@@ -43,7 +45,8 @@ export default class ClientRoom extends React.Component {
     render = () => {
         switch (this.state.state) {
             case states.LOBBY:
-                return <Lobby
+                return <>
+                    <Lobby
                     roomCode={this.state.roomCode}
                     users={this.state.users}
                     myId={this.socket.id}
@@ -51,6 +54,15 @@ export default class ClientRoom extends React.Component {
                     toggleSpectator={this.changeSpectator}
                     startGame={this.startGame}
                     leaveRoom={this.leaveRoom} />
+                    { this.state.ownerId == this.socket.id ?
+                            <LobbySettings
+                                startGame={this.startGame}
+                                startLevel={this.state.startLevel}
+                                startLevelChanged={this.startLevelChanged}
+                            />
+                            : ''
+                    }
+                </>
             case states.INGAME:
                 return <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized}/>
             default:
@@ -87,6 +99,9 @@ export default class ClientRoom extends React.Component {
     startGame = () => {
         this.socket.emit('room', {
             type: 'start',
+            settings: {
+                startLevel: this.state.startLevel
+            }
         });
     }
 
@@ -97,6 +112,20 @@ export default class ClientRoom extends React.Component {
                 isSpectator: !this.state.users.filter(u => u.id == id)[0].isSpectator,
                 id
             });
+        }
+    }
+
+    startLevelChanged = evnt => {
+        try {
+            let lvl = parseInt(evnt.target.value);
+            if (isNaN(lvl)) lvl = '';
+            lvl = Math.min(29, Math.max(0, lvl));
+            lvl = lvl.toString();
+            this.setState({
+                startLevel: lvl
+            });
+        } catch (e) {
+            //They entered something wrong (like the letter e. Exponentials aren't necessary)
         }
     }
 
