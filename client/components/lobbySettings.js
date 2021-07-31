@@ -13,7 +13,7 @@ export default class LobbySettings extends React.Component {
                 <label htmlFor="levelStart">Start Level: </label>
                 <input id="levelStart" type="number"
                     min="0" max="29" style={ {width: "50px" } }
-                    onClick={e => e.target.select()}
+                    onClick={e => e.target.select()} //Select all the text when clicked
                     value={this.props.startLevel}
                     onChange={this.props.startLevelChanged} />
 

@@ -1,3 +1,4 @@
+import validator from 'validator';
 import states from '../common/states.js';
 import ServerMatch from './match.js';
 
@@ -92,9 +93,20 @@ export default class ServerRoom {
     }
 
     newMatch(settings) {
-        const startLevel = settings.startLevel;
+        const isValid = validator.isNumeric(settings.startLevel + ''); //Make sure its a string
+        if (!isValid) {
+            this.owner.socket.emit('msg', { msg: 'Start level must be a number between 0 and 29' });
+            return;
+        }
+        const startLevel = validator.toInt(settings.startLevel + '');
 
         const players = this.users.filter(u => !u.isSpectator).map(u => u.socket);
+
+        if (players.length !== 2) {
+            this.owner.socket.emit('msg', { msg: 'There must be 2 people playing' });
+            return;
+        }
+
         this.match = new ServerMatch(startLevel, ...players);
         for (let u of this.users) {
             u.socket.emit('room', {
@@ -118,6 +130,12 @@ export default class ServerRoom {
     }
 
     changeSpectator(id, isSpectator) {
+        const valid = (isSpectator === true || isSpectator === false);
+        if (!valid) {
+            this.owner.emit('msg', { msg: 'Something went wrong changing the spectator' });
+            return;
+        }
+
         for (const u of this.users) {
             if (u.id == id) {
                 u.isSpectator = isSpectator;

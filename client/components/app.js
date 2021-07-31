@@ -25,7 +25,7 @@ class App extends React.Component {
             reconnection: false //Do not try to reconnect automatically
         });
 
-        this.socket.on('state', this.gotState);
+        this.socket.on('msg', this.gotMessage);
         //this.socket.on('gameState', gotGameState);
         //this.socket.on('matchOver', () => { });
         this.socket.on('joinedRoom', this.joinedRoom);
@@ -86,16 +86,8 @@ class App extends React.Component {
         state = states.FINDING_MATCH;*/
     }
 
-    gotState = (data) => {
-        this.setState({ state: data.state });
-        if (data.hasOwnProperty('message')) {
-            alert(data.message);
-        }
-
-        if (this.state.state == states.MENU) {
-            //dom.joinDiv.style('visibility: visible;');
-            //room = null;
-        }
+    gotMessage = data => {
+        alert(data.msg);
     }
 
     createRoom = () => {

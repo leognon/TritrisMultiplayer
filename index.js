@@ -1,5 +1,6 @@
 import express from 'express';
 import { Server as SocketIOServer } from 'socket.io';
+import validator from 'validator';
 
 import config from './common/config.js';
 
@@ -42,14 +43,41 @@ io.on('connection', socket => {
     });*/
 
     socket.on('room', data => {
+        const validateName = name => {
+            const min = 3;
+            const max = 12;
+            const validators = [
+                {
+                    valid: validator.isLength(name, {min, max}),
+                    msg: `Name must be between ${min} and ${max} characters long`
+                },
+                {
+                    valid: validator.isAscii(name),
+                    msg: `Name must only contain ASCII characters (a-Z, 0-9)`
+                }
+            ]
+            for (const valid of validators) {
+                if (!valid.valid) {
+                    return valid;
+                }
+            }
+            return { valid: true };
+        }
+
         switch (data.type) {
             case 'create':
-                socket.name = data.name;
-                createRoom(socket);
-                break;
             case 'join':
+                const valid = validateName(data.name);
+                if (!valid.valid) {
+                    socket.emit('msg', { msg: valid.msg });
+                    return;
+                }
                 socket.name = data.name;
-                joinRoom(socket, data.code);
+
+                if (data.type == 'create')
+                    createRoom(socket);
+                else if (data.type == 'join')
+                    joinRoom(socket, data.code);
                 break;
             case 'leave':
                 leaveRoom(socket);
@@ -107,7 +135,7 @@ function joinRoom(socket, code) {
         rooms[code].addUser(socket);
     } else {
         socket.emit('msg', {
-            message: 'Invalid room code'
+            msg: 'Invalid room code'
         });
     }
 }
