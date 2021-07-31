@@ -4,8 +4,8 @@
     "description": "Online multiplayer Tritris (Tetris with  Triangles)",
     "main": "index.js",
     "scripts": {
-        "build": "gulp build-react --production",
-        "buildDebug": "gulp build-react",
+        "build": "gulp build-prod",
+        "buildDebug": "gulp build",
         "start": "npm run build && node index.js",
         "playSound": "afplay ~/Desktop/youtube/tritris/tritris/assets/move.wav &",
         "dev": "nodemon -i build --exec 'npm run buildDebug && npm run playSound && node index.js'",
@@ -28,12 +28,10 @@
         "babelify": "^10.0.0",
         "browserify": "^17.0.0",
         "gulp": "^4.0.2",
-        "gulp-if": "^3.0.0",
         "gulp-uglify": "^3.0.2",
         "nodemon": "^2.0.7",
         "vinyl-buffer": "^1.0.1",
-        "vinyl-source-stream": "^2.0.0",
-        "yargs": "^7.1.2"
+        "vinyl-source-stream": "^2.0.0"
     },
     "type": "module",
     "babel": {
