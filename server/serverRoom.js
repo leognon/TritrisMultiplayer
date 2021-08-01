@@ -35,8 +35,8 @@ export default class ServerRoom {
             code: this.roomCode,
             ownerId: this.owner.id,
             users: this.users.map(u => {
-                return { //Just get the id and name and isSpectator
-                    id: u.id, name: u.name, isSpectator: u.isSpectator
+                return { //Just get the id and name and isSpectator and isReady
+                    id: u.id, name: u.name, isSpectator: u.isSpectator, isReady: u.isReady
                 }
             })
         });
@@ -83,6 +83,9 @@ export default class ServerRoom {
                 if (socket.id == this.owner.id) {
                     this.changeSpectator(data.id, data.isSpectator);
                 }
+                break;
+            case 'changeReady':
+                this.changeReady(socket.id, data.isReady);
                 break;
             case 'inputs':
                 if (this.state == states.INGAME && this.match) {
@@ -150,6 +153,23 @@ export default class ServerRoom {
         }
     }
 
+    changeReady(id, isReady) {
+        const valid = (isReady === true || isReady === false);
+        if (!valid) {
+            this.getUserById(id).socket.emit('msg', { msg: 'Something went wrong changing ready.' });
+            return;
+        }
+        this.getUserById(id).isReady = isReady;
+
+        for (const u of this.users) {
+            u.socket.emit('room', {
+                type: 'readyChanged',
+                id,
+                isReady
+            });
+        }
+    }
+
     physicsUpdate() {
         if (this.state == states.INGAME && this.match) {
             this.match.physicsUpdate();
@@ -182,6 +202,13 @@ export default class ServerRoom {
         }
         return false;
     }
+
+    getUserById = id => {
+        for (let u of this.users) {
+            if (u.id == id) return u;
+        }
+        return null;
+    }
 }
 
 class User {
@@ -189,6 +216,7 @@ class User {
         this.socket = socket;
         this.name = socket.name;
         this.id = socket.id;
+        this.isReady = false;
         this.isSpectator = false;
     }
 }

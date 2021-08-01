@@ -13,7 +13,7 @@ export default class ClientRoom extends React.Component {
         super(props);
         this.state = {
             state: states.LOBBY,
-            users: this.props.originalUsers.map(u => new User(u.name, u.id, u.isSpectator)),
+            users: this.props.originalUsers.map(u => new User(u.name, u.id, u.isSpectator, u.isReady)),
             ownerId: this.props.ownerId,
             roomCode: this.props.roomCode,
             startLevel: 0
@@ -48,13 +48,15 @@ export default class ClientRoom extends React.Component {
             case states.LOBBY:
                 return <>
                     <Lobby
-                    roomCode={this.state.roomCode}
-                    users={this.state.users}
-                    myId={this.socket.id}
-                    ownerId={this.state.ownerId}
-                    toggleSpectator={this.changeSpectator}
-                    startGame={this.startGame}
-                    leaveRoom={this.leaveRoom} />
+                        roomCode={this.state.roomCode}
+                        users={this.state.users}
+                        myId={this.socket.id}
+                        ownerId={this.state.ownerId}
+                        toggleSpectator={this.changeSpectator}
+                        startGame={this.startGame}
+                        changeReady={this.changeReady}
+                        leaveRoom={this.leaveRoom}
+                    />
 
                     { this.state.ownerId == this.socket.id ?
                         <LobbySettings
@@ -80,7 +82,7 @@ export default class ClientRoom extends React.Component {
     }
 
     addUser = (id, name) => {
-        const newUser = new User(name, id, false);
+        const newUser = new User(name, id, false, false);
         this.setState({
             users: [...this.state.users, newUser]
         });
@@ -119,6 +121,13 @@ export default class ClientRoom extends React.Component {
         }
     }
 
+    changeReady = () => {
+        this.socket.emit('room', {
+            type: 'changeReady',
+            isReady: !this.getUserById(this.socket.id).isReady
+        });
+    }
+
     startLevelChanged = evnt => {
         try {
             let lvl = parseInt(evnt.target.value);
@@ -137,11 +146,22 @@ export default class ClientRoom extends React.Component {
         const newUsers = [...this.state.users];
         for (let i = 0; i < newUsers.length; i++) {
             if (newUsers[i].id == id) {
-                newUsers[i] = new User(newUsers[i].name, newUsers[i].id, isSpectator);
+                newUsers[i] = new User(newUsers[i].name, newUsers[i].id, isSpectator, newUsers[i].isReady);
             }
         }
         this.setState({ users: newUsers });
     }
+
+    readyChanged = (id, isReady) => {
+        const newUsers = [...this.state.users];
+        for (let i = 0; i < newUsers.length; i++) {
+            if (newUsers[i].id == id) {
+                newUsers[i] = new User(newUsers[i].name, newUsers[i].id, newUsers[i].isSpectator, isReady);
+            }
+        }
+        this.setState({ users: newUsers });
+    }
+
 
     matchStarted = (playerIds, seed, level) => {
         let me = null;
@@ -200,6 +220,9 @@ export default class ClientRoom extends React.Component {
             case 'spectatorChanged':
                 this.spectatorChanged(data.id, data.isSpectator);
                 break;
+            case 'readyChanged':
+                this.readyChanged(data.id, data.isReady);
+                break;
         }
     }
 
@@ -218,9 +241,10 @@ export default class ClientRoom extends React.Component {
 }
 
 class User {
-    constructor(name, id, isSpectator) {
+    constructor(name, id, isSpectator, isReady) {
         this.name = name;
         this.id = id;
+        this.isReady = isReady;
         this.isSpectator = isSpectator;
     }
 }
