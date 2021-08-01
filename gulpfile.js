@@ -6,15 +6,16 @@ import source from 'vinyl-source-stream';
 import uglify from 'gulp-uglify';
 import buffer from 'vinyl-buffer';
 
-const options = {
-    entries: './client/components/app.js', // Entry point
-    extensions: ['.js'], // consider files with these extensions as modules
-};
-
 /**
  * Build an output file. Babelify is used to transform 'jsx' code to JavaScript code.
  **/
 gulp.task('build', function () {
+    const options = {
+        entries: './client/components/app.js', // Entry point
+        extensions: ['.js'], // consider files with these extensions as modules
+        debug: true
+    };
+
     return browserify(options)
         .transform(babelify)
         .bundle()
@@ -23,6 +24,11 @@ gulp.task('build', function () {
 });
 
 gulp.task('build-prod', () => {
+    const options = {
+        entries: './client/components/app.js', // Entry point
+        extensions: ['.js'], // consider files with these extensions as modules
+    };
+
     return browserify(options)
         .transform(babelify)
         .bundle()
