@@ -5,11 +5,10 @@
     "main": "index.js",
     "scripts": {
         "build": "gulp build-prod",
-        "buildDebug": "gulp build",
-        "start": "npm run build && node index.js",
+        "start": "gulp build && node index.js",
         "playSound": "afplay ~/Desktop/youtube/tritris/tritris/assets/move.wav &",
-        "dev": "nodemon -i build --exec 'npm run buildDebug && npm run playSound && node index.js'",
-        "devDebug": "nodemon -i build --exec 'npm run buildDebug && npm run playSound && node --inspect index.js'"
+        "dev": "nodemon -i build --exec 'gulp build && npm run playSound && node index.js'",
+        "devDebug": "nodemon -i build --exec 'gulp build && npm run playSound && node --inspect index.js'"
     },
     "author": "Goel",
     "license": "ISC",
@@ -21,9 +20,9 @@
         "react-p5": "^1.3.19",
         "socket.io": "^4.1.2",
         "socket.io-client": "^4.1.2",
-        "validator": "^13.6.0"
-    },
-    "devDependencies": {
+        "validator": "^13.6.0",
+
+        "@babel/core": "^7.14.8",
         "@babel/preset-env": "^7.14.8",
         "@babel/preset-react": "^7.14.5",
         "babelify": "^10.0.0",
