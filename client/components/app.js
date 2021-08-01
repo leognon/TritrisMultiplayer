@@ -5,6 +5,7 @@ import Sketch from 'react-p5';
 import io from 'socket.io-client';
 import states from '../../common/states.js';
 import Loading from './loading.js';
+import Background from './background.js';
 import Menu from './menu.js';
 import ClientRoom from '../clientRoom.js';
 
@@ -18,6 +19,10 @@ class App extends React.Component {
                 roomCode: '',
                 ownerId: '',
                 originalUsers: []
+            },
+            background: {
+                triangles: [],
+                nextSpawn: Date.now()
             }
         }
 
@@ -51,25 +56,15 @@ class App extends React.Component {
 
     setup = (p5, canvasParentRef) => {
         p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
+        p5.background(100);
         p5.loadImage('../client/assets/piecesImage.png', img => {
             this.pieceImages = loadPieces(img);
             this.setState({ state: states.MENU });
         });
         p5.loadFont('../client/assets/fff-forward.ttf', fnt => {
-            p5.textFont(fnt);
             this.font = fnt;
         });
-    }
-
-    draw = p5 => {
-        if (this.state.state == -1) {
-            p5.noLoop();
-        }
-        p5.background(
-            100 + 155*p5.noise(p5.frameCount/320, 0),
-            100 + 155*p5.noise(p5.frameCount/250, 20),
-            100 + 155*p5.noise(p5.frameCount/280, 30)
-        );
+        p5.noLoop();
     }
 
     nameChanged = evnt => {
@@ -130,13 +125,13 @@ class App extends React.Component {
             case states.LOADING:
                 return (
                     <div className="main">
-                        <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
+                        <Sketch setup={this.setup} windowResized={this.windowResized} />
                         <Loading />
                     </div>);
             case states.MENU:
                 return (
                     <div className="main">
-                        <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />
+                        <Background pieceImages={this.pieceImages} />
                         <Menu quickPlay={this.quickPlay}
                             createRoom={this.createRoom}
                             joinRoom={this.joinRoom}
@@ -148,13 +143,13 @@ class App extends React.Component {
                 return (
                     <div className="main">
                         <ClientRoom
-                        roomCode={this.state.roomData.roomCode}
-                        ownerId={this.state.roomData.ownerId}
-                        originalUsers={this.state.roomData.originalUsers}
-                        socket={this.socket}
-                        pieceImages={this.pieceImages}
-                        sounds={this.sounds}
-                        font={this.font}
+                            roomCode={this.state.roomData.roomCode}
+                            ownerId={this.state.roomData.ownerId}
+                            originalUsers={this.state.roomData.originalUsers}
+                            socket={this.socket}
+                            pieceImages={this.pieceImages}
+                            sounds={this.sounds}
+                            font={this.font}
                         />
                     </div>);
             default:

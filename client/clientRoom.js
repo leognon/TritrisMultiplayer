@@ -2,6 +2,7 @@ import React from 'react';
 import Sketch from 'react-p5';
 import Lobby from './components/lobby.js';
 import LobbySettings from './components/lobbySettings.js';
+import Background from './components/background.js';
 import config from '../common/config.js';
 import states from '../common/states.js';
 import MyGame from './myGame.js';
@@ -54,14 +55,17 @@ export default class ClientRoom extends React.Component {
                     toggleSpectator={this.changeSpectator}
                     startGame={this.startGame}
                     leaveRoom={this.leaveRoom} />
+
                     { this.state.ownerId == this.socket.id ?
-                            <LobbySettings
-                                startGame={this.startGame}
-                                startLevel={this.state.startLevel}
-                                startLevelChanged={this.startLevelChanged}
-                            />
-                            : ''
+                        <LobbySettings
+                            startGame={this.startGame}
+                            startLevel={this.state.startLevel}
+                            startLevelChanged={this.startLevelChanged}
+                        />
+                    : ''
                     }
+
+                    <Background pieceImages={this.props.pieceImages}/>
                 </>
             case states.INGAME:
                 return <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized}/>
