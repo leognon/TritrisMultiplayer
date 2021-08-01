@@ -15,6 +15,11 @@ export default class Background extends React.Component {
         this.draw(p5);
     }
 
+    windowResized = p5 => {
+        p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
+        p5.redraw();
+    }
+
     draw = p5 => {
         const deltaTime = Date.now() - this.lastFrame;
 
@@ -72,7 +77,7 @@ export default class Background extends React.Component {
     }
 
     render = () => {
-        return <Sketch setup={this.setup} draw={this.draw} />;
+        return <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />;
     }
 }
 

@@ -27,15 +27,12 @@ export default class Lobby extends React.Component {
             <div id="lobbyDiv" className="box">
                 <h1>{ title }</h1>
                 <p>Code: {this.props.roomCode}</p>
+                <hr />
                 <h3>Players</h3> { playerList }
                 { spectatorList.length > 0 ? <><hr /><h3>Spectators</h3></> : ''}
                 {spectatorList }
 
-                {
-                    this.props.myId == this.props.ownerId ?
-                    <button onClick={this.props.startGame}>Start Game</button>
-                    : ''
-                }
+                <hr />
                 <button onClick={this.props.leaveRoom}>Leave Room</button>
             </div>
             </>
