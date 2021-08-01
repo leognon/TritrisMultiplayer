@@ -22,8 +22,13 @@ import piecesJSON from './pieces.js';
  *      [X] Join room
  *  More gamemodes
  *      Quadtris (Bitris?)
+ *          Fix colors (both versions of a mirror is purple)
+ *          Redo rotation center code
+ *          Make pieces.json format better (add names)
  *      B-Type
  *      4x8
+ *      Invisible-Tris
+ *      No next
  *  How should level starts be chosen?
  *  Database
  *      Save games / replay games
@@ -107,9 +112,6 @@ export class Game {
         this.pushDownPoints = 0; //The current amount of push down points. Increases when holding down, but resets if released
         this.lastMoveDown = 750; //When the last move down was. Originally a 750ms delay for the first piece
 
-        this.lastFrame = Date.now(); //Used to calculate deltaTime and for DAS
-        //TODO This is unnecessary in the server
-
         this.spawnNextPiece = 0;
 
         this.animatingUntil = 0; //How long until the line clear animation is done
@@ -159,8 +161,6 @@ export class Game {
         this.animatingLines = state.animatingLines;
 
         this.time = state.time;
-
-        this.lastFrame = Date.now();
     }
 
     updateToTime(t, gravity) { //Go from the current time to t and do all inputs that happened during that time
@@ -181,7 +181,7 @@ export class Game {
             }
         }
 
-        while (this.time < t) {
+        while (this.time < t && this.alive) {
             let deltaTime = this.pieceSpeed; // this.pieceSpeed/100; //TODO Figure out deltaTime stuff in the server
             if (this.time + deltaTime > t) {
                 deltaTime = t - this.time; //Ensure the time does not go over the desired time
@@ -211,10 +211,9 @@ export class Game {
     }
 
     update(deltaTime, input, gravity) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
-        this.lastFrame = Date.now(); //TODO lastFrame is unnecessary in server
-        this.time += deltaTime;
-
         if (!this.alive) return;
+
+        this.time += deltaTime;
 
         if (this.time <= this.animatingUntil) { //Line clear animation
             this.playLineClearingAnimation();

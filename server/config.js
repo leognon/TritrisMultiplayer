@@ -1,0 +1,6 @@
+const SERVER_CONFIG = {
+    SEND_DATA: 100,
+    PHYSICS_UPDATE: 1000/20,
+    ROOM_CODE_LENGTH: 4
+}
+export default SERVER_CONFIG;

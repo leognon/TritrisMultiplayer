@@ -3,7 +3,7 @@ import Sketch from 'react-p5';
 import Lobby from './components/lobby.js';
 import LobbySettings from './components/lobbySettings.js';
 import Background from './components/background.js';
-import config from '../common/config.js';
+import COMMON_CONFIG from '../common/config.js';
 import states from '../common/states.js';
 import MyGame from './myGame.js';
 import OtherGame from './otherGame.js';
@@ -247,7 +247,7 @@ class ClientMatch {
     update(p5, socket) {
         if (this.myGame !== null && Date.now() > this.nextSendData) {
             this.sendData(socket);
-            this.nextSendData = Date.now() + config.CLIENT_SEND_DATA;
+            this.nextSendData = Date.now() + COMMON_CONFIG.CLIENT_SEND_DATA;
         }
 
         if (this.myGame !== null) this.myGame.clientUpdate(p5);
@@ -301,12 +301,12 @@ class ClientMatch {
 
         gamesToDisplay[0].playSounds(sounds);
 
-        if (this.myGame !== null && this.myGame.duringCountDown()) {
+        if (gamesToDisplay[0].duringCountDown()) {
             p5.textSize(50);
             p5.fill(255);
             p5.noStroke();
             p5.textAlign(p5.CENTER, p5.CENTER);
-            const secondsRemaining = 1 + Math.floor(-this.myGame.time / 1000);
+            const secondsRemaining = 1 + Math.floor(-gamesToDisplay[0].time / 1000);
             p5.text(secondsRemaining, center - gameWidth - spacing/2 + boardWidth/2, 10+boardHeight/2);
         }
     }

@@ -1,5 +1,5 @@
 import { Input } from '../common/game.js';
-import config from '../common/config.js';
+import COMMON_CONFIG from '../common/config.js';
 import ClientGame from '../client/clientGame';
 
 export default class OtherGame extends ClientGame {
@@ -26,7 +26,7 @@ export default class OtherGame extends ClientGame {
 
             for (const s in this.soundsToPlay) this.soundsToPlay[s] = false; //Only play new sounds
             const avgUpdateEvery = this.totalReceivedTimes / this.receivedTimes.length;
-            const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
+            const behindBy = Math.max(COMMON_CONFIG.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, COMMON_CONFIG.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
             const curTime = Date.now() - this.startTime - behindBy; //Update with a 350ms buffer
             //TODO Is it good to go to curTime??? What if gameData.time gets behind?
             if (curTime > this.time) {
@@ -47,8 +47,7 @@ export default class OtherGame extends ClientGame {
             this.receivedTimes.splice(0, 1);
         }
         const avgUpdateEvery = this.totalReceivedTimes / this.receivedTimes.length;
-        const behindBy = Math.max(config.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, config.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
-        //TODO Is avgUpdateEvery necessary? Just use config.SERVER_SEND_DATA
+        const behindBy = Math.max(COMMON_CONFIG.CLIENT_NUM_UPDATES_BEHIND_BY*avgUpdateEvery, COMMON_CONFIG.CLIENT_MIN_BEHIND_BY); //How far behind the interpolation should be. This ensures a buffer so interpolation stays smooth
 
         //TODO Delete inputs that are before the previous state
         for (let encodedInp of inputs) {

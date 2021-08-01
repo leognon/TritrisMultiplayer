@@ -8,6 +8,7 @@ import Loading from './loading.js';
 import Background from './background.js';
 import Menu from './menu.js';
 import ClientRoom from '../clientRoom.js';
+import COMMON_CONFIG from '../../common/config.js';
 
 class App extends React.Component {
     constructor(props) {
@@ -68,9 +69,10 @@ class App extends React.Component {
     }
 
     nameChanged = evnt => {
-        this.setState({
-            name: evnt.target.value
-        });
+        let name = evnt.target.value;
+        if (name.length > COMMON_CONFIG.MAX_NAME_LENGTH)
+            name = name.slice(0, COMMON_CONFIG.MAX_NAME_LENGTH);
+        this.setState({ name });
     }
 
 

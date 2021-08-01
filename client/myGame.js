@@ -189,7 +189,11 @@ export default class MyGame extends ClientGame {
         this.goToGameState(myGameData);
 
         this.updateToTime(Date.now() - this.startTime, false); //Recatch-up the game
+
         this.lastFrame = Date.now();
+        //TODO???? Should lastFrame not be set here because that might cause deltaTime to "skip" time
+        //In testing it was causing minor lagbacks (especially on 19)
+
         this.redraw = true;
     }
 

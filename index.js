@@ -2,7 +2,8 @@ import express from 'express';
 import { Server as SocketIOServer } from 'socket.io';
 import validator from 'validator';
 
-import config from './common/config.js';
+import COMMON_CONFIG from './common/config.js';
+import SERVER_CONFIG from './server/config.js';
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -45,7 +46,7 @@ io.on('connection', socket => {
     socket.on('room', data => {
         const validateName = name => {
             const min = 3;
-            const max = 12;
+            const max = COMMON_CONFIG.MAX_NAME_LENGTH;
             const validators = [
                 {
                     valid: validator.isLength(name, {min, max}),
@@ -112,7 +113,7 @@ function createRoom(owner) {
 }
 
 function generateUniqRoomCode() {
-    let length = 1;
+    let length = SERVER_CONFIG.ROOM_CODE_LENGTH;
     let code;
     let attempts = 0;
     do {
@@ -131,6 +132,7 @@ function generateUniqRoomCode() {
 }
 
 function joinRoom(socket, code) {
+    code = code.toUpperCase();
     if (rooms.hasOwnProperty(code)) {
         rooms[code].addUser(socket);
     } else {
@@ -170,13 +172,13 @@ setInterval(() => {
     for (const id in rooms) {
         rooms[id].physicsUpdate();
     }
-}, config.SERVER_PHYSICS_UPDATE);
+}, SERVER_CONFIG.PHYSICS_UPDATE);
 
 //Send new game states to clients
 setInterval(() => {
     for (const id in rooms) {
         rooms[id].clientsUpdate();
     }
-}, config.SERVER_SEND_DATA);
+}, SERVER_CONFIG.SEND_DATA);
 
 console.log('Server started');
