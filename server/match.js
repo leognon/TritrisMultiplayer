@@ -2,7 +2,13 @@ import ServerGame from './serverGame.js';
 
 export default class ServerMatch {
     constructor(level, socket1, socket2) {
-        console.log('Created match between ' + socket1.id + ' and ' + (socket2 ? socket2.id : 'nobody'));
+        let names = '';
+        for (let s of [socket1, socket2]) {
+            names += `${s.name} (${s.id.slice(0,4)}), `;
+        }
+        console.log('Created match btwn ' + names);
+
+
         this.seed = Math.random();
         this.level = level;
 

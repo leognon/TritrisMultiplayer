@@ -42,8 +42,8 @@ export default class ServerGame extends Game {
         this.goToGameState(this.latestState); //Go to the last known state before these new inputs were just received
         if (latestTime >= this.time) //Don't go back in time. Prevents user from sending old inputs
             this.updateToTime(latestTime, false); //Update all of the newly received inputs
-        else
-            console.log(`Not going back from ${this.time} to ${latestTime}`);
+        //else
+            //console.log(`Not going back from ${this.time} to ${latestTime}`);
         this.physicsUpdate(false); //Updates to the current time (simulating gravity)
     }
 

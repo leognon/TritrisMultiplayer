@@ -34,7 +34,7 @@ app.get('/build/main.min.js', (req, res) => {
 });
 
 io.on('connection', socket => {
-    console.log(socket.id + ' connected');
+    console.log(nameId(socket) + ' connected');
     sockets[socket.id] = socket;
 
     //TODO Validate and sanitize inputs
@@ -148,6 +148,7 @@ function leaveRoom(socket) {
     if (room.found) {
         const shouldDisband = room.room.removeUser(socket);
         if (shouldDisband) {
+            console.log('Disbanding room ' + room.id);
             delete rooms[room.id];
         }
     }
@@ -166,6 +167,12 @@ function getRoom(socket) {
     return {
         found: false
     }
+}
+
+function nameId(socket) {
+    if (socket.hasOwnProperty(nameId))
+        return `${nameId} (${socket.id.slice(0, 4)})`;
+    return `${socket.id.slice(0,4)}`;
 }
 
 //Physics update

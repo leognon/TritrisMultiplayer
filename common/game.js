@@ -169,7 +169,7 @@ export class Game {
             return; //Nothing can happen before 0 so no need to play inputs
         }
         if (this.time > t) {
-            console.log('Cannot go backwards to ' + t + ' from ' + this.time);
+            //console.log('Cannot go backwards to ' + t + ' from ' + this.time);
         }
         let nextInputId = this.inputs.length; //The id of the next input that should be played. If none should be played, it will be inputs.length
 

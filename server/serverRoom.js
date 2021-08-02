@@ -18,10 +18,11 @@ export default class ServerRoom {
 
         this.addUser(owner);
 
-        console.log('Created room with code ' + this.roomCode);
+        console.log(this.owner.name + ' created room with code ' + this.roomCode);
     }
 
     addUser(socket) {
+        console.log(socket.name + ' joined ' + this.roomCode);
         for (let u of this.users) {
             u.socket.emit('room', {
                 type: 'playerJoined',
@@ -43,6 +44,7 @@ export default class ServerRoom {
     }
 
     removeUser(socket) {
+        console.log(socket.name + ' left ' + this.roomCode);
         for (let i = this.users.length-1; i >= 0; i--) {
             if (this.users[i].id == socket.id) {
                 this.users[i].socket.emit('leftRoom');
@@ -123,6 +125,12 @@ export default class ServerRoom {
     }
 
     endMatch() {
+        let scores = '';
+        for (let p of this.match.players) {
+            scores += p.socket.name + ': ' + p.serverGame.score + ' | ';
+        }
+        console.log('Ending match in room ' + this.roomCode + '. ' + scores);
+
         for (let u of this.users) {
             u.socket.emit('room', {
                 type: 'endMatch'
