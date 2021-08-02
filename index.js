@@ -132,6 +132,7 @@ function generateUniqRoomCode() {
 }
 
 function joinRoom(socket, code) {
+    if (!code) code = '';
     code = code.toUpperCase();
     if (rooms.hasOwnProperty(code)) {
         rooms[code].addUser(socket);
