@@ -46,6 +46,10 @@ export default class ServerRoom {
     removeUser(socket) {
         console.log(socket.name + ' left ' + this.roomCode);
         for (let i = this.users.length-1; i >= 0; i--) {
+            if (!this.users[i]) {
+                console.log('There is no user index ' + i + ' in room ' + this.roomCode, this.users);
+                continue;
+            }
             if (this.users[i].id == socket.id) {
                 this.users[i].socket.emit('leftRoom');
                 this.users.splice(i, 1);
@@ -107,12 +111,7 @@ export default class ServerRoom {
 
         const players = this.users.filter(u => !u.isSpectator).map(u => u.socket);
 
-        if (players.length !== 2) {
-            this.owner.socket.emit('msg', { msg: 'There must be 2 people playing' });
-            return;
-        }
-
-        this.match = new ServerMatch(startLevel, ...players);
+        this.match = new ServerMatch(startLevel, players);
         for (let u of this.users) {
             u.socket.emit('room', {
                 type: 'matchStarted',

@@ -99,8 +99,9 @@ export class Grid {
 
         if (showGridLines) {
             //Draws the grid outline
+            const scaleFactor = (w * h) / (400 * 800);
             p5.stroke(100);
-            p5.strokeWeight(2);
+            p5.strokeWeight(Math.max(0.25, 2.5 * scaleFactor));
             //Vertical lines
             for (let i = 0; i <= this.w; i++)
                 p5.line(x + i * cellW, y, x + i * cellW, y + h);

@@ -1,20 +1,20 @@
 import ServerGame from './serverGame.js';
 
 export default class ServerMatch {
-    constructor(level, socket1, socket2) {
+    constructor(level, sockets) {
         let names = '';
-        for (let s of [socket1, socket2]) {
+        for (let s of sockets) {
             names += `${s.name} (${s.id.slice(0,4)}), `;
         }
         console.log('Created match btwn ' + names);
-
 
         this.seed = Math.random();
         this.level = level;
 
         this.players = [];
-        this.addPlayer(socket1);
-        this.addPlayer(socket2);
+        for (let socket of sockets) {
+            this.addPlayer(socket);
+        }
     }
 
     addPlayer(socket) {

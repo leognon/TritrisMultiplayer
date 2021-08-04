@@ -45,14 +45,130 @@ export default class ClientGame extends Game {
         }
     }
 
-    show(p5, x, y, w, h, pieceImages, showGridLines, showStats) {
-        if (Date.now() < this.startTime) {
-            this.redraw = true; //During the countdown, keep redrawing to show the display
+    getBigElements(p5, left) {
+        //Score/Lines display - Top 10%
+        //Board Middle 80%
+        //Name - Bottom 10%
+        let boardHeight = p5.height * 0.8;
+        let boardWidth = boardHeight / 2;
+        if (boardWidth * 3 > p5.width) { //If the window is too thin
+            boardWidth = p5.width / 3;
+            boardHeight = boardWidth * 2;
         }
 
-        //TODO Remove redraw? It is temporarily disabled
-        //if (!this.redraw) return;
+        const scaleFactor = boardWidth / 250; //Ensure everything scales together
 
+        const cellW = boardWidth / this.w;
+
+        const padding = 8 * scaleFactor;
+
+        const scorePosX = left;
+        const scorePosY = padding;
+        const scoreWidth = boardWidth;
+        const scoreHeight = boardHeight * 1/8;
+
+        const boardPosX = left;
+        const boardPosY = scorePosY + scoreHeight + padding;
+
+        const nextPosX = boardPosX + boardWidth + padding;
+        const nextPosY = boardPosY + cellW * 2;
+        const nextDim = cellW * 3;
+
+        const textSize = cellW * 0.5;
+        const nameX = left + boardWidth / 2;
+        const nameY = boardPosY + boardHeight + padding;
+
+        return {
+            topText: {
+                x: scorePosX,
+                y: scorePosY,
+                w: scoreWidth,
+                h: scoreHeight,
+                scaleFactor: scaleFactor
+            },
+            board: {
+                x: boardPosX,
+                y: boardPosY,
+                w: boardWidth,
+                h: boardHeight
+            },
+            next: {
+                x: nextPosX,
+                y: nextPosY,
+                w: nextDim,
+                h: nextDim
+            },
+            bottomText: {
+                x: nameX,
+                y: nameY,
+                textSize
+            },
+            bounding: {
+                left,
+                right: nextPosX + nextDim,
+                top: scorePosY,
+                bottom: nameY + textSize
+            }
+        }
+    }
+
+    showBig(p5, left, pieceImages, showGridLines) {
+        const elems = this.getBigElements(p5, left);
+
+        this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.topText.scaleFactor);
+
+        this.showGameBoard(p5, elems.board.x, elems.board.y, elems.board.w, elems.board.h, pieceImages, showGridLines);
+
+        this.showNextBox(p5, elems.next.x, elems.next.y, elems.next.w, elems.next.h, pieceImages);
+
+        p5.fill(0);
+        p5.noStroke();
+        p5.textSize(elems.bottomText.fontSize);
+        p5.textAlign(p5.CENTER, p5.TOP);
+        p5.text(this.name, elems.bottomText.x, elems.bottomText.y);
+
+        return elems;
+    }
+
+    getSmallElements(x, y, w, h) {
+        const padding = h * 0.01;
+        const cellH = h / this.h;
+        const textHeight = 0.5 * cellH;
+        return {
+            bounding: {
+                left: x,
+                right: x + w,
+                top: y,
+                bottom: y + h + padding + textHeight
+            },
+            board: {
+                x, y, w, h
+            },
+            text: {
+                x: x + w/2,
+                y: y + h + padding,
+                size: textHeight
+            }
+        }
+    }
+
+    showSmall(p5, x, y, w, h, pieceImages, showGridLines) {
+        const elements = this.getSmallElements(x, y, w, h);
+
+        this.showGameBoard(p5, x, y, w, h, pieceImages, showGridLines);
+
+        const formattedScore = this.formatScore(this.score);
+        const text = `${this.name} | ${formattedScore}`;
+
+        p5.fill(0);
+        p5.noStroke();
+        p5.textSize(elements.text.size);
+        p5.textAlign(p5.CENTER, p5.TOP);
+        p5.text(text, elements.text.x, elements.text.y);
+    }
+
+
+    showGameBoard(p5, x, y, w, h, pieceImages, showGridLines) {
         p5.noStroke();
         p5.fill(0);
         p5.rect(x, y, w, h);
@@ -64,18 +180,73 @@ export default class ClientGame extends Game {
         if (this.currentPiece) {
             this.currentPiece.show(p5, x, y, cellW, cellH, pieceImages);
         }
+    }
 
-        const txtSize = 20;
-        p5.textSize(txtSize);
+    showNextBox(p5, x, y, w, h, pieceImages) {
+        p5.fill(100);
+        p5.stroke(0);
+        p5.strokeWeight(3);
+        p5.rect(x, y, w, h);
+        if (this.nextPiece) {
+            if (this.nextSingles == 0) { //Show next piece normally
+                this.nextPiece.showAt(p5, x, y, w, h, pieceImages);
+            } else if (this.nextSingles == 2) { //Show 3 Ninjas coming up
+                const spacingX = w / 7;
+                const spacingY = h / 7;
+                this.nextPiece.showAt(p5, x - spacingX, y - spacingY, w, h, pieceImages);
+                this.nextPiece.showAt(p5, x, y, w, h, pieceImages);
+                this.nextPiece.showAt(p5, x + spacingX, y + spacingY, w, h, pieceImages);
+            } else if (this.nextSingles == 1) { //Show 2 ninjas coming up
+                const spacingX = w / 7;
+                const spacingY = h / 7;
+                this.nextPiece.showAt(p5, x - spacingX/2, y - spacingY/2, w, h, pieceImages);
+                this.nextPiece.showAt(p5, x + spacingX/2, y + spacingY/2, w, h, pieceImages);
+            }
+        }
+    }
+
+    showScoreAndLines(p5, x, y, w, h, scaleFactor) {
+        const score = this.formatScore(this.score);
+        let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
+        if (this.lines == 0) tritrisPercent = '--';
+
+        //p5.textLeading(fontHeight);
+        const lines = [
+            `Score ${score} | ${tritrisPercent}%`,
+            `Lines ${this.lines} (${this.level})`
+        ];
+        const innerTextHeight = h - 5*scaleFactor;
+        const lineHeight = innerTextHeight / lines.length;
+        let fontSize = lineHeight - 10*scaleFactor;
+
+        p5.textSize(fontSize); //Needed to calcualte the text width accurately
+        const longestLineWidth = Math.max(...lines.map(l => p5.textWidth(l)));
+        if (longestLineWidth > w) {
+            const scale = w / longestLineWidth;
+            fontSize *= scale;
+        }
+
+        const textPadding = 8 * scaleFactor;
+
+        p5.stroke(0);
+        p5.strokeWeight(3);
+        p5.fill(100); //Box border
+        p5.rect(x, y, w, h);
+
+        p5.textSize(fontSize);
         p5.textAlign(p5.LEFT, p5.TOP);
-        const padding = 10;
-        const scorePos = p5.createVector(x + w + cellW, y + cellH);
-        let scoreDim;
+        p5.fill(0);
+        p5.noStroke();
+        for (let i = 0; i < lines.length; i++) {
+            p5.text(lines[i], x + textPadding, y + lineHeight*i + textPadding);
+        }
+    }
 
-        let normal = this.score % 100000;
-        let dig = Math.floor(this.score / 100000);
+    formatScore(s) {
+        let normal = s % 100000; //The last 5 digits are displayed normally
+        let dig = Math.floor(s / 100000); //The leading digit
         let formattedScore = normal.toString();
-        if (dig > 0) {
+        if (dig > 0) { //Pad zeros
             while (formattedScore.length < 5) formattedScore = '0' + formattedScore; //Make sure the length is correct
         }
         for (let i = formattedScore.length-3; i > 0; i -= 3) {
@@ -87,118 +258,6 @@ export default class ClientGame extends Game {
             if (dig >= 10 && dig <= 35) str = String.fromCharCode('A'.charCodeAt(0) + dig - 10);
             formattedScore = str + formattedScore;
         }
-
-        const scoreTxt = `Score ${formattedScore}`;
-        const linesTxt = `Lines  ${this.lines}`;
-        const levelTxt = `Level  ${this.level}`;
-        const textW = Math.max(
-            p5.textWidth(scoreTxt),
-            p5.textWidth(linesTxt),
-            p5.textWidth(levelTxt),
-            4 * cellW
-        );
-        scoreDim = p5.createVector(
-            textW + padding + 10,
-            txtSize * 4.5 + padding * 2
-        );
-        p5.fill(100);
-        p5.stroke(0);
-        p5.strokeWeight(3);
-        //The box outline
-        p5.rect(scorePos.x, scorePos.y, scoreDim.x, scoreDim.y);
-        p5.noStroke();
-        p5.fill(0);
-        p5.text(scoreTxt, scorePos.x + padding, scorePos.y + padding);
-        p5.text(
-            linesTxt,
-            scorePos.x + padding,
-            scorePos.y + padding + 1.75 * txtSize
-        );
-        p5.text(
-            levelTxt,
-            scorePos.x + padding,
-            scorePos.y + padding + 3.5 * txtSize
-        );
-
-        const nextPiecePos = p5.createVector(
-            scorePos.x,
-            scorePos.y + scoreDim.y + cellH
-        );
-        const nextPieceDim = p5.createVector(cellW * 3, cellW * 3);
-        p5.fill(100);
-        p5.stroke(0);
-        p5.strokeWeight(3);
-        p5.rect(nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y);
-        if (this.nextPiece) {
-            if (this.nextSingles == 0) { //Show next piece normally
-                this.nextPiece.showAt(
-                    p5,
-                    nextPiecePos.x,
-                    nextPiecePos.y,
-                    nextPieceDim.x,
-                    nextPieceDim.y,
-                    pieceImages
-                );
-            } else if (this.nextSingles == 2) { //Show 3 Ninjas coming up
-                const spacingX = nextPieceDim.x / 7;
-                const spacingY = nextPieceDim.y / 7;
-                this.nextPiece.showAt(p5, nextPiecePos.x - spacingX, nextPiecePos.y - spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
-                this.nextPiece.showAt(p5, nextPiecePos.x, nextPiecePos.y, nextPieceDim.x, nextPieceDim.y, pieceImages);
-                this.nextPiece.showAt(p5, nextPiecePos.x + spacingX, nextPiecePos.y + spacingY, nextPieceDim.x, nextPieceDim.y, pieceImages);
-            } else if (this.nextSingles == 1) { //Show 2 ninjas coming up
-                const spacingX = nextPieceDim.x / 7;
-                const spacingY = nextPieceDim.y / 7;
-                this.nextPiece.showAt(p5, nextPiecePos.x - spacingX/2, nextPiecePos.y - spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
-                this.nextPiece.showAt(p5, nextPiecePos.x + spacingX/2, nextPiecePos.y + spacingY/2, nextPieceDim.x, nextPieceDim.y, pieceImages);
-            }
-        }
-
-        if (showStats) {
-            const statPos = p5.createVector(
-                scorePos.x,
-                nextPiecePos.y + nextPieceDim.y + cellH
-            );
-
-            let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
-            if (this.lines == 0) tritrisPercent = '--';
-            const tritrisPercentText = `Tri ${tritrisPercent}%`;
-
-            const fixedTime = Math.max(this.time, 0);
-            const totalSec = Math.floor(fixedTime / 1000) % 60;
-            const totalM = Math.floor(fixedTime / (1000*60));
-            const startLevelText = `Time ${p5.nf(totalM,2)}:${p5.nf(totalSec,2)}`;
-
-            const textW = Math.max(
-                p5.textWidth(tritrisPercentText),
-                p5.textWidth(startLevelText),
-                4 * cellW
-            );
-
-            const statDim = p5.createVector(
-                textW + padding + 10,
-                txtSize * 2.75 + padding * 2
-            );
-            p5.fill(100);
-            p5.stroke(0);
-            p5.strokeWeight(3);
-            //The box outline
-            p5.rect(statPos.x, statPos.y, statDim.x, statDim.y);
-            p5.noStroke();
-            p5.fill(0);
-            p5.text(tritrisPercentText, statPos.x + padding, statPos.y + padding);
-            p5.text(
-                startLevelText,
-                statPos.x + padding,
-                statPos.y + padding + 1.75 * txtSize
-            );
-        }
-
-        p5.fill(0);
-        p5.noStroke();
-        p5.textSize(25);
-        p5.textAlign(p5.CENTER, p5.TOP);
-        p5.text(this.name, x + w/2, y + h + 10);
-
-        this.redraw = false;
+        return formattedScore;
     }
 }

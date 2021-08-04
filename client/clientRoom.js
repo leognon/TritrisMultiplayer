@@ -306,32 +306,98 @@ class ClientMatch {
         if (this.myGame !== null) gamesToDisplay.push(this.myGame);
         gamesToDisplay.push(...this.otherPlayers.map(p => p.game));
 
+        //TODO Make tritris sound for all games
+        //If main game is dead, pick a different one
         if (gamesToDisplay[0].isFlashing()) p5.background(150);
         else p5.background(100);
 
-        let boardWidth = p5.width/4;
-        let boardHeight = boardWidth*2;
-        if (boardHeight > p5.height * 0.9) {
-            boardHeight = p5.height * 0.9;
-            boardWidth = boardHeight / 2;
+        const mainGame = gamesToDisplay[0];
+        const secondaryGame = gamesToDisplay[1];
+        const smallGames = gamesToDisplay.slice(2, gamesToDisplay.length);
+
+        const padding = 20 * (p5.width * p5.height) / (1920 * 1000);
+
+        const center = p5.width / 2;
+
+        const secondaryElems = secondaryGame.showBig(p5, padding, pieceImages, true);
+        const mainElems = mainGame.showBig(p5, secondaryElems.bounding.right + padding, pieceImages, true, true, true);
+
+        //const secondaryPos = mainDim.left / 2; //Halfway between
+        //secondaryGame.showBig(p5, secondaryPos, pieceImages, true, true, true);
+
+        if (smallGames.length > 0) {
+            this.showSmallGames(p5, mainElems.bounding.right, smallGames, pieceImages);
         }
-        const gameWidth = boardWidth + 5*(boardWidth / gamesToDisplay[0].w) + 20;
-        const center = p5.width/2;
-        const spacing = 30;
 
-        gamesToDisplay[0].show(p5, center-gameWidth-spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
-        gamesToDisplay[1].show(p5, center+spacing/2, 10, boardWidth, boardHeight, pieceImages, true, true, true);
-        //TODO Display multiple other players!
+        mainGame.playSounds(sounds);
 
-        gamesToDisplay[0].playSounds(sounds);
-
-        if (gamesToDisplay[0].duringCountDown()) {
-            p5.textSize(50);
+        if (mainGame.duringCountDown()) {
+            p5.textSize(50); //TODO Add scale factor here?
             p5.fill(255);
             p5.noStroke();
             p5.textAlign(p5.CENTER, p5.CENTER);
-            const secondsRemaining = 1 + Math.floor(-gamesToDisplay[0].time / 1000);
-            p5.text(secondsRemaining, center - gameWidth - spacing/2 + boardWidth/2, 10+boardHeight/2);
+            const secondsRemaining = 1 + Math.floor(-mainGame.time / 1000);
+            p5.text(secondsRemaining, p5.width/2, p5.height/2);
+        }
+    }
+
+    showSmallGames(p5, x, games, pieceImages) {
+        const gameDim = games[0].getSmallElements(0, 0, 100, 200);
+        const gameRatio = gameDim.bounding.bottom / gameDim.bounding.right; //The ratio of height to width
+        const boardToTotalHeightRatio = gameDim.bounding.bottom / gameDim.board.h;
+
+        const padding = 8 * (p5.width * p5.height) / (1920 * 1000); //Padding for in between games and around the border
+
+        const leftBorder = x + padding; //The left side
+        const totalWidth = p5.width - padding - leftBorder; //The total width to fit all of the small games
+        const totalHeight = p5.height - padding*2; //Padding for top and bottom
+        //const gridRatio = totalHeight / totalWidth;
+
+        let bestDiff = Infinity; //Keep track of the closest ration
+        let gridW = -1; //The number of grid cells in a row
+        let gridH = -1; //The number of grid cells in a column
+        for (let tryGridW = 1; tryGridW <= games.length; tryGridW++) { //Loop to find the optimal grid width
+            const tryGridH = Math.ceil(games.length / tryGridW);
+
+            const gameWidth = totalWidth / tryGridW; //how wide each game will be
+            const gameHeight = totalHeight / tryGridH; //How tall each game will be
+
+            const ratioDiff = Math.abs((gameHeight / gameWidth) - gameRatio); //How close the ratios are
+            if (ratioDiff < bestDiff) {
+                gridW = tryGridW; //New best ratio
+                gridH = tryGridH;
+                bestDiff = ratioDiff;
+            }
+        }
+
+        let boardWidth = (totalWidth / gridW) - padding; //The width of each game board
+        let boardHeight = boardWidth * 2; //The height of each game board
+        let cellHeight = boardHeight * boardToTotalHeightRatio; //Including the text at the bottom, the total height of the grid cell
+        if ((cellHeight + padding) * gridH > p5.height) { //If the bottom will cut it off
+            cellHeight = (totalHeight / gridH) - padding; //Recalculate so that each cell is as tall as possible
+
+            boardHeight = cellHeight / boardToTotalHeightRatio; //Calculate the board height
+            boardWidth = boardHeight / 2; //Calculate the board width
+        }
+
+        const displayedGridHeight = cellHeight * gridH; //The total height of the grid. Allows for centering
+        const verticalPadding = (p5.height - displayedGridHeight) / 2; //How much padding is needed to center
+
+        for (let index = 0; index < games.length; index++) {
+            const i = Math.floor(index / gridW); //The grid cell row
+            const j = index % gridW; //The grid cell column
+
+            let numInRow = gridW; //How many cells are in this row
+            if (i == Math.floor((games.length-1) / gridW)) {
+                numInRow = games.length % gridW;
+                if (numInRow == 0) numInRow = gridW; //In case it is all 1 column or all 1 row
+            }
+            const displayedRowWidth = numInRow * (boardWidth + padding); //The total width of this row.
+            const horzPadding = (p5.width - x - displayedRowWidth) / 2; //How much padding to center it
+
+            const posX = leftBorder + horzPadding + j * (boardWidth + padding); //The top left position of the cell
+            const posY = verticalPadding + i * (cellHeight + padding); //The top left position of the cell
+            games[index].showSmall(p5, posX, posY, boardWidth, boardHeight, pieceImages, true);
         }
     }
 }
