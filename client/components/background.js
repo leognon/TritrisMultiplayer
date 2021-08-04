@@ -11,12 +11,12 @@ export default class Background extends React.Component {
     }
 
     setup = (p5, canvasParentRef) => {
-        p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
+        p5.createCanvas(window.innerWidth, window.innerHeight).parent(canvasParentRef);
         this.draw(p5);
     }
 
     windowResized = p5 => {
-        p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
+        p5.resizeCanvas(window.innerWidth, window.innerHeight);
         p5.redraw();
     }
 

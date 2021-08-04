@@ -56,7 +56,7 @@ class App extends React.Component {
     }
 
     setup = (p5, canvasParentRef) => {
-        p5.createCanvas(p5.windowWidth, p5.windowHeight).parent(canvasParentRef);
+        p5.createCanvas(window.innerWidth, window.innerHeight).parent(canvasParentRef);
         p5.background(100);
         p5.loadImage('../client/assets/piecesImage.png', img => {
             this.pieceImages = loadPieces(img);
@@ -160,7 +160,7 @@ class App extends React.Component {
     }
 
     windowResized = (p5) => {
-        p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
+        p5.resizeCanvas(window.innerWidth, window.innerHeight);
         p5.redraw();
     }
 }
