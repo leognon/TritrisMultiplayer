@@ -45,15 +45,22 @@ export default class ClientGame extends Game {
         }
     }
 
-    getBigElements(p5, left) {
+    getBigElements(p5, pos, centered, maxWidth) {
         //Score/Lines display - Top 10%
         //Board Middle 80%
         //Name - Bottom 10%
         let boardHeight = p5.height * 0.8;
         let boardWidth = boardHeight / 2;
-        if (boardWidth * 3 > p5.width) { //If the window is too thin
-            boardWidth = p5.width / 3;
+        if (boardWidth > maxWidth) { //If the window is too thin
+            boardWidth = maxWidth
             boardHeight = boardWidth * 2;
+        }
+
+        let left;
+        if (centered) {
+            left = pos - boardWidth/2;
+        } else {
+            left = pos;
         }
 
         const scaleFactor = boardWidth / 250; //Ensure everything scales together
@@ -112,8 +119,8 @@ export default class ClientGame extends Game {
         }
     }
 
-    showBig(p5, left, pieceImages, showGridLines) {
-        const elems = this.getBigElements(p5, left);
+    showBig(p5, left, centered, maxWidth, pieceImages, showGridLines) {
+        const elems = this.getBigElements(p5, left, centered, maxWidth);
 
         this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.topText.scaleFactor);
 

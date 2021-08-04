@@ -311,21 +311,40 @@ class ClientMatch {
         if (gamesToDisplay[0].isFlashing()) p5.background(150);
         else p5.background(100);
 
-        const mainGame = gamesToDisplay[0];
-        const secondaryGame = gamesToDisplay[1];
-        const smallGames = gamesToDisplay.slice(2, gamesToDisplay.length);
-
         const padding = 20 * (p5.width * p5.height) / (1920 * 1000);
 
-        const center = p5.width / 2;
+        const mainGame = gamesToDisplay[0];
+        if (gamesToDisplay.length === 1) {
+            //Just show in center
+            mainGame.showBig(p5, p5.width/2, true, p5.width/2, pieceImages, true);
+        } else if (gamesToDisplay.length === 2 || gamesToDisplay.length === 3) {
+            const elems = mainGame.getBigElements(p5, 0, false, Infinity);
+            const boardWidthToTotalWidthRatio = elems.board.w / elems.bounding.right; //The ratio from board to total width (including next box)
 
-        const secondaryElems = secondaryGame.showBig(p5, padding, pieceImages, true);
-        const mainElems = mainGame.showBig(p5, secondaryElems.bounding.right + padding, pieceImages, true, true, true);
+            const maxTotalW = (p5.width - padding) / gamesToDisplay.length - padding; //The max width including next box
+            const maxBoardWidth = maxTotalW * boardWidthToTotalWidthRatio; //The max width of each board (not included next box)
 
-        //const secondaryPos = mainDim.left / 2; //Halfway between
-        //secondaryGame.showBig(p5, secondaryPos, pieceImages, true, true, true);
+            //An array of all to display (in order) from left to array
+            let games = [gamesToDisplay[1], gamesToDisplay[0]];
+            if (gamesToDisplay.length === 3) games.push(gamesToDisplay[2]);
 
-        if (smallGames.length > 0) {
+            let left = padding;
+            for (let g of games) { //Show them each in a row
+                const gElems = g.showBig(p5, left, false, maxBoardWidth, pieceImages, true);
+                left = gElems.bounding.right + padding;
+            }
+        } else {
+            const elems = mainGame.getBigElements(p5, 0, false, Infinity);
+            const boardWidthToTotalWidthRatio = elems.board.w / elems.bounding.right; //The ratio from board to total width (including next box)
+            const maxTotalW = (p5.width - padding) / 3 - padding; //The max width including next box. Ensures a large enough partition for the left, middle and right
+            const maxBoardWidth = maxTotalW * boardWidthToTotalWidthRatio; //The max width of each board (not included next box)
+
+            const secondaryGame = gamesToDisplay[1];
+
+            const secondaryElems = secondaryGame.showBig(p5, padding, false, maxBoardWidth, pieceImages, true);
+            const mainElems = mainGame.showBig(p5, secondaryElems.bounding.right + padding, false, maxBoardWidth, pieceImages, true);
+
+            const smallGames = gamesToDisplay.slice(2, gamesToDisplay.length);
             this.showSmallGames(p5, mainElems.bounding.right, smallGames, pieceImages);
         }
 
