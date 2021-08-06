@@ -1,9 +1,19 @@
 import React from 'react';
-import NameInput from './nameInput';
+import NameInput from './nameInput.js';
+import Settings from './settings.js';
 
 export default class Menu extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            showSettings: false
+        }
+    }
+
+    toggleSettings = show => {
+        this.setState({
+            showSettings: show
+        });
     }
 
     render = () => {
@@ -18,6 +28,14 @@ export default class Menu extends React.Component {
                 <br />
                 <button id="createRoom" onClick={this.props.createRoom}>Create Room</button>
                 <button id="joinRoom" onClick={this.props.joinRoom}>Join Room</button>
+
+                <br />
+                <button id="settings" onClick={() => this.toggleSettings(true)}>Settings</button>
+                { this.state.showSettings &&
+                    <Settings
+                        toggleSettings={this.toggleSettings}
+                    />
+                }
             </div>
         );
     }

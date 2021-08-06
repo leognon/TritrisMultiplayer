@@ -16,6 +16,15 @@ class App extends React.Component {
         this.state = {
             state: states.LOADING,
             name: 'player' + Math.floor(Math.random()*99+1),
+            controls: {
+                    counterClock: 90, //Z
+                    clock: 88, //X
+                    left: 37, //Left arrow
+                    right: 39, //Right arrow
+                    down: 40, //Down arrow
+                    start: 13, //Enter
+                    restart: 27 //Escape
+            },
             roomData: {
                 roomCode: '',
                 ownerId: '',
