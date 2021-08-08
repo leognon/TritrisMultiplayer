@@ -29,8 +29,11 @@ app.get('/client/assets/*', (req, res) => {
 app.get('/client/style.css', (req, res) => {
     res.sendFile('/client/style.css', { root: __dirname });
 });
-app.get('/build/main.min.js', (req, res) => {
-    res.sendFile('/build/main.min.js', { root: __dirname });
+app.get('/main.js', (req, res) => {
+    if (process.env.PORT) //Production
+        res.sendFile('/build/prod.js', { root: __dirname });
+    else //Local testing
+        res.sendFile('/build/dev.js', { root: __dirname });
 });
 
 io.on('connection', socket => {

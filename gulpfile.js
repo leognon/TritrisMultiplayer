@@ -19,7 +19,7 @@ gulp.task('build', function () {
     return browserify(options)
         .transform(babelify)
         .bundle()
-        .pipe(source('main.min.js'))
+        .pipe(source('dev.js'))
         .pipe(gulp.dest('./build'));
 });
 
@@ -32,7 +32,7 @@ gulp.task('build-prod', () => {
     return browserify(options)
         .transform(babelify)
         .bundle()
-        .pipe(source('main.min.js'))
+        .pipe(source('prod.js'))
         .pipe(buffer())
         .pipe(uglify())
         .pipe(gulp.dest('./build'));
