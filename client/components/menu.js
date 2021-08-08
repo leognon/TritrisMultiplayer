@@ -37,6 +37,8 @@ export default class Menu extends React.Component {
                         controls={this.props.controls}
                         controlChanged={this.props.controlChanged}
                         resetControls={this.props.resetControls}
+                        volume={this.props.volume}
+                        setVolume={this.props.setVolume}
                     />
                 }
             </div>

@@ -60,6 +60,13 @@ export default class Settings extends React.Component {
                     <button onClick={this.props.resetControls}>Revert to Defaults</button>
 
                     <hr />
+                    <h3>Volume</h3>
+                    <input id="volumeSlider" type="range" min="0" max="100"
+                        value={this.props.volume}
+                        onChange={this.props.setVolume}
+                    />
+                    <hr />
+
                     <button onClick={() => this.props.toggleSettings(false)}>Close</button>
                 </div>
             </div>

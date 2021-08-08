@@ -23,6 +23,7 @@ class App extends React.Component {
             state: states.LOADING,
             name: 'player' + Math.floor(Math.random()*99+1),
             controls: currentControls,
+            volume: localStorage.hasOwnProperty('volume') ? parseInt(localStorage.getItem('volume')) : 75,
             roomData: {
                 roomCode: '',
                 ownerId: '',
@@ -128,6 +129,19 @@ class App extends React.Component {
         window.localStorage.setItem('controls', JSON.stringify(this.state.controls));
     }
 
+    setVolume = evnt => {
+        let vol = parseInt(evnt.target.value);
+        if (vol <= 3) vol = 0; //It doesn't have to be exactly 0 to be muted
+        for (const sound in this.sounds) {
+            this.sounds[sound].setVolume(vol / 100);
+        }
+        this.setState({
+            volume: evnt.target.value
+        }, () => {
+            localStorage.setItem('volume', this.state.volume);
+        });
+    }
+
     quickPlay = () => {
         /*this.socket.emit('joinMatch', {
             name: dom.name.value()
@@ -195,6 +209,8 @@ class App extends React.Component {
                             controls={this.state.controls}
                             controlChanged={this.controlChanged}
                             resetControls={this.resetControls}
+                            volume={this.state.volume}
+                            setVolume={this.setVolume}
                         />
                     </div>);
             case states.ROOM:
