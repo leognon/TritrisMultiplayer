@@ -13,18 +13,16 @@ import COMMON_CONFIG from '../../common/config.js';
 class App extends React.Component {
     constructor(props) {
         super(props);
+
+        //Load from localStorage or use defaults
+        let currentControls = localStorage.hasOwnProperty('controls')
+            ? JSON.parse(localStorage.getItem('controls'))
+            : this.getDefaultControls();
+
         this.state = {
             state: states.LOADING,
             name: 'player' + Math.floor(Math.random()*99+1),
-            controls: {
-                    counterClock: 90, //Z
-                    clock: 88, //X
-                    left: 37, //Left arrow
-                    right: 39, //Right arrow
-                    down: 40, //Down arrow
-                    start: 13, //Enter
-                    restart: 27 //Escape
-            },
+            controls: currentControls,
             roomData: {
                 roomCode: '',
                 ownerId: '',
@@ -84,6 +82,51 @@ class App extends React.Component {
         this.setState({ name });
     }
 
+    controlChanged = (control, newKey) => {
+        let newControls = Object.assign({}, this.state.controls);
+        newControls[control] = {
+            controlName: this.state.controls[control].controlName,
+            key: newKey
+        }
+        this.setState({
+            controls: newControls
+        }, this.saveControls);
+    }
+
+    getDefaultControls = () => {
+        return {
+                counterClock: {
+                    key: 90, //Z
+                    controlName: "Counter Clockwise"
+                },
+                clock: {
+                    key: 88, //X
+                    controlName: "Clock"
+                },
+                left: {
+                    key: 37, //Left arrow
+                    controlName: "Left"
+                },
+                right: {
+                    key: 39, //Right arrow
+                    controlName: "Right"
+                },
+                down: {
+                    key: 40, //Down arrow
+                    controlName: "Down"
+                }
+        }
+    }
+
+    resetControls = () => {
+        this.setState({
+            controls: this.getDefaultControls()
+        }, this.saveControls);
+    }
+
+    saveControls = () => {
+        window.localStorage.setItem('controls', JSON.stringify(this.state.controls));
+    }
 
     quickPlay = () => {
         /*this.socket.emit('joinMatch', {
@@ -148,7 +191,11 @@ class App extends React.Component {
                             joinRoom={this.joinRoom}
                             quickPlay={this.quickPlay}
                             name={this.state.name}
-                            nameChanged={this.nameChanged} />
+                            nameChanged={this.nameChanged}
+                            controls={this.state.controls}
+                            controlChanged={this.controlChanged}
+                            resetControls={this.resetControls}
+                        />
                     </div>);
             case states.ROOM:
                 return (
@@ -161,6 +208,7 @@ class App extends React.Component {
                             pieceImages={this.pieceImages}
                             sounds={this.sounds}
                             font={this.font}
+                            controls={this.state.controls}
                         />
                     </div>);
             default:

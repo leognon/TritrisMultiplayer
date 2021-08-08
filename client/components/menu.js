@@ -34,6 +34,9 @@ export default class Menu extends React.Component {
                 { this.state.showSettings &&
                     <Settings
                         toggleSettings={this.toggleSettings}
+                        controls={this.props.controls}
+                        controlChanged={this.props.controlChanged}
+                        resetControls={this.props.resetControls}
                     />
                 }
             </div>

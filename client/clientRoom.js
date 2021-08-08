@@ -171,7 +171,7 @@ export default class ClientRoom extends React.Component {
             else others.push(this.getUserById(id));
         }
 
-        this.match = new ClientMatch(level, seed, me, others);
+        this.match = new ClientMatch(level, seed, me, others, this.props.controls);
 
         this.setState({ state: states.INGAME });
     }
@@ -250,14 +250,14 @@ class User {
 }
 
 class ClientMatch {
-    constructor(level, seed, me, others) {
+    constructor(level, seed, me, others, myControls) {
         this.seed = seed;
         this.level = level;
 
         if (me === null) this.myId = null;
         else this.myId = me.id;
 
-        if (me !== null) this.myGame = new MyGame(this.seed, this.level, me.name);
+        if (me !== null) this.myGame = new MyGame(this.seed, this.level, me.name, myControls);
         else this.myGame = null;
 
         this.otherPlayers = [];

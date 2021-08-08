@@ -2,7 +2,7 @@ import { Input } from '../common/game.js';
 import ClientGame from '../client/clientGame';
 
 export default class MyGame extends ClientGame {
-    constructor(seed, level, name) {
+    constructor(seed, level, name, myControls) {
         super(seed, level, name);
 
         const frameRate = 60.0988; //frames per second
@@ -17,15 +17,7 @@ export default class MyGame extends ClientGame {
         this.zCharged = false;
         this.xWasPressed = false;
         this.xCharged = false;
-        this.controls = {
-            clock: 88,
-            counterClock: 90,
-            down: 40,
-            left: 37,
-            restart: 27,
-            right: 39,
-            start: 13
-        }
+        this.controls = myControls;
 
         this.inputsQueue = []; //Fill up a queue of inputs to be sent to the server at regular intervals
         this.inputId = 0;
@@ -118,14 +110,14 @@ export default class MyGame extends ClientGame {
     getCurrentInputs(p5) {
         const deltaTime = Date.now() - this.lastFrame;
 
-        let oneKeyPressed = p5.keyIsDown(this.controls.left) != p5.keyIsDown(this.controls.right);
-        if (p5.keyIsDown(this.controls.down)) oneKeyPressed = false; //Cannot move left/right and press down at the same time
+        let oneKeyPressed = p5.keyIsDown(this.controls.left.key) != p5.keyIsDown(this.controls.right.key);
+        if (p5.keyIsDown(this.controls.down.key)) oneKeyPressed = false; //Cannot move left/right and press down at the same time
 
         let shouldMoveHorz = false;
         if (oneKeyPressed) {
             this.das += deltaTime;
-            if ((p5.keyIsDown(this.controls.left) && !this.leftWasPressed) || //Just started pressing left
-                (p5.keyIsDown(this.controls.right) && !this.rightWasPressed)) { //Just started pressing right
+            if ((p5.keyIsDown(this.controls.left.key) && !this.leftWasPressed) || //Just started pressing left
+                (p5.keyIsDown(this.controls.right.key) && !this.rightWasPressed)) { //Just started pressing right
                 //If it was tapped, move and reset das
                 shouldMoveHorz = true;
                 this.das = 0;
@@ -137,13 +129,13 @@ export default class MyGame extends ClientGame {
 
         let horzDirection = 0;
         if (shouldMoveHorz) {
-            if (p5.keyIsDown(this.controls.left)) horzDirection = -1;
-            if (p5.keyIsDown(this.controls.right)) horzDirection = 1;
+            if (p5.keyIsDown(this.controls.left.key)) horzDirection = -1;
+            if (p5.keyIsDown(this.controls.right.key)) horzDirection = 1;
         }
 
         //If the user just pressed rotate or they have been holding it and it's charged
-        const zPressed = p5.keyIsDown(this.controls.counterClock) && (!this.zWasPressed || this.zCharged);
-        const xPressed = p5.keyIsDown(this.controls.clock) && (!this.xWasPressed || this.xCharged);
+        const zPressed = p5.keyIsDown(this.controls.counterClock.key) && (!this.zWasPressed || this.zCharged);
+        const xPressed = p5.keyIsDown(this.controls.clock.key) && (!this.xWasPressed || this.xCharged);
         let rotation = 0;
         if (zPressed && xPressed) rotation = 2; //A 180 rotation
         else if (xPressed) rotation = 1;
@@ -151,19 +143,19 @@ export default class MyGame extends ClientGame {
 
         let softDrop = false;
         let pieceSpeed = this.pieceSpeed; //The default piece speed based on the current level
-        if (p5.keyIsDown(this.controls.down)) {
+        if (p5.keyIsDown(this.controls.down.key)) {
             //Pressing down moves at 19 speed
             pieceSpeed = Math.min(pieceSpeed, this.softDropSpeed);
             softDrop = true;
         }
         let moveDown = this.time >= this.lastMoveDown + pieceSpeed;
 
-        this.leftWasPressed = p5.keyIsDown(this.controls.left);
-        this.rightWasPressed = p5.keyIsDown(this.controls.right);
-        this.zWasPressed = p5.keyIsDown(this.controls.counterClock); //If Z was pressed
-        this.xWasPressed = p5.keyIsDown(this.controls.clock); //If X was pressed
-        if (!p5.keyIsDown(this.controls.counterClock)) this.zCharged = false; //If the player is pressing anymore, they no longer want to rotate, so don't charge
-        if (!p5.keyIsDown(this.controls.clock)) this.xCharged = false;
+        this.leftWasPressed = p5.keyIsDown(this.controls.left.key);
+        this.rightWasPressed = p5.keyIsDown(this.controls.right.key);
+        this.zWasPressed = p5.keyIsDown(this.controls.counterClock.key); //If Z was pressed
+        this.xWasPressed = p5.keyIsDown(this.controls.clock.key); //If X was pressed
+        if (!p5.keyIsDown(this.controls.counterClock.key)) this.zCharged = false; //If the player is pressing anymore, they no longer want to rotate, so don't charge
+        if (!p5.keyIsDown(this.controls.clock.key)) this.xCharged = false;
 
         return {
             horzDirection, rotation, moveDown, softDrop
