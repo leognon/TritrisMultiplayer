@@ -21,7 +21,7 @@ class App extends React.Component {
 
         this.state = {
             state: states.LOADING,
-            name: 'player' + Math.floor(Math.random()*99+1),
+            name: localStorage.hasOwnProperty('name') ? localStorage.getItem('name') : ('player' + Math.floor(Math.random()*99+1)),
             controls: currentControls,
             volume: localStorage.hasOwnProperty('volume') ? parseInt(localStorage.getItem('volume')) : 75,
             roomData: {
@@ -80,7 +80,9 @@ class App extends React.Component {
         let name = evnt.target.value;
         if (name.length > COMMON_CONFIG.MAX_NAME_LENGTH)
             name = name.slice(0, COMMON_CONFIG.MAX_NAME_LENGTH);
-        this.setState({ name });
+        this.setState({ name }, () => {
+            localStorage.setItem('name', this.state.name);
+        });
     }
 
     controlChanged = (control, newKey) => {
