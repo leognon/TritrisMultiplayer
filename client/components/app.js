@@ -165,11 +165,15 @@ class App extends React.Component {
 
     joinRoom = () => {
         const code = prompt('Please enter the room code to join.');
-        this.socket.emit('room', {
-            type: 'join',
-            name: this.state.name,
-            code
-        });
+        if (code.length === 0) {
+            alert('Please enter a room code');
+        } else {
+            this.socket.emit('room', {
+                type: 'join',
+                name: this.state.name,
+                code
+            });
+        }
         //TODO Add loading state
     }
 
