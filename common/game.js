@@ -4,12 +4,20 @@ import piecesJSON from './pieces.js';
 
 /* TODO
  *
- *  [ ] Better score display - Show score differential
+ *  FIX socket disconnect!
+ *      Since there are no accounts yet, each client can have a randomly generated cookie (doesn't actually have to be a cookie though)
+ *      If disconnected, they can reconnect with that cookie which will identify them as a user
+ *      In the server, use that cookie instead of socket.id
+ *      Try using this https://socket.io/get-started/private-messaging-part-2/#Persistent-session-ID
+ *  [X] Better score display - Show score differential
  *  [ ] Fix number of points for double (should be 300)
- *  [ ] Figure out deltaTime stuff
+ *  [ ] Figure out deltaTime stuff - Don't update deltaTime after receiving data on myGame?
  *  [ ] Make server more authoritative. Validate inputs, ensure piece falls consistently
- *  [ ] Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
+ *  [X] Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
  *  [ ] Round decimals to make game more deterministic
+ *  [ ] Add version numbers
+ *      [ ] Disconnect message if server changed
+ *      [ ] Remember last version so update dialogues and popup
  *  [X] Game id system
  *      [X] Create custom lobby
  *      [X] Spectate games
@@ -18,7 +26,7 @@ import piecesJSON from './pieces.js';
  *          [X] Creates custom room with id
  *          [ ] Settings
  *              [ ] Change gamemode, level start, etc.
- *              [ ] Set certain players to spectator
+ *              [X] Set certain players to spectator
  *      [X] Join room
  *  More gamemodes
  *      Quadtris (Bitris?)
@@ -35,6 +43,15 @@ import piecesJSON from './pieces.js';
  *      Accounts
  *          Sign in with Google?
  *          Ranked matches - ELO
+ *
+ * Ping display (ms)
+ * Play tritris sound effect for both players
+ * When one player tops out, switch the sounds to the other
+ *      Same with flash
+ * Lock room so nobody can join
+ *      Hide room code
+ * Don't show ready for spectators
+ * Make ready go unready after games
  *
  */
 

@@ -47,6 +47,7 @@ export default class ServerRoom {
         console.log(socket.name + ' left ' + this.roomCode);
         for (let i = this.users.length-1; i >= 0; i--) {
             if (!this.users[i]) {
+                //TODO This happens if multiple people leave simulateneously (select multiple tabs and click reload)
                 console.log('There is no user index ' + i + ' in room ' + this.roomCode, this.users);
                 continue;
             }

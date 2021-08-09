@@ -7,8 +7,7 @@
         "start": "node index.js",
         "playSound": "afplay ~/Desktop/youtube/tritris/tritris/assets/move.wav &",
         "dev": "nodemon -i build --exec 'gulp build && npm run playSound && node index.js'",
-        "devDebug": "nodemon -i build --exec 'gulp build && npm run playSound && node --inspect index.js'",
-        "pushProd": "gulp build-prod && git push heroku"
+        "devDebug": "nodemon -i build --exec 'gulp build && npm run playSound && node --inspect index.js'"
     },
     "author": "Goel",
     "license": "ISC",
