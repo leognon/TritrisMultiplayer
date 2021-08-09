@@ -266,6 +266,10 @@ class ClientMatch {
         }
 
         this.nextSendData = Date.now();
+
+        this.currentOrder = [];
+        this.lastShowOrderChange = -1;
+        this.minChangeOrderTime = 10 * 1000; //It can only change every 10 seconds to stop flickering
     }
 
     update(p5, socket) {
@@ -302,12 +306,44 @@ class ClientMatch {
     }
 
     show(p5, pieceImages, sounds) {
+        const allOtherGames = this.otherPlayers.map(p => p.game);
+        const desIndexes = allOtherGames.map((g, i) => {
+            return {
+                score: g.score,
+                index: i
+            }
+        }).sort((a, b) => b.score - a.score).map(obj => obj.index);
+        //Creates an array with the indices from allOtherGames that is sorted from highest score to lowest
+
+        let ordersAreDiff = false;
+        if (this.lastShowOrderChange === -1) {
+            ordersAreDiff = true; //First order
+        } else {
+            //Compare if the indices are different
+            for (let i = 0; i < desIndexes.length; i++) {
+                if (desIndexes[i] !== this.currentOrder[i]) {
+                    ordersAreDiff = true;
+                    break;
+                }
+            }
+        }
+
+        //The orders are different and it has been long enough to change, then change
+        if (ordersAreDiff && Date.now() > this.lastShowOrderChange + this.minChangeOrderTime) {
+            this.currentOrder = desIndexes;
+            this.lastShowOrderChange = Date.now();
+            console.log('Changing order');
+        }
+        //Otherwise, do nothing. Once enough time has passed the order will change (if it is still different)
+
+
         let gamesToDisplay = [];
         if (this.myGame !== null) gamesToDisplay.push(this.myGame);
-        gamesToDisplay.push(...this.otherPlayers.map(p => p.game));
+        gamesToDisplay.push(...this.currentOrder.map(i => allOtherGames[i])); //Convert back to game objects
+        //const otherGames = this.otherPlayers.map(p => p.game).sort((a, b) => b.score - a.score);
+        //gamesToDisplay.push(otherGames);
 
         //TODO Make tritris sound for all games
-        //If main game is dead, pick a different one
         if (gamesToDisplay[0].isFlashing()) p5.background(150);
         else p5.background(100);
 
