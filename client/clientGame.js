@@ -52,7 +52,7 @@ export default class ClientGame extends Game {
         let boardHeight = p5.height * 0.8;
         let boardWidth = boardHeight / 2;
         if (boardWidth > maxWidth) { //If the window is too thin
-            boardWidth = maxWidth
+            boardWidth = maxWidth;
             boardHeight = boardWidth * 2;
         }
 
@@ -119,10 +119,11 @@ export default class ClientGame extends Game {
         }
     }
 
-    showBig(p5, left, centered, maxWidth, pieceImages, showGridLines) {
+    //TODO Make an options object wit hall the data instead of a billion parameters
+    showBig(p5, left, centered, maxWidth, pieceImages, showGridLines, baseGame) {
         const elems = this.getBigElements(p5, left, centered, maxWidth);
 
-        this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.topText.scaleFactor);
+        this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.topText.scaleFactor, baseGame);
 
         this.showGameBoard(p5, elems.board.x, elems.board.y, elems.board.w, elems.board.h, pieceImages, showGridLines);
 
@@ -159,19 +160,28 @@ export default class ClientGame extends Game {
         }
     }
 
-    showSmall(p5, x, y, w, h, pieceImages, showGridLines) {
+    showSmall(p5, x, y, w, h, baseGame, pieceImages, showGridLines) {
         const elements = this.getSmallElements(x, y, w, h);
 
         this.showGameBoard(p5, x, y, w, h, pieceImages, showGridLines);
 
-        const formattedScore = this.formatScore(this.score);
-        const text = `${this.name} | ${formattedScore}`;
+        const scoreDiff = this.score - baseGame.score;
+        const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
+        const textObjs = [
+            {
+                text: `${this.name} | `,
+                color: p5.color(0)
+            },
+            scoreTextObj
+        ];
 
         p5.fill(0);
         p5.noStroke();
         p5.textSize(elements.text.size);
-        p5.textAlign(p5.CENTER, p5.TOP);
-        p5.text(text, elements.text.x, elements.text.y);
+        p5.textAlign(p5.LEFT, p5.TOP);
+        const textW = this.getColorfulLineWidth(p5, textObjs);
+        const correctedXPos = elements.text.x - textW/2;
+        this.showColorfulText(p5, textObjs, correctedXPos, elements.text.y);
     }
 
 
@@ -212,44 +222,134 @@ export default class ClientGame extends Game {
         }
     }
 
-    showScoreAndLines(p5, x, y, w, h, scaleFactor) {
-        const score = this.formatScore(this.score);
-        let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
-        if (this.lines == 0) tritrisPercent = '--';
-
+    showScoreAndLines(p5, x, y, w, h, scaleFactor, baseGame) {
         //p5.textLeading(fontHeight);
-        const lines = [
-            `Score ${score} | ${tritrisPercent}%`,
-            `Lines ${this.lines} (${this.level})`
-        ];
+        let textLines;
+        if (baseGame === this) {
+            const score = this.formatScore(this.score);
+            let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
+            if (this.lines == 0) tritrisPercent = '--';
+
+            textLines = [
+                [ //First line of text
+                    {
+                        text: `Score ${score} | ${tritrisPercent}%`,
+                        color: 0
+                    }
+                ],
+                [ //Second line of text
+                    {
+                        text: `Lines ${this.lines} | (${this.level})`,
+                        color: 0
+                    }
+                ]
+            ];
+        } else {
+            const scoreDiff = this.score - baseGame.score; //Show comparison
+            const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
+
+            const myTritrisPercent = (this.lines !== 0) ? Math.round(100 * 3*this.tritrisAmt / this.lines) : 0;
+            const otherTritrisPercent = (baseGame.lines !== 0) ? Math.round(100 * 3*baseGame.tritrisAmt / baseGame.lines) : 0;
+            const tritrisPercentDiff = myTritrisPercent - otherTritrisPercent;
+            const tritrisPercentTextObj = this.getDiffTextObj(tritrisPercentDiff);
+
+            const lineDiff = this.lines - baseGame.lines; //Show comparison
+            const lineTextObj = this.getDiffTextObj(lineDiff);
+
+            //TODO What if they have the same score? It looks like they have 0 points
+            const levelDiff = this.level - baseGame.level;
+            const levelTextObj = this.getDiffTextObj(levelDiff);
+
+            textLines = [
+                [ //First line
+                    {
+                        text: 'Score ',
+                        color: 0
+                    },
+                    scoreTextObj,
+                    {
+                        text: ' (',
+                        color: 0
+                    },
+                    tritrisPercentTextObj,
+                    {
+                        text: '%)',
+                        color: 0
+                    }
+                ],
+                [ //Second line
+                    {
+                        text: 'Lines: ',
+                        color: 0
+                    },
+                    lineTextObj,
+                    {
+                        text: ' (',
+                        color: 0
+                    },
+                    levelTextObj,
+                    {
+                        text: ')',
+                        color: 0
+                    }
+                ]
+            ];
+        }
         const innerTextHeight = h - 5*scaleFactor;
-        const lineHeight = innerTextHeight / lines.length;
+        const lineHeight = innerTextHeight / textLines.length;
         let fontSize = lineHeight - 10*scaleFactor;
 
+        const textPadding = 8 * scaleFactor;
         p5.textSize(fontSize); //Needed to calcualte the text width accurately
-        const longestLineWidth = Math.max(...lines.map(l => p5.textWidth(l)));
+        const lineWidths = textLines.map(parts => this.getColorfulLineWidth(p5, parts));
+        const longestLineWidth = Math.max(...lineWidths) + textPadding*2;
         if (longestLineWidth > w) {
             const scale = w / longestLineWidth;
             fontSize *= scale;
         }
 
-        const textPadding = 8 * scaleFactor;
-
         p5.stroke(0);
-        p5.strokeWeight(3);
+        p5.strokeWeight(3); //TODO Make strokeWeight scale
         p5.fill(100); //Box border
         p5.rect(x, y, w, h);
 
         p5.textSize(fontSize);
         p5.textAlign(p5.LEFT, p5.TOP);
-        p5.fill(0);
+        //p5.fill(0);
         p5.noStroke();
-        for (let i = 0; i < lines.length; i++) {
-            p5.text(lines[i], x + textPadding, y + lineHeight*i + textPadding);
+        for (let i = 0; i < textLines.length; i++) {
+            this.showColorfulText(p5, textLines[i], x + textPadding, y + lineHeight*i + textPadding);
+        }
+    }
+
+    showColorfulText(p5, textParts, x, y) {
+        let curX = x;
+        for (let part of textParts) {
+            p5.fill(part.color);
+            p5.text(part.text, curX, y);
+            curX += p5.textWidth(part.text);
+        }
+    }
+
+    getColorfulLineWidth(p5, parts) {
+        return p5.textWidth(parts.reduce((acc, part) => acc + part.text, ''));
+    }
+
+    getDiffTextObj(diff, diffStr) {
+        if (diffStr === undefined) diffStr = diff.toString();
+        const text = (diff >= 0 ? '+' : '') + diffStr;
+        let color;
+        if (diff === 0) color = 0; //Black
+        else if (diff > 0) color = [0, 200, 0];
+        else color = [200, 0, 0];
+        return {
+            text, color
         }
     }
 
     formatScore(s) {
+        const isNeg = s < 0;
+        s = Math.abs(s);
         let normal = s % 100000; //The last 5 digits are displayed normally
         let dig = Math.floor(s / 100000); //The leading digit
         let formattedScore = normal.toString();
@@ -265,6 +365,7 @@ export default class ClientGame extends Game {
             if (dig >= 10 && dig <= 35) str = String.fromCharCode('A'.charCodeAt(0) + dig - 10);
             formattedScore = str + formattedScore;
         }
+        if (isNeg) formattedScore = '-' + formattedScore;
         return formattedScore;
     }
 }

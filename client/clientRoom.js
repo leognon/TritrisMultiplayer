@@ -308,7 +308,7 @@ class ClientMatch {
     show(p5, pieceImages, sounds) {
         const allOtherGames = this.otherPlayers.map(p => p.game);
         const desIndexes = allOtherGames.map((g, i) => {
-            return {
+            return { //This convuluted mess is done in order to preserve the original index when sorting
                 score: g.score,
                 index: i
             }
@@ -332,7 +332,6 @@ class ClientMatch {
         if (ordersAreDiff && Date.now() > this.lastShowOrderChange + this.minChangeOrderTime) {
             this.currentOrder = desIndexes;
             this.lastShowOrderChange = Date.now();
-            console.log('Changing order');
         }
         //Otherwise, do nothing. Once enough time has passed the order will change (if it is still different)
 
@@ -352,7 +351,7 @@ class ClientMatch {
         const mainGame = gamesToDisplay[0];
         if (gamesToDisplay.length === 1) {
             //Just show in center
-            mainGame.showBig(p5, p5.width/2, true, p5.width/2, pieceImages, true);
+            mainGame.showBig(p5, p5.width/2, true, p5.width/2, pieceImages, true, mainGame);
         } else if (gamesToDisplay.length === 2 || gamesToDisplay.length === 3) {
             const elems = mainGame.getBigElements(p5, 0, false, Infinity);
             const boardWidthToTotalWidthRatio = elems.board.w / elems.bounding.right; //The ratio from board to total width (including next box)
@@ -366,7 +365,7 @@ class ClientMatch {
 
             let left = padding;
             for (let g of games) { //Show them each in a row
-                const gElems = g.showBig(p5, left, false, maxBoardWidth, pieceImages, true);
+                const gElems = g.showBig(p5, left, false, maxBoardWidth, pieceImages, true, mainGame);
                 left = gElems.bounding.right + padding;
             }
         } else {
@@ -377,11 +376,11 @@ class ClientMatch {
 
             const secondaryGame = gamesToDisplay[1];
 
-            const secondaryElems = secondaryGame.showBig(p5, padding, false, maxBoardWidth, pieceImages, true);
-            const mainElems = mainGame.showBig(p5, secondaryElems.bounding.right + padding, false, maxBoardWidth, pieceImages, true);
+            const secondaryElems = secondaryGame.showBig(p5, padding, false, maxBoardWidth, pieceImages, true, mainGame);
+            const mainElems = mainGame.showBig(p5, secondaryElems.bounding.right + padding, false, maxBoardWidth, pieceImages, true, mainGame);
 
             const smallGames = gamesToDisplay.slice(2, gamesToDisplay.length);
-            this.showSmallGames(p5, mainElems.bounding.right, smallGames, pieceImages);
+            this.showSmallGames(p5, mainElems.bounding.right, smallGames, mainGame, pieceImages);
         }
 
         mainGame.playSounds(sounds);
@@ -396,7 +395,7 @@ class ClientMatch {
         }
     }
 
-    showSmallGames(p5, x, games, pieceImages) {
+    showSmallGames(p5, x, games, baseGame, pieceImages) {
         const gameDim = games[0].getSmallElements(0, 0, 100, 200);
         const gameRatio = gameDim.bounding.bottom / gameDim.bounding.right; //The ratio of height to width
         const boardToTotalHeightRatio = gameDim.bounding.bottom / gameDim.board.h;
@@ -452,7 +451,7 @@ class ClientMatch {
 
             const posX = leftBorder + horzPadding + j * (boardWidth + padding); //The top left position of the cell
             const posY = verticalPadding + i * (cellHeight + padding); //The top left position of the cell
-            games[index].showSmall(p5, posX, posY, boardWidth, boardHeight, pieceImages, true);
+            games[index].showSmall(p5, posX, posY, boardWidth, boardHeight, baseGame, pieceImages, true);
         }
     }
 }
