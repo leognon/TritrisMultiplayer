@@ -4,6 +4,24 @@ import UserLabel from './userLabel.js';
 export default class Lobby extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            showRoomCode: true
+        }
+    }
+
+    toggleShowRoomCode = () => {
+        this.setState({
+            showRoomCode: !this.state.showRoomCode
+        });
+    }
+
+    getShownRoomCode = () => {
+        let code = this.props.roomCode;
+        if (!this.state.showRoomCode) {
+            //Replace all the characters with *
+            code = code.split('').fill('*').join('');
+        }
+        return code;
     }
 
     getUserLabel = u => {
@@ -26,7 +44,7 @@ export default class Lobby extends React.Component {
             <>
             <div id="lobbyDiv" className="box">
                 <h1>{ title }</h1>
-                <p>Code: {this.props.roomCode}</p>
+                <p onClick={this.toggleShowRoomCode}>Code: {this.getShownRoomCode()}</p>
                 <hr />
                 <h3>Players</h3> { playerList }
                 { spectatorList.length > 0 ? <><hr /><h3>Spectators</h3></> : ''}

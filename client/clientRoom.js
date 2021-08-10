@@ -16,6 +16,7 @@ export default class ClientRoom extends React.Component {
             users: this.props.originalUsers.map(u => new User(u.name, u.id, u.isSpectator, u.isReady)),
             ownerId: this.props.ownerId,
             roomCode: this.props.roomCode,
+            roomIsLocked: false,
             startLevel: 0
         }
 
@@ -63,6 +64,8 @@ export default class ClientRoom extends React.Component {
                             startGame={this.startGame}
                             startLevel={this.state.startLevel}
                             startLevelChanged={this.startLevelChanged}
+                            toggleLockRoom={this.toggleLockRoom}
+                            roomIsLocked={this.state.roomIsLocked}
                         />
                     : ''
                     }
@@ -79,6 +82,17 @@ export default class ClientRoom extends React.Component {
 
     componentWillUnmount = () => {
         this.socket.removeListener('room');
+    }
+
+    toggleLockRoom = () => {
+        this.socket.emit('room', {
+            type: 'toggleLockRoom',
+            lockRoom: !this.state.roomIsLocked
+        });
+    }
+
+    roomLocked = roomIsLocked => {
+        this.setState({ roomIsLocked });
     }
 
     addUser = (id, name) => {
@@ -231,6 +245,9 @@ export default class ClientRoom extends React.Component {
                 break;
             case 'readyChanged':
                 this.readyChanged(data.id, data.isReady);
+                break;
+            case 'roomLocked':
+                this.roomLocked(data.roomIsLocked);
                 break;
         }
     }

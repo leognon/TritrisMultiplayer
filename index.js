@@ -137,7 +137,7 @@ function generateUniqRoomCode() {
 function joinRoom(socket, code) {
     if (!code) code = '';
     code = code.toUpperCase();
-    if (rooms.hasOwnProperty(code)) {
+    if (rooms.hasOwnProperty(code) && !rooms[code].roomIsLocked) {
         rooms[code].addUser(socket);
     } else {
         socket.emit('msg', {

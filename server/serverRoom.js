@@ -5,6 +5,7 @@ import ServerMatch from './match.js';
 export default class ServerRoom {
     constructor(roomCode, owner) {
         this.roomCode = roomCode;
+        this.roomIsLocked = false;
 
         this.owner = new User(owner); //The socket who created the room
         this.users = []; //An array of users
@@ -94,6 +95,11 @@ export default class ServerRoom {
             case 'changeReady':
                 this.changeReady(socket.id, data.isReady);
                 break;
+            case 'toggleLockRoom':
+                if (socket.id == this.owner.id) {
+                    this.toggleLockRoom(data.lockRoom);
+                }
+                break;
             case 'inputs':
                 if (this.state == states.INGAME && this.match) {
                     this.match.gotInputs(socket, data.inps);
@@ -177,6 +183,14 @@ export default class ServerRoom {
                 isReady
             });
         }
+    }
+
+    toggleLockRoom(newState) {
+        this.roomIsLocked = newState;
+        this.owner.socket.emit('room', {
+            type: 'roomLocked',
+            roomIsLocked: this.roomIsLocked
+        });
     }
 
     physicsUpdate() {

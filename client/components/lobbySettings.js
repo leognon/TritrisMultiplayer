@@ -18,6 +18,10 @@ export default class LobbySettings extends React.Component {
                     onChange={this.props.startLevelChanged} />
 
                 <br />
+                <button onClick={this.props.toggleLockRoom}>
+                    { this.props.roomIsLocked ? 'Unlock room' : 'Lock room' }
+                </button>
+                <br />
                 <button onClick={this.props.startGame}>Start Game</button>
             </div>
         );

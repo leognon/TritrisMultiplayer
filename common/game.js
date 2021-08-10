@@ -47,8 +47,6 @@ import piecesJSON from './pieces.js';
  * Ping display (ms)
  * When one player tops out, switch the sounds to the other
  *      Same with flash
- * Lock room so nobody can join
- *      Hide room code
  *
  */
 
