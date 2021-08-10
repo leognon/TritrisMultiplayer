@@ -36,11 +36,21 @@ export default class ClientGame extends Game {
         return Date.now() < this.startTime;
     }
 
-    playSounds(sounds) {
-        for (const s in sounds) {
-            if (this.soundsToPlay[s]) {
-                sounds[s].play();
-                this.soundsToPlay[s] = false;
+    playSounds(sounds, allSounds) {
+        if (allSounds) { //Play all sounds
+            for (const s in sounds) {
+                if (this.soundsToPlay[s]) {
+                    sounds[s].play();
+                    this.soundsToPlay[s] = false;
+                }
+            }
+        } else { //Play all tritris and topout sound
+            const desiredSounds = ['tritris', 'topout'];
+            for (const s of desiredSounds) { //Only play the desired sounds
+                if (this.soundsToPlay[s]) {
+                    sounds[s].play();
+                    this.soundsToPlay[s] = false;
+                }
             }
         }
     }

@@ -335,14 +335,10 @@ class ClientMatch {
         }
         //Otherwise, do nothing. Once enough time has passed the order will change (if it is still different)
 
-
         let gamesToDisplay = [];
         if (this.myGame !== null) gamesToDisplay.push(this.myGame);
         gamesToDisplay.push(...this.currentOrder.map(i => allOtherGames[i])); //Convert back to game objects
-        //const otherGames = this.otherPlayers.map(p => p.game).sort((a, b) => b.score - a.score);
-        //gamesToDisplay.push(otherGames);
 
-        //TODO Make tritris sound for all games
         if (gamesToDisplay[0].isFlashing()) p5.background(150);
         else p5.background(100);
 
@@ -383,7 +379,10 @@ class ClientMatch {
             this.showSmallGames(p5, mainElems.bounding.right, smallGames, mainGame, pieceImages);
         }
 
-        mainGame.playSounds(sounds);
+        for (let g of gamesToDisplay) {
+            if (g === mainGame) g.playSounds(sounds, true); //Play all sounds for main game
+            else g.playSounds(sounds, false); //Only play tritris
+        }
     }
 
     showSmallGames(p5, x, games, baseGame, pieceImages) {
