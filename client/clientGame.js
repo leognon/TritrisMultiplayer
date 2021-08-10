@@ -86,12 +86,12 @@ export default class ClientGame extends Game {
         const nameY = boardPosY + boardHeight + padding;
 
         return {
+            scaleFactor: scaleFactor,
             topText: {
                 x: scorePosX,
                 y: scorePosY,
                 w: scoreWidth,
                 h: scoreHeight,
-                scaleFactor: scaleFactor
             },
             board: {
                 x: boardPosX,
@@ -123,17 +123,26 @@ export default class ClientGame extends Game {
     showBig(p5, left, centered, maxWidth, pieceImages, showGridLines, baseGame) {
         const elems = this.getBigElements(p5, left, centered, maxWidth);
 
-        this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.topText.scaleFactor, baseGame);
+        this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.scaleFactor, baseGame);
 
         this.showGameBoard(p5, elems.board.x, elems.board.y, elems.board.w, elems.board.h, pieceImages, showGridLines);
 
-        this.showNextBox(p5, elems.next.x, elems.next.y, elems.next.w, elems.next.h, pieceImages);
+        this.showNextBox(p5, elems.next.x, elems.next.y, elems.next.w, elems.next.h, elems.scaleFactor, pieceImages);
 
         p5.fill(0);
         p5.noStroke();
         p5.textSize(elems.bottomText.fontSize);
         p5.textAlign(p5.CENTER, p5.TOP);
         p5.text(this.name, elems.bottomText.x, elems.bottomText.y);
+
+        if (this === baseGame && this.duringCountDown()) {
+            p5.textSize(50 * elems.scaleFactor);
+            p5.fill(255);
+            p5.noStroke();
+            p5.textAlign(p5.CENTER, p5.CENTER);
+            const secondsRemaining = 1 + Math.floor(-this.time / 1000);
+            p5.text(secondsRemaining, elems.board.x + elems.board.w/2, elems.board.y + elems.board.h/2);
+        }
 
         return elems;
     }
@@ -199,10 +208,10 @@ export default class ClientGame extends Game {
         }
     }
 
-    showNextBox(p5, x, y, w, h, pieceImages) {
+    showNextBox(p5, x, y, w, h, scaleFactor, pieceImages) {
         p5.fill(100);
         p5.stroke(0);
-        p5.strokeWeight(3);
+        p5.strokeWeight(3 * scaleFactor);
         p5.rect(x, y, w, h);
         if (this.nextPiece) {
             if (this.nextSingles == 0) { //Show next piece normally
@@ -309,7 +318,7 @@ export default class ClientGame extends Game {
         }
 
         p5.stroke(0);
-        p5.strokeWeight(3); //TODO Make strokeWeight scale
+        p5.strokeWeight(3 * scaleFactor);
         p5.fill(100); //Box border
         p5.rect(x, y, w, h);
 

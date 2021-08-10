@@ -384,15 +384,6 @@ class ClientMatch {
         }
 
         mainGame.playSounds(sounds);
-
-        if (mainGame.duringCountDown()) {
-            p5.textSize(50); //TODO Add scale factor here?
-            p5.fill(255);
-            p5.noStroke();
-            p5.textAlign(p5.CENTER, p5.CENTER);
-            const secondsRemaining = 1 + Math.floor(-mainGame.time / 1000);
-            p5.text(secondsRemaining, p5.width/2, p5.height/2);
-        }
     }
 
     showSmallGames(p5, x, games, baseGame, pieceImages) {
