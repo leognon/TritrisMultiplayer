@@ -45,13 +45,10 @@ import piecesJSON from './pieces.js';
  *          Ranked matches - ELO
  *
  * Ping display (ms)
- * Play tritris sound effect for both players
  * When one player tops out, switch the sounds to the other
  *      Same with flash
  * Lock room so nobody can join
  *      Hide room code
- * Don't show ready for spectators
- * Make ready go unready after games
  *
  */
 

@@ -11,8 +11,7 @@ export default class Lobby extends React.Component {
             key={u.id}
             name={u.name}
             isOwner={this.props.ownerId == u.id}
-            isSpectator={u.isSpectator}
-            isReady={u.isReady}
+            isReady={u.isReady && !u.isSpectator}
             isMe={u.id == this.props.myId}
             toggleSpectator={() => this.props.toggleSpectator(u.id)}
         />;
@@ -34,7 +33,11 @@ export default class Lobby extends React.Component {
                 {spectatorList }
 
                 <hr />
-                <button onClick={this.props.changeReady}>Toggle Ready</button>
+                {
+                    !this.props.users.filter(u => u.id === this.props.myId)[0].isSpectator
+                        ?  <button onClick={this.props.changeReady}>Toggle Ready</button>
+                        : ''
+                }
                 <button onClick={this.props.leaveRoom}>Leave Room</button>
             </div>
             </>

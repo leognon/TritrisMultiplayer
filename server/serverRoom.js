@@ -135,6 +135,7 @@ export default class ServerRoom {
             u.socket.emit('room', {
                 type: 'endMatch'
             });
+            u.isReady = false;
         }
         this.match = null;
         this.state = states.LOBBY;

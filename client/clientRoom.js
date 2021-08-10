@@ -179,7 +179,16 @@ export default class ClientRoom extends React.Component {
     endMatch = () => {
         this.match = null;
 
-        this.setState({ state: states.LOBBY });
+        //Unready everyone after a match
+        const newUsers = [...this.state.users];
+        for (let i = 0; i < newUsers.length; i++) {
+            newUsers[i] = new User(newUsers[i].name, newUsers[i].id, newUsers[i].isSpectator, false);
+        }
+
+        this.setState({
+            state: states.LOBBY,
+            users: newUsers
+        });
     }
 
     //Update the current game
