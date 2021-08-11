@@ -16,12 +16,21 @@ export default class LobbySettings extends React.Component {
                     onClick={e => e.target.select()} //Select all the text when clicked
                     value={this.props.startLevel}
                     onChange={this.props.startLevelChanged} />
-
                 <br />
+
+                <label htmlFor="4x8">4x8: </label>
+                <input id="4x8" type="checkbox"
+                    value={this.props.use4x8}
+                    onChange={this.props.use4x8Changed}
+                />
+                <br />
+
+
                 <button onClick={this.props.toggleLockRoom}>
                     { this.props.roomIsLocked ? 'Unlock room' : 'Lock room' }
                 </button>
                 <br />
+
                 <button onClick={this.props.startGame}>Start Game</button>
             </div>
         );

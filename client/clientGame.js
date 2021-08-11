@@ -1,8 +1,8 @@
 import { Game } from '../common/game.js';
 
 export default class ClientGame extends Game {
-    constructor(seed, level, name) {
-        super(seed, level);
+    constructor(name, settings) {
+        super(settings);
 
         this.name = name;
         this.flashAmount = 4;

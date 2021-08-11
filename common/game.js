@@ -51,7 +51,10 @@ import piecesJSON from './pieces.js';
  */
 
 export class Game {
-    constructor(seed, level) {
+    constructor(settings) {
+        console.log('New game with', settings);
+        //TODO Add 4x8 and quadtris quickly
+        //For quadtris, I should probably re-do how the center of rotations work
         this.w = 8;
         this.h = 16;
         this.grid = new Grid(this.w, this.h);
@@ -61,17 +64,18 @@ export class Game {
         this.startTime = Date.now() + countDownLength; //A 5 second countdown before the game starts
         this.time = -countDownLength;
 
-        this.seed = seed;
+        this.seed = settings.seed;
         this.gen = new RandomGenerator(this.seed);
         this.numGens = 0; //Used to know how many steps to advance the rng from the initial state when the client recieves an update
 
         this.alive = true;
 
-        if (level < 0) level = 0;
-        if (level > 29) level = 29;
-        if (level >= 20 && level <= 28) level = 19; //Can only start on 0-19 or 29
-        this.startLevel = level;
-        this.level = level;
+        let lvl = settings.startLevel;
+        if (lvl < 0) lvl = 0;
+        if (lvl > 29) lvl = 29;
+        if (lvl >= 20 && lvl <= 28) lvl = 19; //Can only start on 0-19 or 29
+        this.startLevel = lvl;
+        this.level = this.startLevel;
         this.lines = 0;
         this.score = 0;
         this.scoreWeights = { 1: 100, 2: 400, 3: 1200 };

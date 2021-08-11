@@ -3,8 +3,8 @@ import COMMON_CONFIG from '../common/config.js';
 import ClientGame from '../client/clientGame';
 
 export default class OtherGame extends ClientGame {
-    constructor(seed, level, name) {
-        super(seed, level, name);
+    constructor(name, settings) {
+        super(name, settings);
 
         this.lastReceivedInputTime = -1; //The time when the most recent input was received
 

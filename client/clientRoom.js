@@ -16,8 +16,11 @@ export default class ClientRoom extends React.Component {
             users: this.props.originalUsers.map(u => new User(u.name, u.id, u.isSpectator, u.isReady)),
             ownerId: this.props.ownerId,
             roomCode: this.props.roomCode,
+            settings: {
+                startLevel: 0,
+                use4x8: false
+            },
             roomIsLocked: false,
-            startLevel: 0
         }
 
         this.socket = this.props.socket;
@@ -62,8 +65,10 @@ export default class ClientRoom extends React.Component {
                     { this.state.ownerId == this.socket.id ?
                         <LobbySettings
                             startGame={this.startGame}
-                            startLevel={this.state.startLevel}
+                            startLevel={this.state.settings.startLevel}
                             startLevelChanged={this.startLevelChanged}
+                            use4x8={this.state.settings.use4x8}
+                            use4x8Changed={this.use4x8Changed}
                             toggleLockRoom={this.toggleLockRoom}
                             roomIsLocked={this.state.roomIsLocked}
                         />
@@ -119,9 +124,7 @@ export default class ClientRoom extends React.Component {
     startGame = () => {
         this.socket.emit('room', {
             type: 'start',
-            settings: {
-                startLevel: this.state.startLevel
-            }
+            settings: this.state.settings
         });
     }
 
@@ -148,12 +151,19 @@ export default class ClientRoom extends React.Component {
             if (isNaN(lvl)) lvl = '';
             lvl = Math.min(29, Math.max(0, lvl));
             lvl = lvl.toString();
-            this.setState({
-                startLevel: lvl
-            });
+
+            const newSettings = { ...this.state.settings };
+            newSettings.startLevel = lvl;
+            this.setState({ settings: newSettings });
         } catch (e) {
             //They entered something wrong (like the letter e. Exponentials aren't necessary)
         }
+    }
+
+    use4x8Changed = evnt => {
+        const newSettings = { ...this.state.settings };
+        newSettings.use4x8 = evnt.target.checked;
+        this.setState({ settings: newSettings });
     }
 
     spectatorChanged = (id, isSpectator) => {
@@ -177,7 +187,7 @@ export default class ClientRoom extends React.Component {
     }
 
 
-    matchStarted = (playerIds, seed, level) => {
+    matchStarted = (playerIds, settings) => {
         let me = null;
         let others = [];
         for (let id of playerIds) {
@@ -185,7 +195,7 @@ export default class ClientRoom extends React.Component {
             else others.push(this.getUserById(id));
         }
 
-        this.match = new ClientMatch(level, seed, me, others, this.props.controls);
+        this.match = new ClientMatch(me, others, settings, this.props.controls);
 
         this.setState({ state: states.INGAME });
     }
@@ -221,7 +231,7 @@ export default class ClientRoom extends React.Component {
     gotData = data => {
         switch (data.type) {
             case 'matchStarted':
-                this.matchStarted(data.playerIds, data.seed, data.level);
+                this.matchStarted(data.playerIds, data.settings);
                 break;
             case 'endMatch':
                 this.endMatch();
@@ -276,19 +286,16 @@ class User {
 }
 
 class ClientMatch {
-    constructor(level, seed, me, others, myControls) {
-        this.seed = seed;
-        this.level = level;
-
+    constructor(me, others, settings, myControls) {
         if (me === null) this.myId = null;
         else this.myId = me.id;
 
-        if (me !== null) this.myGame = new MyGame(this.seed, this.level, me.name, myControls);
+        if (me !== null) this.myGame = new MyGame(me.name, myControls, settings);
         else this.myGame = null;
 
         this.otherPlayers = [];
         for (let other of others) {
-            this.otherPlayers.push(new OtherPlayer(other.id, other.name, this.seed, this.level));
+            this.otherPlayers.push(new OtherPlayer(other.id, other.name, settings));
         }
 
         this.nextSendData = Date.now();
@@ -473,11 +480,11 @@ class ClientMatch {
 }
 
 class OtherPlayer {
-    constructor(id, name, seed, level) {
+    constructor(id, name, settings) {
         this.id = id;
         this.name = name;
 
-        this.game = new OtherGame(seed, level, this.name);
+        this.game = new OtherGame(this.name, settings);
     }
 
     interpolateUpdate() {

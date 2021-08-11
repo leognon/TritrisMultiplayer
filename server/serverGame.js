@@ -1,8 +1,8 @@
 import { Game, Input } from '../common/game.js';
 
 export default class ServerGame extends Game {
-    constructor(seed, level) {
-        super(seed, level);
+    constructor(settings) {
+        super(settings);
         this.lastInputSent = -1; //The last input id that was sent to other clients
         this.lastSentTime = -1; //The time of the last game state that was sent to other clients
 

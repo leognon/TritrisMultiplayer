@@ -109,22 +109,26 @@ export default class ServerRoom {
     }
 
     newMatch(settings) {
-        const isValid = validator.isNumeric(settings.startLevel + ''); //Make sure its a string
-        if (!isValid) {
+        console.log('Server starting match', settings);
+
+        if (!validator.isNumeric(settings.startLevel + '')) {
             this.owner.socket.emit('msg', { msg: 'Start level must be a number between 0 and 29' });
             return;
         }
-        const startLevel = validator.toInt(settings.startLevel + '');
+
+        if (settings.use4x8 !== false & settings.use4x8 !== true) {
+            this.owner.socket.emit('msg', { msg: 'Please check the 4x8 checkbox correctly.' });
+            return;
+        }
 
         const players = this.users.filter(u => !u.isSpectator).map(u => u.socket);
 
-        this.match = new ServerMatch(startLevel, players);
+        this.match = new ServerMatch(players, settings);
         for (let u of this.users) {
             u.socket.emit('room', {
                 type: 'matchStarted',
                 playerIds: players.map(p => p.id),
-                seed: this.match.seed,
-                level: this.match.level
+                settings: this.match.settings
             });
         }
         this.state = states.INGAME;

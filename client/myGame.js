@@ -2,8 +2,8 @@ import { Input } from '../common/game.js';
 import ClientGame from '../client/clientGame';
 
 export default class MyGame extends ClientGame {
-    constructor(seed, level, name, myControls) {
-        super(seed, level, name);
+    constructor(name, myControls, settings) {
+        super(name, settings);
 
         const frameRate = 60.0988; //frames per second
         const msPerFrame = 1000 / frameRate;

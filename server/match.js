@@ -1,24 +1,28 @@
 import ServerGame from './serverGame.js';
 
 export default class ServerMatch {
-    constructor(level, sockets) {
+    constructor(sockets, settings) {
         let names = '';
         for (let s of sockets) {
             names += `${s.name} (${s.id.slice(0,4)}), `;
         }
         console.log('Created match btwn ' + names);
 
-        this.seed = Math.random();
-        this.level = level;
+        this.settings = {
+            seed: Math.random(),
+            startLevel: parseInt(settings.startLevel),
+            use4x8: settings.use4x8
+        }
 
         this.players = [];
         for (let socket of sockets) {
             this.addPlayer(socket);
         }
+        console.log('added players');
     }
 
     addPlayer(socket) {
-        this.players.push(new ServerPlayer(socket, this.seed, this.level));
+        this.players.push(new ServerPlayer(socket, this.settings));
     }
 
     //If all players have lost
@@ -81,9 +85,9 @@ export default class ServerMatch {
 }
 
 class ServerPlayer {
-    constructor(socket, seed, level) {
+    constructor(socket, settings) {
         this.socket = socket;
-        this.serverGame = new ServerGame(seed, level);
+        this.serverGame = new ServerGame(settings);
     }
 
     physicsUpdate() {
