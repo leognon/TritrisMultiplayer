@@ -20,7 +20,7 @@ export default class LobbySettings extends React.Component {
 
                 <label htmlFor="4x8">4x8: </label>
                 <input id="4x8" type="checkbox"
-                    value={this.props.use4x8}
+                    checked={this.props.use4x8}
                     onChange={this.props.use4x8Changed}
                 />
                 <br />

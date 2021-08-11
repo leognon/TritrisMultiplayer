@@ -75,7 +75,7 @@ export default class ClientGame extends Game {
 
         const scaleFactor = boardWidth / 250; //Ensure everything scales together
 
-        const cellW = boardWidth / this.w;
+        const cellW = boardWidth / 8; //8 is hardcoded so everything doesnt get extremely big in 4x8
 
         const padding = 8 * scaleFactor;
 

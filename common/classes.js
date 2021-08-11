@@ -265,7 +265,7 @@ export class Triangle {
 }
 
 export class Piece {
-    constructor(data) {
+    constructor(data, totalGridWidth) {
         if (data.hasOwnProperty('grid')) {
             //It is a serialized version
             const gridData = data.grid;
@@ -294,7 +294,7 @@ export class Piece {
                 }
             }
             this.pos = {
-                x: Math.ceil((8 - this.grid[0].length) / 2),
+                x: Math.ceil((totalGridWidth - this.grid[0].length) / 2),
                 y: 0
             };
             this.rotation = 0;

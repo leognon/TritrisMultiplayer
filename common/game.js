@@ -22,21 +22,21 @@ import piecesJSON from './pieces.js';
  *      [X] Create custom lobby
  *      [X] Spectate games
  *
- *      Click create room button
+ *      [X] Click create room button
  *          [X] Creates custom room with id
- *          [ ] Settings
- *              [ ] Change gamemode, level start, etc.
+ *          [X] Settings
+ *              [X] Change gamemode, level start, etc.
  *              [X] Set certain players to spectator
  *      [X] Join room
- *  More gamemodes
- *      Quadtris (Bitris?)
+ *  [ ] More gamemodes
+ *      [ ] Quadtris (Bitris?)
  *          Fix colors (both versions of a mirror is purple)
  *          Redo rotation center code
  *          Make pieces.json format better (add names)
- *      B-Type
- *      4x8
- *      Invisible-Tris
- *      No next
+ *      [ ] B-Type
+ *      [X] 4x8
+ *      [ ] Invisible-Tris
+ *      [ ] No next
  *  How should level starts be chosen?
  *  Database
  *      Save games / replay games
@@ -52,11 +52,12 @@ import piecesJSON from './pieces.js';
 
 export class Game {
     constructor(settings) {
-        console.log('New game with', settings);
-        //TODO Add 4x8 and quadtris quickly
-        //For quadtris, I should probably re-do how the center of rotations work
         this.w = 8;
         this.h = 16;
+        if (settings.use4x8) {
+            this.w = 4;
+            this.h = 8;
+        }
         this.grid = new Grid(this.w, this.h);
 
         this.tritrisAmt = 0; //For statistics
@@ -158,7 +159,7 @@ export class Game {
         else this.currentPiece = null;
 
         this.nextPieceIndex = state.nextPieceIndex;
-        if (this.nextPieceIndex !== null) this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex]);
+        if (this.nextPieceIndex !== null) this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex], this.w);
         else this.nextPiece = null;
 
         this.grid = new Grid(state.serializedGrid);
@@ -353,7 +354,7 @@ export class Game {
             }
         }
 
-        this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex]);
+        this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex], this.w);
     }
 
     updateScoreAndLevel() {
