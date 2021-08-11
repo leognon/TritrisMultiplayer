@@ -281,8 +281,10 @@ export class Piece {
                 x: data.x,
                 y: data.y
             }
-            this.rotation = data.rotation;
-            this.rotations = data.rotations;
+            this.centerOffset = {
+                x: data.centerOffsetX,
+                y: data.centerOffsetY
+            }
         } else {
             this.grid = [];
             const pieces = data.pieces;
@@ -297,8 +299,16 @@ export class Piece {
                 x: Math.ceil((totalGridWidth - this.grid[0].length) / 2),
                 y: 0
             };
-            this.rotation = 0;
-            this.rotations = data.rotationOffset || [[0, 0]]; //How the position should change when rotated. If not specified, the pos can stay the same (for pieces with square dimensions)
+            let centerOffsetX = this.grid[0].length / 2;
+            let centerOffsetY = this.grid.length / 2;
+            if (data.hasOwnProperty('center')) {
+                centerOffsetX = data.center[0];
+                centerOffsetY = data.center[1];
+            }
+            this.centerOffset = {
+                x: centerOffsetX,
+                y: centerOffsetY
+            }
         }
     }
 
@@ -307,7 +317,7 @@ export class Piece {
         this.rotateLeft();
     }
 
-    rotateLeft() {
+    rotateLeft() { //Counter clockwise
         let newGrid = [];
         for (let newRow = 0; newRow < this.grid[0].length; newRow++) {
             newGrid.push([]);
@@ -319,13 +329,19 @@ export class Piece {
         }
         this.grid = newGrid;
 
-        //Calculates a new position so the piece stays centered around the same piece
-        this.pos.x += this.rotations[this.rotation][0]
-        this.pos.y += this.rotations[this.rotation][1];
-        this.rotation = (this.rotation + 1) % this.rotations.length;
+        //Make sure it rotates around the center
+        const newCenterOffset = {
+            x: this.centerOffset.y,
+            y: this.grid.length - this.centerOffset.x
+        }
+        this.pos = {
+            x: this.pos.x + this.centerOffset.x - newCenterOffset.x,
+            y: this.pos.y + this.centerOffset.y - newCenterOffset.y
+        }
+        this.centerOffset = newCenterOffset;
     }
 
-    rotateRight() {
+    rotateRight() { //Clockwise
         let newGrid = [];
         for (let newRow = 0; newRow < this.grid[0].length; newRow++) {
             newGrid.push([]);
@@ -337,10 +353,16 @@ export class Piece {
         }
         this.grid = newGrid;
 
-        //Calculates a new position so the piece stays centered around the same piece
-        this.rotation = (this.rotation - 1 + this.rotations.length) % this.rotations.length;
-        this.pos.x -= this.rotations[this.rotation][0]
-        this.pos.y -= this.rotations[this.rotation][1];
+        //Make sure it rotates around the center
+        const newCenterOffset = {
+            x: this.grid[0].length - this.centerOffset.y,
+            y: this.centerOffset.x
+        }
+        this.pos = {
+            x: this.pos.x + this.centerOffset.x - newCenterOffset.x,
+            y: this.pos.y + this.centerOffset.y - newCenterOffset.y
+        }
+        this.centerOffset = newCenterOffset;
     }
 
     move(x, y) {
@@ -374,8 +396,9 @@ export class Piece {
             grid: serializedGrid,
             x: this.pos.x,
             y: this.pos.y,
-            rotation: this.rotation,
-            rotations: this.rotations
+            centerOffsetX: this.centerOffset.x,
+            centerOffsetY: this.centerOffset.y,
+            rotation: this.rotation
         }
     }
 

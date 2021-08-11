@@ -1,5 +1,7 @@
 const piecesJSON = [
     {
+        "name": "ninja",
+        "count": 5,
         "color": 6,
         "pieces": [
             [
@@ -11,6 +13,7 @@ const piecesJSON = [
         ]
     },
     {
+        "name": "redBoomerang",
         "color": 0,
         "pieces": [
             [
@@ -36,6 +39,7 @@ const piecesJSON = [
         ]
     },
     {
+        "name": "fortuneCookie",
         "color": 1,
         "pieces": [
             [
@@ -61,13 +65,9 @@ const piecesJSON = [
         ]
     },
     {
+        "name": "yellowPencil",
         "color": 2,
-        "rotationOffset": [
-            [-1, 1],
-            [1, 0],
-            [0, 0],
-            [0, -1]
-        ],
+        "center": [ 0.5, 1.5 ],
         "pieces": [
             [
                 [
@@ -84,6 +84,7 @@ const piecesJSON = [
         ]
     },
     {
+        "name": "pinkBoomerang",
         "color": 3,
         "pieces": [
             [
@@ -109,13 +110,9 @@ const piecesJSON = [
         ]
     },
     {
+        "name": "bluePencil",
         "color": 4,
-        "rotationOffset": [
-            [-1, 1],
-            [1, 0],
-            [0, 0],
-            [0, -1]
-        ],
+        "center": [ 0.5, 1.5 ],
         "pieces": [
             [
                 [
@@ -132,6 +129,7 @@ const piecesJSON = [
         ]
     },
     {
+        "name": "razor",
         "color": 5,
         "pieces": [
             [
