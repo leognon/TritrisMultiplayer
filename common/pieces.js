@@ -1,7 +1,7 @@
 const piecesJSON = [
     {
         "name": "ninja",
-        "count": 5,
+        "count": 3,
         "color": 6,
         "pieces": [
             [

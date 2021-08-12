@@ -224,25 +224,15 @@ export default class ClientGame extends Game {
         p5.strokeWeight(3 * scaleFactor);
         p5.rect(x, y, w, h);
         if (this.nextPiece) {
-            if (this.nextSingles == 0) { //Show next piece normally
-                this.nextPiece.showAt(p5, x, y, w, h, pieceImages);
-            } else if (this.nextSingles == 2) { //Show 3 Ninjas coming up
-                const spacingX = w / 7;
-                const spacingY = h / 7;
-                this.nextPiece.showAt(p5, x - spacingX, y - spacingY, w, h, pieceImages);
-                this.nextPiece.showAt(p5, x, y, w, h, pieceImages);
-                this.nextPiece.showAt(p5, x + spacingX, y + spacingY, w, h, pieceImages);
-            } else if (this.nextSingles == 1) { //Show 2 ninjas coming up
-                const spacingX = w / 7;
-                const spacingY = h / 7;
-                this.nextPiece.showAt(p5, x - spacingX/2, y - spacingY/2, w, h, pieceImages);
-                this.nextPiece.showAt(p5, x + spacingX/2, y + spacingY/2, w, h, pieceImages);
+            const spacing = w / 7;
+            for (let i = 0; i < this.nextPieceCount; i++) {
+                let positionRelativeToCenter = i - (this.nextPieceCount - 1) / 2;
+                this.nextPiece.showAt(p5, x + spacing * positionRelativeToCenter, y + spacing * positionRelativeToCenter, w, h, pieceImages);
             }
         }
     }
 
     showScoreAndLines(p5, x, y, w, h, scaleFactor, baseGame) {
-        //p5.textLeading(fontHeight);
         let textLines;
         if (baseGame === this) {
             const score = this.formatScore(this.score);

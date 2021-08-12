@@ -97,7 +97,7 @@ export class Game {
         this.currentPiece = null; //The current piece starts as null
         this.nextPiece = null; //The next piece starts as a random piece that isn't a single triangles
         this.nextPieceIndex = null;
-        this.nextSingles = 0;
+        this.nextPieceCount = 0; //For the ninja, will spawn multiple
         this.bag = [];
         this.spawnPiece(); //Sets the next piece
         this.spawnPiece(); //Make next piece current, and pick new next
@@ -153,7 +153,6 @@ export class Game {
             this.gen.range(1); //Advance the internal state of the random number generator to match
 
         this.bag = [...state.bag];
-        this.nextSingles = state.nextSingles;
 
         if (state.currentPieceSerialized) this.currentPiece = new Piece(state.currentPieceSerialized);
         else this.currentPiece = null;
@@ -161,6 +160,7 @@ export class Game {
         this.nextPieceIndex = state.nextPieceIndex;
         if (this.nextPieceIndex !== null) this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex], this.w);
         else this.nextPiece = null;
+        this.nextPieceCount = state.nextPieceCount;
 
         this.grid = new Grid(state.serializedGrid);
 
@@ -323,7 +323,8 @@ export class Game {
 
         //Only clear lines if the next piece is not a triangle, or the next piece is a triangle, but it is a new triplet
         let numLinesCleared = 0;
-        if (this.nextPieceIndex != 0 || this.nextSingles == 2) {
+        if (!this.piecesJSON[this.nextPieceIndex].hasOwnProperty('count') || //The next piece comes out once (a new sequence is starting)
+            this.nextPieceCount === this.piecesJSON[this.nextPieceIndex].count) { //A new sequence is starting
             numLinesCleared = this.clearLines(); //Clear any complete lines
         }
 
@@ -341,17 +342,21 @@ export class Game {
             }
         }
         this.currentPiece = this.nextPiece; //Assign the new current piece
-        if (this.nextSingles > 0) {
-            this.nextPieceIndex = 0; //This will make it spawn 3 single triangles in a row
-            this.nextSingles--;
-        } else {
+        this.nextPieceCount--; //Used up one of the next pieces
+
+        if (this.nextPieceCount <= 0) {
+            //Pick a new next piece
             const bagIndex = this.gen.range(this.bag.length);
             this.numGens++;
             this.nextPieceIndex = this.bag.splice(bagIndex, 1)[0]; //Pick 1 item and remove it from bag
             const nextPieceJSON = this.piecesJSON[this.nextPieceIndex];
             if (nextPieceJSON.hasOwnProperty('count')) {
-                this.nextSingles = nextPieceJSON.count - 1; //The -1 is because there is already 1 for the next piece
+                this.nextPieceCount = nextPieceJSON.count;
+            } else {
+                this.nextPieceCount = 1;
             }
+        } else {
+            //Keep using the same next piece
         }
 
         this.nextPiece = new Piece(this.piecesJSON[this.nextPieceIndex], this.w);
@@ -526,7 +531,7 @@ class GameState {
         if (game.currentPiece) this.currentPieceSerialized = game.currentPiece.serialized();
         this.nextPiece = game.nextPiece;
         this.nextPieceIndex = game.nextPieceIndex;
-        this.nextSingles = game.nextSingles;
+        this.nextPieceCount = game.nextPieceCount;
         this.bag = [...game.bag]; //Save a copy of the current bag
 
         this.pieceSpeed = game.pieceSpeed;
