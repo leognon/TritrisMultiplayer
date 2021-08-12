@@ -18,7 +18,8 @@ export default class ClientRoom extends React.Component {
             roomCode: this.props.roomCode,
             settings: {
                 startLevel: 0,
-                use4x8: false
+                use4x8: false,
+                quadtris: false
             },
             roomIsLocked: false,
         }
@@ -69,6 +70,8 @@ export default class ClientRoom extends React.Component {
                             startLevelChanged={this.startLevelChanged}
                             use4x8={this.state.settings.use4x8}
                             use4x8Changed={this.use4x8Changed}
+                            quadtris={this.state.settings.quadtris}
+                            quadtrisChanged={this.quadtrisChanged}
                             toggleLockRoom={this.toggleLockRoom}
                             roomIsLocked={this.state.roomIsLocked}
                         />
@@ -163,6 +166,12 @@ export default class ClientRoom extends React.Component {
     use4x8Changed = evnt => {
         const newSettings = { ...this.state.settings };
         newSettings.use4x8 = evnt.target.checked;
+        this.setState({ settings: newSettings });
+    }
+
+    quadtrisChanged = evnt => {
+        const newSettings = { ...this.state.settings };
+        newSettings.quadtris = evnt.target.checked;
         this.setState({ settings: newSettings });
     }
 

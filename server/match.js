@@ -10,8 +10,7 @@ export default class ServerMatch {
 
         this.settings = {
             seed: Math.random(),
-            startLevel: parseInt(settings.startLevel),
-            use4x8: settings.use4x8
+            ...settings,
         }
 
         this.players = [];

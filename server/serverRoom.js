@@ -116,8 +116,13 @@ export default class ServerRoom {
             return;
         }
 
-        if (settings.use4x8 !== false & settings.use4x8 !== true) {
+        if (settings.use4x8 !== false && settings.use4x8 !== true) {
             this.owner.socket.emit('msg', { msg: 'Please check the 4x8 checkbox correctly.' });
+            return;
+        }
+
+        if (settings.quadtris !== false && settings.quadtris !== true) {
+            this.owner.socket.emit('msg', { msg: 'Please check the quadtris checkbox correctly.' });
             return;
         }
 

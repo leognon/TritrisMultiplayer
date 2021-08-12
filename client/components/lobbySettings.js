@@ -25,6 +25,12 @@ export default class LobbySettings extends React.Component {
                 />
                 <br />
 
+                <label htmlFor="quadtris">Quadtris: </label>
+                <input id="quadtris" type="checkbox"
+                    checked={this.props.quadtris}
+                    onChange={this.props.quadtrisChanged}
+                />
+                <br />
 
                 <button onClick={this.props.toggleLockRoom}>
                     { this.props.roomIsLocked ? 'Unlock room' : 'Lock room' }

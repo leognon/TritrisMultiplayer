@@ -1,6 +1,6 @@
 import { Grid, Piece } from './classes.js';
 import RandomGenerator from 'random-seed';
-import piecesJSON from './pieces.js';
+import { tritrisJSON, quadtrisJSON } from './pieces.js';
 
 /* TODO
  *
@@ -29,12 +29,13 @@ import piecesJSON from './pieces.js';
  *              [X] Set certain players to spectator
  *      [X] Join room
  *  [ ] More gamemodes
- *      [ ] Quadtris (Bitris?)
- *          Fix colors (both versions of a mirror is purple)
- *          Redo rotation center code
- *          Make pieces.json format better (add names)
+ *      [X] Quadtris
+ *          [X] Fix colors (both versions of a mirror is purple)
+ *          [X] Redo rotation center code
+ *          [X] Make pieces.json format better (add names)
  *      [ ] B-Type
  *      [X] 4x8
+ *      [ ] Bitris
  *      [ ] Invisible-Tris
  *      [ ] No next
  *  How should level starts be chosen?
@@ -71,7 +72,7 @@ export class Game {
 
         this.alive = true;
 
-        let lvl = settings.startLevel;
+        let lvl = parseInt(settings.startLevel);
         if (lvl < 0) lvl = 0;
         if (lvl > 29) lvl = 29;
         if (lvl >= 20 && lvl <= 28) lvl = 19; //Can only start on 0-19 or 29
@@ -79,10 +80,13 @@ export class Game {
         this.level = this.startLevel;
         this.lines = 0;
         this.score = 0;
-        this.scoreWeights = { 1: 100, 2: 400, 3: 1200 };
+        this.scoreWeights = { 1: 100, 2: 400, 3: 1200, 4: 1200*4 }; //TODO Figure out 4 line clear weight!
         //TODO The weights should be 1: 100, 2: 300, 3: 1200!!!!!!!!!!!!!!
 
-        this.piecesJSON = piecesJSON;
+        if (settings.quadtris)
+            this.piecesJSON = quadtrisJSON;
+        else
+            this.piecesJSON = tritrisJSON;
 
         const frameRate = 60.0988; //frames per second
         const msPerFrame = 1000 / frameRate;
