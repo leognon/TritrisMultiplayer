@@ -1,8 +1,20 @@
 let sessionIdtoUserId = new Map(); //sessionIdtoUserId[sessionId] = userId
 let clients = new Map(); //users[userId] = Client
 
-function generateRandomId() {
-    return Math.floor(Math.random() * 100000000);
+//For generating ids
+const alphabet = [];
+for (let i = 'a'.charCodeAt(0); i <= 'z'.charCodeAt(0); i++) alphabet.push(String.fromCharCode(i));
+for (let i = 'A'.charCodeAt(0); i <= 'Z'.charCodeAt(0); i++) alphabet.push(String.fromCharCode(i));
+for (let i = '0'.charCodeAt(0); i <= '9'.charCodeAt(0); i++) alphabet.push(String.fromCharCode(i));
+
+function generateRandomId(notIn) {
+    let str = '';
+    do {
+        str = '';
+        for (let i = 0; i < 16; i++) str += alphabet[Math.floor(Math.random() * alphabet.length)];
+    } while (notIn.has(str));
+    //It is probably quite unnecesary to check for collisions...
+    return str;
 }
 
 export function addClient(socket) {
@@ -14,8 +26,8 @@ export function addClient(socket) {
     let client;
     let sessionId, userId;
     if (newUser) {
-        sessionId = 'session' + Math.floor(Math.random() * 10000000);
-        userId = 'user' + Math.floor(Math.random() * 10000000);
+        sessionId = generateRandomId(sessionIdtoUserId);
+        userId = generateRandomId(clients);
         sessionIdtoUserId.set(sessionId, userId);
 
         client = new Client(socket, userId);

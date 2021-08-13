@@ -4,11 +4,6 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
 
 /* TODO
  *
- *  FIX socket disconnect!
- *      Since there are no accounts yet, each client can have a randomly generated cookie (doesn't actually have to be a cookie though)
- *      If disconnected, they can reconnect with that cookie which will identify them as a user
- *      In the server, use that cookie instead of socket.id
- *      Try using this https://socket.io/get-started/private-messaging-part-2/#Persistent-session-ID
  *  [X] Better score display - Show score differential
  *  [ ] Fix number of points for double (should be 300)
  *  [ ] Figure out deltaTime stuff - Don't update deltaTime after receiving data on myGame?
