@@ -11,25 +11,37 @@ export function addClient(socket) {
         newUser = false;
     }
 
+    let client;
     let sessionId, userId;
     if (newUser) {
         sessionId = 'session' + Math.floor(Math.random() * 10000000);
         userId = 'user' + Math.floor(Math.random() * 10000000);
         sessionIdtoUserId.set(sessionId, userId);
+
+        client = new Client(socket, userId);
+        clients.set(userId, client);
+
+        console.log('New Client ' + sessionId + ' userId: ' + userId);
+
+        socket.emit('auth', {
+            sessionId, userId
+        });
     } else {
         sessionId = socket.handshake.auth.sessionId;
         userId = sessionIdtoUserId.get(sessionId);
+
+        client = clients.get(userId);
+        client.socket = socket;
+        
+        console.log('Old Client ' + sessionId + ' userId: ' + userId);
+
+        socket.emit('reAuth', {
+            sessionId, userId,
+
+        });
     }
 
-    socket.emit('auth', {
-        sessionId, userId
-    });
-
-    const newClient = new Client(socket, userId);
-    clients.set(userId, newClient);
-    console.log('New Client ' + sessionId + ' userId: ' + userId);
-
-    return newClient;
+    return client;
 }
 
 class Client {

@@ -44,29 +44,44 @@ class App extends React.Component {
         //}
         this.socket = io({
             auth,
-            reconnection: false
+            reconnection: true
         });
         this.socket.userId = '';
 
         this.socket.on('auth', ({ sessionId, userId }) => {
             console.log(`Auth Sess ${sessionId}, userId ${userId}`);
             this.socket.userId = userId;
+            auth.sessionId = sessionId;
 
-            this.assetLoaded();
+            if (this.state.state === states.LOADING) //Make sure to not go back to menu
+                this.assetLoaded();
+            //localStorage.setItem('sessionId', sessionId);
+        });
+        this.socket.on('reAuth', ({ sessionId, userId }) => {
+            console.log(`Re-Auth Sess ${sessionId}, userId ${userId}`);
+            this.socket.userId = userId;
+            auth.sessionId = sessionId;
+
+            if (this.state.state === states.LOADING) //Make sure to not go back to menu
+                this.assetLoaded();
             //localStorage.setItem('sessionId', sessionId);
         });
 
+        /*setTimeout(() => {
+            console.log('Running disconnect');
+            this.socket.disconnect();
+            setTimeout(() => {
+                console.log('Running reconnect');
+                this.socket.connect();
+            }, 10000);
+        }, 15000);*/
+
 
         this.socket.on('msg', this.gotMessage);
-        //this.socket.on('gameState', gotGameState);
-        //this.socket.on('matchOver', () => { });
         this.socket.on('joinedRoom', this.joinedRoom);
         this.socket.on('leftRoom', this.leaveRoom);
         this.socket.on('disconnect', () => {
             console.log('Disconnected!!!');
-            /*this.setState({
-                state: -1
-            });*/
         });
 
         this.pieceImages = null;

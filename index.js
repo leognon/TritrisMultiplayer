@@ -96,7 +96,8 @@ io.on('connection', socket => {
 
     //TODO Add confirmation dialogue when disconnecting in a match. To differentiate between closing the tab and the socket disconnecting
     client.on('disconnect', () => {
-        leaveRoom(client);
+        console.log(`Client ${client.getId()} disconnected`);
+        //leaveRoom(client);
     });
 });
 
