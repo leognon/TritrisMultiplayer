@@ -26,12 +26,12 @@ export default class Lobby extends React.Component {
 
     getUserLabel = u => {
         return <UserLabel
-            key={u.id}
+            key={u.getId()}
             name={u.name}
-            isOwner={this.props.ownerId == u.id}
+            isOwner={this.props.ownerId == u.getId()}
             isReady={u.isReady && !u.isSpectator}
-            isMe={u.id == this.props.myId}
-            toggleSpectator={() => this.props.toggleSpectator(u.id)}
+            isMe={u.getId() == this.props.myId}
+            toggleSpectator={() => this.props.toggleSpectator(u.getId())}
         />;
     }
 
@@ -52,7 +52,7 @@ export default class Lobby extends React.Component {
 
                 <hr />
                 {
-                    !this.props.users.filter(u => u.id === this.props.myId)[0].isSpectator
+                    !this.props.users.filter(u => u.getId() === this.props.myId)[0].isSpectator
                         ?  <button onClick={this.props.changeReady}>Toggle Ready</button>
                         : ''
                 }

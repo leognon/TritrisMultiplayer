@@ -55,7 +55,7 @@ export default class ClientRoom extends React.Component {
                     <Lobby
                         roomCode={this.state.roomCode}
                         users={this.state.users}
-                        myId={this.socket.id}
+                        myId={this.socket.userId}
                         ownerId={this.state.ownerId}
                         toggleSpectator={this.changeSpectator}
                         startGame={this.startGame}
@@ -63,7 +63,7 @@ export default class ClientRoom extends React.Component {
                         leaveRoom={this.leaveRoom}
                     />
 
-                    { this.state.ownerId == this.socket.id ?
+                    { this.state.ownerId == this.socket.userId ?
                         <LobbySettings
                             startGame={this.startGame}
                             startLevel={this.state.settings.startLevel}
@@ -112,7 +112,7 @@ export default class ClientRoom extends React.Component {
 
     removeUser = (id) => {
         //Make a new list without the user that left
-        let newUsers = this.state.users.filter(u => u.id != id);
+        let newUsers = this.state.users.filter(u => u.getId() != id);
         this.setState({
             users: newUsers
         });
@@ -132,10 +132,10 @@ export default class ClientRoom extends React.Component {
     }
 
     changeSpectator = id => {
-        if (this.socket.id == this.state.ownerId) {
+        if (this.socket.userId == this.state.ownerId) {
             this.socket.emit('room', {
                 type: 'changeSpectator',
-                isSpectator: !this.state.users.filter(u => u.id == id)[0].isSpectator,
+                isSpectator: !this.state.users.filter(u => u.getId() == id)[0].isSpectator,
                 id
             });
         }
@@ -144,7 +144,7 @@ export default class ClientRoom extends React.Component {
     changeReady = () => {
         this.socket.emit('room', {
             type: 'changeReady',
-            isReady: !this.getUserById(this.socket.id).isReady
+            isReady: !this.getUserById(this.socket.userId).isReady
         });
     }
 
@@ -178,8 +178,8 @@ export default class ClientRoom extends React.Component {
     spectatorChanged = (id, isSpectator) => {
         const newUsers = [...this.state.users];
         for (let i = 0; i < newUsers.length; i++) {
-            if (newUsers[i].id == id) {
-                newUsers[i] = new User(newUsers[i].name, newUsers[i].id, isSpectator, newUsers[i].isReady);
+            if (newUsers[i].getId() == id) {
+                newUsers[i] = new User(newUsers[i].name, newUsers[i].getId(), isSpectator, newUsers[i].isReady);
             }
         }
         this.setState({ users: newUsers });
@@ -188,8 +188,8 @@ export default class ClientRoom extends React.Component {
     readyChanged = (id, isReady) => {
         const newUsers = [...this.state.users];
         for (let i = 0; i < newUsers.length; i++) {
-            if (newUsers[i].id == id) {
-                newUsers[i] = new User(newUsers[i].name, newUsers[i].id, newUsers[i].isSpectator, isReady);
+            if (newUsers[i].getId() == id) {
+                newUsers[i] = new User(newUsers[i].name, newUsers[i].getId(), newUsers[i].isSpectator, isReady);
             }
         }
         this.setState({ users: newUsers });
@@ -200,7 +200,7 @@ export default class ClientRoom extends React.Component {
         let me = null;
         let others = [];
         for (let id of playerIds) {
-            if (id == this.socket.id) me = this.getUserById(id);
+            if (id == this.socket.userId) me = this.getUserById(id);
             else others.push(this.getUserById(id));
         }
 
@@ -215,7 +215,7 @@ export default class ClientRoom extends React.Component {
         //Unready everyone after a match
         const newUsers = [...this.state.users];
         for (let i = 0; i < newUsers.length; i++) {
-            newUsers[i] = new User(newUsers[i].name, newUsers[i].id, newUsers[i].isSpectator, false);
+            newUsers[i] = new User(newUsers[i].name, newUsers[i].getId(), newUsers[i].isSpectator, false);
         }
 
         this.setState({
@@ -279,7 +279,7 @@ export default class ClientRoom extends React.Component {
 
     getUserById = id => {
         for (let u of this.state.users) {
-            if (u.id == id) return u;
+            if (u.getId() == id) return u;
         }
         return null;
     }
@@ -288,23 +288,27 @@ export default class ClientRoom extends React.Component {
 class User {
     constructor(name, id, isSpectator, isReady) {
         this.name = name;
-        this.id = id;
+        this.userId = id;
         this.isReady = isReady;
         this.isSpectator = isSpectator;
+    }
+
+    getId() {
+        return this.userId;
     }
 }
 
 class ClientMatch {
     constructor(me, others, settings, myControls) {
         if (me === null) this.myId = null;
-        else this.myId = me.id;
+        else this.myId = me.getId();
 
         if (me !== null) this.myGame = new MyGame(me.name, myControls, settings);
         else this.myGame = null;
 
         this.otherPlayers = [];
         for (let other of others) {
-            this.otherPlayers.push(new OtherPlayer(other.id, other.name, settings));
+            this.otherPlayers.push(new OtherPlayer(other.getId(), other.name, settings));
         }
 
         this.nextSendData = Date.now();
@@ -342,7 +346,7 @@ class ClientMatch {
 
         if (myData !== null) this.myGame.gotGameState(myData);
         for (let other of this.otherPlayers) {
-            const otherData = games[other.id];
+            const otherData = games[other.getId()];
             other.gotGameState(otherData);
         }
     }
@@ -490,10 +494,14 @@ class ClientMatch {
 
 class OtherPlayer {
     constructor(id, name, settings) {
-        this.id = id;
+        this.userId = id;
         this.name = name;
 
         this.game = new OtherGame(this.name, settings);
+    }
+
+    getId() {
+        return this.userId;
     }
 
     interpolateUpdate() {

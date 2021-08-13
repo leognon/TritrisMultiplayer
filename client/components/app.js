@@ -19,8 +19,11 @@ class App extends React.Component {
             ? JSON.parse(localStorage.getItem('controls'))
             : this.getDefaultControls();
 
+        this.totalAssets = 3; //pieceImages, font and auth
+
         this.state = {
             state: states.LOADING,
+            assetsLoaded: 0,
             name: localStorage.hasOwnProperty('name') ? localStorage.getItem('name') : ('player' + Math.floor(Math.random()*99+1)),
             controls: currentControls,
             volume: localStorage.hasOwnProperty('volume') ? parseInt(localStorage.getItem('volume')) : 75,
@@ -35,9 +38,24 @@ class App extends React.Component {
             }
         }
 
+        let auth = {};
+        //if (localStorage.hasOwnProperty('sessionId')) {
+            //auth.sessionId = localStorage.getItem('sessionId');
+        //}
         this.socket = io({
-            reconnection: false //Do not try to reconnect automatically
+            auth,
+            reconnection: false
         });
+        this.socket.userId = '';
+
+        this.socket.on('auth', ({ sessionId, userId }) => {
+            console.log(`Auth Sess ${sessionId}, userId ${userId}`);
+            this.socket.userId = userId;
+
+            this.assetLoaded();
+            //localStorage.setItem('sessionId', sessionId);
+        });
+
 
         this.socket.on('msg', this.gotMessage);
         //this.socket.on('gameState', gotGameState);
@@ -68,10 +86,11 @@ class App extends React.Component {
         p5.background(100);
         p5.loadImage('../client/assets/piecesImage.png', img => {
             this.pieceImages = loadPieces(img);
-            this.setState({ state: states.MENU });
+            this.assetLoaded();
         });
         p5.loadFont('../client/assets/fff-forward.ttf', fnt => {
             this.font = fnt;
+            this.assetLoaded();
         });
         p5.noLoop();
     }
@@ -236,6 +255,15 @@ class App extends React.Component {
             default:
                 return '';
         }
+    }
+
+    assetLoaded = () => {
+        const newNum = this.state.assetsLoaded + 1;
+        const newState = newNum >= this.totalAssets ? states.MENU : states.LOADING;
+        this.setState({
+            assetsLoaded: newNum,
+            state: newState
+        });
     }
 
     windowResized = (p5) => {

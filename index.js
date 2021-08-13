@@ -14,8 +14,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-let sockets = {}; //TODO This is pretty much useless
-
+import { addClient } from './server/sockets.js';
 import ServerRoom from './server/serverRoom.js';
 //let queue = []; //A list of socket ids in the queue
 let rooms = {}; //The key is the room code
@@ -37,8 +36,8 @@ app.get('/main.js', (req, res) => {
 });
 
 io.on('connection', socket => {
-    console.log(nameId(socket) + ' connected');
-    sockets[socket.id] = socket;
+    const client = addClient(socket);
+    //console.log(nameId(socket) + ' connected');
 
     //TODO Validate and sanitize inputs
     /*socket.on('joinMatch', data => {
@@ -46,7 +45,7 @@ io.on('connection', socket => {
         enqueue(socket);
     });*/
 
-    socket.on('room', data => {
+    client.on('room', data => {
         const validateName = name => {
             const min = 3;
             const max = COMMON_CONFIG.MAX_NAME_LENGTH;
@@ -76,27 +75,28 @@ io.on('connection', socket => {
                     socket.emit('msg', { msg: valid.msg });
                     return;
                 }
-                socket.name = data.name;
+                client.setName(data.name);
 
                 if (data.type == 'create')
-                    createRoom(socket);
+                    createRoom(client);
                 else if (data.type == 'join')
-                    joinRoom(socket, data.code);
+                    joinRoom(client, data.code);
                 break;
             case 'leave':
-                leaveRoom(socket);
+                leaveRoom(client);
                 break;
             default:
-                const room = getRoom(socket);
+                const room = getRoom(client);
                 if (room.found) {
-                    room.room.gotData(socket, data);
+                    room.room.gotData(client, data);
                 }
                 break;
         }
     });
 
-    socket.on('disconnect', () => {
-        leaveRoom(socket);
+    //TODO Add confirmation dialogue when disconnecting in a match. To differentiate between closing the tab and the socket disconnecting
+    client.on('disconnect', () => {
+        leaveRoom(client);
     });
 });
 
@@ -134,22 +134,22 @@ function generateUniqRoomCode() {
     return code;
 }
 
-function joinRoom(socket, code) {
+function joinRoom(client, code) {
     if (!code) code = '';
     code = code.toUpperCase();
     if (rooms.hasOwnProperty(code) && !rooms[code].roomIsLocked) {
-        rooms[code].addUser(socket);
+        rooms[code].addUser(client);
     } else {
-        socket.emit('msg', {
+        client.emit('msg', {
             msg: 'Invalid room code'
         });
     }
 }
 
-function leaveRoom(socket) {
-    const room = getRoom(socket);
+function leaveRoom(client) {
+    const room = getRoom(client);
     if (room.found) {
-        const shouldDisband = room.room.removeUser(socket);
+        const shouldDisband = room.room.removeUser(client);
         if (shouldDisband) {
             console.log('Disbanding room ' + room.id);
             delete rooms[room.id];
@@ -157,9 +157,9 @@ function leaveRoom(socket) {
     }
 }
 
-function getRoom(socket) {
+function getRoom(client) {
     for (let id in rooms) {
-        if (rooms[id].hasPlayer(socket)) {
+        if (rooms[id].hasPlayer(client)) {
             return {
                 found: true,
                 id,
@@ -170,12 +170,6 @@ function getRoom(socket) {
     return {
         found: false
     }
-}
-
-function nameId(socket) {
-    if (socket.hasOwnProperty(nameId))
-        return `${nameId} (${socket.id.slice(0, 4)})`;
-    return `${socket.id.slice(0,4)}`;
 }
 
 //Physics update

@@ -1,10 +1,10 @@
 import ServerGame from './serverGame.js';
 
 export default class ServerMatch {
-    constructor(sockets, settings) {
+    constructor(clients, settings) {
         let names = '';
-        for (let s of sockets) {
-            names += `${s.name} (${s.id.slice(0,4)}), `;
+        for (let client of clients) {
+            names += `${client.name} (${client.getId().slice(0,4)}), `;
         }
         console.log('Created match btwn ' + names);
 
@@ -14,14 +14,13 @@ export default class ServerMatch {
         }
 
         this.players = [];
-        for (let socket of sockets) {
-            this.addPlayer(socket);
+        for (let client of clients) {
+            this.addPlayer(client);
         }
-        console.log('added players');
     }
 
-    addPlayer(socket) {
-        this.players.push(new ServerPlayer(socket, this.settings));
+    addPlayer(client) {
+        this.players.push(new ServerPlayer(client, this.settings));
     }
 
     //If all players have lost
@@ -33,9 +32,9 @@ export default class ServerMatch {
     }
 
     //When inputs have been received from a player
-    gotInputs(socket, data) {
+    gotInputs(client, data) {
         for (let p of this.players) {
-            if (p.getId() == socket.id) {
+            if (p.getId() == client.getId()) {
                 p.gotInputs(data);
                 break;
             }
@@ -50,7 +49,7 @@ export default class ServerMatch {
     }
 
     //Sends data to the clients
-    clientsUpdate(spectatorSockets) {
+    clientsUpdate(spectatorClients) {
         let data = {
             players: {},
             yourData: null
@@ -61,7 +60,7 @@ export default class ServerMatch {
             //begin performing inputs to take them to this state.
             data.players[p.getId()] = p.getGameStateAndInputs();
         }
-        for (const s of spectatorSockets) {
+        for (const s of spectatorClients) {
             s.emit('room', {
                 type: 'gotGameState',
                 data
@@ -84,17 +83,17 @@ export default class ServerMatch {
 }
 
 class ServerPlayer {
-    constructor(socket, settings) {
-        this.socket = socket;
+    constructor(client, settings) {
+        this.client = client;
         this.serverGame = new ServerGame(settings);
     }
 
     physicsUpdate() {
-        this.serverGame.physicsUpdate(this.socket.disconnected);
+        this.serverGame.physicsUpdate(this.client.isDisconnected());
     }
 
     getId() {
-        return this.socket.id;
+        return this.client.userId;
     }
 
     //TODO Should lastFrame be set to Date.now() after receiving data on the client?
@@ -112,7 +111,7 @@ class ServerPlayer {
     }
 
     sendData(data) {
-        this.socket.emit('room', {
+        this.client.emit('room', {
             type: 'gotGameState',
             data //TODO Rework this data.data stuff
         });

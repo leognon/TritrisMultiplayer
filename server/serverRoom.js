@@ -7,7 +7,7 @@ export default class ServerRoom {
         this.roomCode = roomCode;
         this.roomIsLocked = false;
 
-        this.owner = new User(owner); //The socket who created the room
+        this.owner = new User(owner); //The client who created the room
         this.users = []; //An array of users
 
         this.match = null;
@@ -22,57 +22,57 @@ export default class ServerRoom {
         console.log(this.owner.name + ' created room with code ' + this.roomCode);
     }
 
-    addUser(socket) {
-        console.log(socket.name + ' joined ' + this.roomCode);
+    addUser(client) {
+        console.log(client.name + ' joined ' + this.roomCode);
         for (let u of this.users) {
-            u.socket.emit('room', {
+            u.emit('room', {
                 type: 'playerJoined',
-                id: socket.id,
-                name: socket.name
+                id: client.getId(),
+                name: client.name
             });
         }
-        this.users.push(new User(socket));
+        this.users.push(new User(client));
 
-        socket.emit('joinedRoom', {
+        client.emit('joinedRoom', {
             code: this.roomCode,
-            ownerId: this.owner.id,
+            ownerId: this.owner.getId(),
             users: this.users.map(u => {
                 return { //Just get the id and name and isSpectator and isReady
-                    id: u.id, name: u.name, isSpectator: u.isSpectator, isReady: u.isReady
+                    id: u.getId(), name: u.name, isSpectator: u.isSpectator, isReady: u.isReady
                 }
             })
         });
     }
 
-    removeUser(socket) {
-        console.log(socket.name + ' left ' + this.roomCode);
+    removeUser(client) {
+        console.log(client.name + ' left ' + this.roomCode);
         for (let i = this.users.length-1; i >= 0; i--) {
             if (!this.users[i]) {
                 //TODO This happens if multiple people leave simulateneously (select multiple tabs and click reload)
                 console.log('There is no user index ' + i + ' in room ' + this.roomCode, this.users);
                 continue;
             }
-            if (this.users[i].id == socket.id) {
-                this.users[i].socket.emit('leftRoom');
+            if (this.users[i].getId() == client.getId()) {
+                this.users[i].emit('leftRoom');
                 this.users.splice(i, 1);
             } else {
-                this.users[i].socket.emit('room', {
+                this.users[i].emit('room', {
                     type: 'playerLeft',
-                    id: socket.id
+                    id: client.getId()
                 });
             }
         }
 
         if (this.users.length == 0) {
             return true; //Disband room
-        } else if (socket.id == this.owner.id) {
+        } else if (client.getId() == this.owner.getId()) {
             //Pick new owner
             const newOwner = this.users[0];
             this.owner = newOwner;
             for (let u of this.users) {
-                u.socket.emit('room', {
+                u.emit('room', {
                     type: 'newOwner',
-                    id: this.owner.id
+                    id: this.owner.getId()
                 });
             }
         }
@@ -80,29 +80,31 @@ export default class ServerRoom {
         return false;
     }
 
-    gotData(socket, data) {
+    gotData(client, data) {
+        const user = this.getUserById(client.getId());
+
         switch (data.type) {
             case 'start':
-                if (socket.id == this.owner.id && this.state == states.LOBBY) {
+                if (user.getId() == this.owner.getId() && this.state == states.LOBBY) {
                     this.newMatch(data.settings);
                 }
                 break;
             case 'changeSpectator':
-                if (socket.id == this.owner.id) {
+                if (user.getId() == this.owner.getId()) {
                     this.changeSpectator(data.id, data.isSpectator);
                 }
                 break;
             case 'changeReady':
-                this.changeReady(socket.id, data.isReady);
+                this.changeReady(user, data.isReady);
                 break;
             case 'toggleLockRoom':
-                if (socket.id == this.owner.id) {
+                if (client.getId() == this.owner.getId()) {
                     this.toggleLockRoom(data.lockRoom);
                 }
                 break;
             case 'inputs':
                 if (this.state == states.INGAME && this.match) {
-                    this.match.gotInputs(socket, data.inps);
+                    this.match.gotInputs(client, data.inps);
                 }
                 break;
         }
@@ -112,27 +114,27 @@ export default class ServerRoom {
         console.log('Server starting match', settings);
 
         if (!validator.isNumeric(settings.startLevel + '')) {
-            this.owner.socket.emit('msg', { msg: 'Start level must be a number between 0 and 29' });
+            this.owner.emit('msg', { msg: 'Start level must be a number between 0 and 29' });
             return;
         }
 
         if (settings.use4x8 !== false && settings.use4x8 !== true) {
-            this.owner.socket.emit('msg', { msg: 'Please check the 4x8 checkbox correctly.' });
+            this.owner.emit('msg', { msg: 'Please check the 4x8 checkbox correctly.' });
             return;
         }
 
         if (settings.quadtris !== false && settings.quadtris !== true) {
-            this.owner.socket.emit('msg', { msg: 'Please check the quadtris checkbox correctly.' });
+            this.owner.emit('msg', { msg: 'Please check the quadtris checkbox correctly.' });
             return;
         }
 
-        const players = this.users.filter(u => !u.isSpectator).map(u => u.socket);
+        const players = this.users.filter(u => !u.isSpectator).map(u => u.client);
 
         this.match = new ServerMatch(players, settings);
         for (let u of this.users) {
-            u.socket.emit('room', {
+            u.emit('room', {
                 type: 'matchStarted',
-                playerIds: players.map(p => p.id),
+                playerIds: players.map(p => p.getId()),
                 settings: this.match.settings
             });
         }
@@ -142,12 +144,12 @@ export default class ServerRoom {
     endMatch() {
         let scores = '';
         for (let p of this.match.players) {
-            scores += p.socket.name + ': ' + p.serverGame.score + ' | ';
+            scores += p.client.name + ': ' + p.serverGame.score + ' | ';
         }
         console.log('Ending match in room ' + this.roomCode + '. ' + scores);
 
         for (let u of this.users) {
-            u.socket.emit('room', {
+            u.emit('room', {
                 type: 'endMatch'
             });
             u.isReady = false;
@@ -163,13 +165,11 @@ export default class ServerRoom {
             return;
         }
 
+        const user = this.getUserById(id);
+        if (user) user.isSpectator = isSpectator;
+
         for (const u of this.users) {
-            if (u.id == id) {
-                u.isSpectator = isSpectator;
-            }
-        }
-        for (const u of this.users) {
-            u.socket.emit('room', {
+            u.emit('room', {
                 type: 'spectatorChanged',
                 id,
                 isSpectator
@@ -177,18 +177,18 @@ export default class ServerRoom {
         }
     }
 
-    changeReady(id, isReady) {
+    changeReady(user, isReady) {
         const valid = (isReady === true || isReady === false);
         if (!valid) {
-            this.getUserById(id).socket.emit('msg', { msg: 'Something went wrong changing ready.' });
+            user.emit('msg', { msg: 'Something went wrong changing ready.' });
             return;
         }
-        this.getUserById(id).isReady = isReady;
+        user.isReady = isReady;
 
         for (const u of this.users) {
-            u.socket.emit('room', {
+            u.emit('room', {
                 type: 'readyChanged',
-                id,
+                id: user.getId(),
                 isReady
             });
         }
@@ -196,7 +196,7 @@ export default class ServerRoom {
 
     toggleLockRoom(newState) {
         this.roomIsLocked = newState;
-        this.owner.socket.emit('room', {
+        this.owner.emit('room', {
             type: 'roomLocked',
             roomIsLocked: this.roomIsLocked
         });
@@ -223,32 +223,39 @@ export default class ServerRoom {
 
     clientsUpdate() {
         if (this.state == states.INGAME && this.match) {
-            const spectatorSockets = this.users.filter(u => u.isSpectator).map(s => s.socket);
-            this.match.clientsUpdate(spectatorSockets);
+            const spectatorClients = this.users.filter(u => u.isSpectator).map(s => s.client);
+            this.match.clientsUpdate(spectatorClients);
         }
     }
 
-    hasPlayer(socket) {
+    hasPlayer(client) {
         for (let u of this.users) {
-            if (u.id == socket.id) return true;
+            if (u.getId() == client.getId()) return true;
         }
         return false;
     }
 
     getUserById = id => {
         for (let u of this.users) {
-            if (u.id == id) return u;
+            if (u.getId() == id) return u;
         }
         return null;
     }
 }
 
 class User {
-    constructor(socket) {
-        this.socket = socket;
-        this.name = socket.name;
-        this.id = socket.id;
+    constructor(client) {
+        this.client = client;
+        this.name = this.client.name;
         this.isReady = false;
         this.isSpectator = false;
+    }
+
+    getId = () => {
+        return this.client.userId;
+    }
+
+    emit = (name, data) => {
+        this.client.emit(name, data);
     }
 }
