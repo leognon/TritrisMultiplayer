@@ -94,10 +94,23 @@ io.on('connection', socket => {
         }
     });
 
-    //TODO Add confirmation dialogue when disconnecting in a match. To differentiate between closing the tab and the socket disconnecting
+    //The client left the page. Remove them from any rooms
+    client.on('leftPage', () => {
+        console.log(`Client ${client.getId()} left the page`);
+        leaveRoom(client);
+        client.leftPage = true;
+    });
+
     client.on('disconnect', () => {
         console.log(`Client ${client.getId()} disconnected`);
-        //leaveRoom(client);
+        if (!client.leftPage) {
+            setTimeout(() => {
+                if (client.socket.disconnected) {
+                    console.log(`Client ${client.getId()} is still disconnected`);
+                    leaveRoom(client);
+                }
+            }, SERVER_CONFIG.DISCONNECT_TIMEOUT);
+        }
     });
 });
 

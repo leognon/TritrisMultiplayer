@@ -32,7 +32,7 @@ export function addClient(socket) {
 
         client = clients.get(userId);
         client.socket = socket;
-        
+
         console.log('Old Client ' + sessionId + ' userId: ' + userId);
 
         socket.emit('reAuth', {
@@ -49,6 +49,7 @@ class Client {
         this.socket = socket;
         this.userId = userId;
         this.name = 'UnknownPlayer';
+        this.leftPage = false;
     }
 
     getId = () => {

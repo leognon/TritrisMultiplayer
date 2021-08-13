@@ -44,7 +44,8 @@ class App extends React.Component {
         //}
         this.socket = io({
             auth,
-            reconnection: true
+            reconnection: true,
+            closeOnBeforeunload: false
         });
         this.socket.userId = '';
 
@@ -67,15 +68,9 @@ class App extends React.Component {
             //localStorage.setItem('sessionId', sessionId);
         });
 
-        /*setTimeout(() => {
-            console.log('Running disconnect');
-            this.socket.disconnect();
-            setTimeout(() => {
-                console.log('Running reconnect');
-                this.socket.connect();
-            }, 10000);
-        }, 15000);*/
-
+        window.onbeforeunload = () => {
+            this.socket.emit('leftPage');
+        }
 
         this.socket.on('msg', this.gotMessage);
         this.socket.on('joinedRoom', this.joinedRoom);
