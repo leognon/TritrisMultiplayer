@@ -75,8 +75,7 @@ export class Game {
         this.level = this.startLevel;
         this.lines = 0;
         this.score = 0;
-        this.scoreWeights = { 1: 100, 2: 400, 3: 1200, 4: 1200*4 }; //TODO Figure out 4 line clear weight!
-        //TODO The weights should be 1: 100, 2: 300, 3: 1200!!!!!!!!!!!!!!
+        this.scoreWeights = { 1: 100, 2: 200*2, 3: 400*3, 4: 800*4 };
 
         if (settings.quadtris)
             this.piecesJSON = quadtrisJSON;
