@@ -130,6 +130,12 @@ export default class ServerRoom {
 
         const players = this.users.filter(u => !u.isSpectator).map(u => u.client);
 
+        if (players.length === 0) {
+            this.owner.emit('msg', { msg: 'There must be at least 1 player.' });
+            return;
+        }
+
+
         this.match = new ServerMatch(players, settings);
         for (let u of this.users) {
             u.emit('room', {
