@@ -194,11 +194,19 @@ export default class ClientGame extends Game {
             scoreTextObj
         ];
 
+        let textSize = elements.text.size;
         p5.fill(0);
         p5.noStroke();
-        p5.textSize(elements.text.size);
+        p5.textSize(textSize);
         p5.textAlign(p5.LEFT, p5.TOP);
-        const textW = this.getColorfulLineWidth(p5, textObjs);
+        let textW = this.getColorfulLineWidth(p5, textObjs);
+        if (textW > w) {
+            const scale = w / textW;
+            textSize *= scale;
+
+            p5.textSize(textSize);
+            textW = this.getColorfulLineWidth(p5, textObjs);
+        }
         const correctedXPos = elements.text.x - textW/2;
         this.showColorfulText(p5, textObjs, correctedXPos, elements.text.y);
     }
