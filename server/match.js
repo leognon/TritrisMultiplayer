@@ -2,12 +2,6 @@ import ServerGame from './serverGame.js';
 
 export default class ServerMatch {
     constructor(clients, settings) {
-        let names = '';
-        for (let client of clients) {
-            names += `${client.name} (${client.getId().slice(0,4)}), `;
-        }
-        console.log('Created match btwn ' + names);
-
         this.settings = {
             seed: Math.random(),
             ...settings,

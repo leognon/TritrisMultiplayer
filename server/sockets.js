@@ -19,7 +19,9 @@ function generateRandomId(notIn) {
 
 export function addClient(socket) {
     let newUser = true;
-    if (socket.handshake.auth.hasOwnProperty('sessionId') && sessionIdtoUserId.has(socket.handshake.auth.sessionId)) {
+    if (socket.handshake.auth.hasOwnProperty('sessionId')
+        && sessionIdtoUserId.has(socket.handshake.auth.sessionId)
+        && clients.has(sessionIdtoUserId.get(socket.handshake.auth.sessionId))) {
         newUser = false;
     }
 
@@ -33,8 +35,6 @@ export function addClient(socket) {
         client = new Client(socket, userId);
         clients.set(userId, client);
 
-        console.log('New Client ' + sessionId + ' userId: ' + userId);
-
         socket.emit('auth', {
             sessionId, userId
         });
@@ -45,8 +45,6 @@ export function addClient(socket) {
         client = clients.get(userId);
         client.socket = socket;
 
-        console.log('Old Client ' + sessionId + ' userId: ' + userId);
-
         socket.emit('reAuth', {
             sessionId, userId,
 
@@ -54,6 +52,11 @@ export function addClient(socket) {
     }
 
     return client;
+}
+
+export function removeClient(client) {
+    clients.delete(client.userId);
+    //We leave the sessionId so that it isn't picked again
 }
 
 class Client {

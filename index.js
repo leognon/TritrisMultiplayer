@@ -14,7 +14,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-import { addClient } from './server/sockets.js';
+import { addClient, removeClient } from './server/sockets.js';
 import ServerRoom from './server/serverRoom.js';
 //let queue = []; //A list of socket ids in the queue
 let rooms = {}; //The key is the room code
@@ -25,10 +25,10 @@ app.get('/', (_, res) => {
 app.get('/client/assets/*', (req, res) => {
     res.sendFile(`/client/assets/${req.params[0]}`, { root: __dirname });
 });
-app.get('/client/style.css', (req, res) => {
+app.get('/client/style.css', (_, res) => {
     res.sendFile('/client/style.css', { root: __dirname });
 });
-app.get('/main.js', (req, res) => {
+app.get('/main.js', (_, res) => {
     if (process.env.PORT) //Production
         res.sendFile('/build/prod.js', { root: __dirname });
     else //Local testing
@@ -37,7 +37,7 @@ app.get('/main.js', (req, res) => {
 
 io.on('connection', socket => {
     const client = addClient(socket);
-    //console.log(nameId(socket) + ' connected');
+    console.log(client.getId() + ' connected');
 
     //TODO Validate and sanitize inputs
     /*socket.on('joinMatch', data => {
@@ -102,14 +102,17 @@ io.on('connection', socket => {
     });
 
     client.on('disconnect', () => {
-        console.log(`Client ${client.getId()} disconnected`);
         if (!client.leftPage) {
+            console.log(`Client ${client.getId()} disconnected`);
             setTimeout(() => {
                 if (client.socket.disconnected) {
                     console.log(`Client ${client.getId()} is still disconnected`);
                     leaveRoom(client);
+                    removeClient(client);
                 }
             }, SERVER_CONFIG.DISCONNECT_TIMEOUT);
+        } else {
+            removeClient(client);
         }
     });
 });
@@ -165,7 +168,6 @@ function leaveRoom(client) {
     if (room.found) {
         const shouldDisband = room.room.removeUser(client);
         if (shouldDisband) {
-            console.log('Disbanding room ' + room.id);
             delete rooms[room.id];
         }
     }

@@ -45,7 +45,6 @@ export default class ServerRoom {
     }
 
     removeUser(client) {
-        console.log(client.name + ' left ' + this.roomCode);
         for (let i = this.users.length-1; i >= 0; i--) {
             if (!this.users[i]) {
                 //TODO This happens if multiple people leave simulateneously (select multiple tabs and click reload)
@@ -64,6 +63,7 @@ export default class ServerRoom {
         }
 
         if (this.users.length == 0) {
+            console.log(client.name + ' left ' + this.roomCode + ' disbanding room.');
             return true; //Disband room
         } else if (client.getId() == this.owner.getId()) {
             //Pick new owner
@@ -76,6 +76,8 @@ export default class ServerRoom {
                 });
             }
         }
+
+        console.log(client.name + ' left ' + this.roomCode);
 
         return false;
     }
@@ -111,8 +113,6 @@ export default class ServerRoom {
     }
 
     newMatch(settings) {
-        console.log('Server starting match', settings);
-
         if (!validator.isNumeric(settings.startLevel + '')) {
             this.owner.emit('msg', { msg: 'Start level must be a number between 0 and 29' });
             return;
@@ -135,6 +135,7 @@ export default class ServerRoom {
             return;
         }
 
+        console.log(`Starting match between ${players.map(c => c.name).join(', ')}`, settings);
 
         this.match = new ServerMatch(players, settings);
         for (let u of this.users) {

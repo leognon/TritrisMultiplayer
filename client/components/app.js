@@ -50,7 +50,6 @@ class App extends React.Component {
         this.socket.userId = '';
 
         this.socket.on('auth', ({ sessionId, userId }) => {
-            console.log(`Auth Sess ${sessionId}, userId ${userId}`);
             this.socket.userId = userId;
             auth.sessionId = sessionId;
 
@@ -59,7 +58,6 @@ class App extends React.Component {
             //localStorage.setItem('sessionId', sessionId);
         });
         this.socket.on('reAuth', ({ sessionId, userId }) => {
-            console.log(`Re-Auth Sess ${sessionId}, userId ${userId}`);
             this.socket.userId = userId;
             auth.sessionId = sessionId;
 
@@ -76,6 +74,7 @@ class App extends React.Component {
         this.socket.on('joinedRoom', this.joinedRoom);
         this.socket.on('leftRoom', this.leaveRoom);
         this.socket.on('disconnect', () => {
+            //TODO Add disconnect indicator
             console.log('Disconnected!!!');
         });
 
