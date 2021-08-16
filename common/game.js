@@ -393,8 +393,11 @@ export class Game {
             this.setSpeed();
         }
         this.score += this.scoreWeights[this.animatingLines.length] * (this.level + 1);
-        if (this.animatingLines.length == 3)
-            this.tritrisAmt++;
+
+        //A tritris will count as 1, a quadtris will count as 1.3
+        if (this.animatingLines.length == 3) this.tritrisAmt += 1; //Will increase by 100%
+        else if (this.animatingLines.length == 4) this.tritrisAmt += 16/9; //Will increase by 133%
+
 
         for (const row of this.animatingLines) {
             this.grid.removeLine(row);
