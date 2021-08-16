@@ -20,7 +20,7 @@ export default class ServerMatch {
     //If all players have lost
     isOver() {
         for (let p of this.players) {
-            if (p.serverGame.alive) return false;
+            if (p.serverGame.isAlive()) return false;
         }
         return true;
     }

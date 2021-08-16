@@ -47,6 +47,10 @@ export default class ServerGame extends Game {
         this.physicsUpdate(false); //Updates to the current time (simulating gravity)
     }
 
+    isAlive() {
+        return this.latestState.alive;
+    }
+
     addInput(inp) {
         if (!Input.isValid(inp)) return false;
         if (this.inputs[inp.id]) return false;

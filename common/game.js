@@ -4,6 +4,10 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
 
 /* TODO
  *
+ *  Optional score differential
+ *  Add sound effect for countdown when game is starting
+ *  Don't make screens swap with 3 players
+ *  Make 4 players display like 3 players (without any small)
  *  [X] Better score display - Show score differential
  *  [ ] Fix number of points for double (should be 300)
  *  [ ] Figure out deltaTime stuff - Don't update deltaTime after receiving data on myGame?
@@ -39,6 +43,11 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *      Accounts
  *          Sign in with Google?
  *          Ranked matches - ELO
+ *      Donate
+ *          Get custom skins
+ *          More lobby customization
+ *              Customize pieces and counts (like get 5 ninjas or 2 razors)
+ *              Custom board size
  *
  * Ping display (ms)
  * When one player tops out, switch the sounds to the other
@@ -99,6 +108,7 @@ export class Game {
         this.bag = [];
         this.spawnPiece(); //Sets the next piece
         this.spawnPiece(); //Make next piece current, and pick new next
+        this.pieceHasMoved = false; //If the current piece has moved. If it doesn't move and the current piece is placed, you lose
 
         this.levelSpeeds = {
             0: 48,
@@ -170,6 +180,7 @@ export class Game {
         this.pieceSpeed = state.pieceSpeed;
         this.pushDownPoints = state.pushDownPoints;
         this.lastMoveDown = state.lastMoveDown;
+        this.pieceHasMoved = state.pieceHasMoved;
 
         this.spawnNextPiece = state.spawnNextPiece;
         this.animatingUntil = state.animatingUntil;
@@ -244,11 +255,7 @@ export class Game {
         if (this.shouldSpawnPiece()) {
             this.spawnPiece();
             this.lastMoveDown = this.time;
-            if (!this.isValid(this.currentPiece)) {
-                this.alive = false; //If the new piece is already blocked, game over
-                this.updateGameState();
-                this.addSound('topout');
-            }
+            this.pieceHasMoved = false;
             this.redraw = true;
             this.addSound('fall');
         }
@@ -257,6 +264,7 @@ export class Game {
         if (this.currentPiece !== null) {
             if (input) { //It is time for the input to be performed
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
+                if (moveData.moved) this.pieceHasMoved = true;
                 if (moveData.playSound) this.addSound('move');
                 if (input.vertDir) {
                     if (input.softDrop) this.pushDownPoints++; //Pushing down
@@ -273,6 +281,11 @@ export class Game {
                     else if (numLinesCleared > 0) {
                         this.addSound('clear');
                     }
+
+                    if (!this.pieceHasMoved) {
+                        this.alive = false; //A piece spawned and was not / could not be moved. Game over
+                        this.addSound('topout');
+                    }
                 }
                 this.redraw = true;
             }
@@ -283,8 +296,14 @@ export class Game {
             const moveData = this.movePiece(0, 0, true);
             this.pushDownPoints = 0;
             this.lastMoveDown = this.time;
+            if (moveData.moved) this.pieceHasMoved = true;
             if (moveData.placePiece) {
                 this.placePiece();
+
+                if (!this.pieceHasMoved) {
+                    this.alive = false; //A piece spawned and was not / could not be moved. Game over
+                    this.addSound('topout');
+                }
             }
             this.redraw = true;
         }
@@ -453,7 +472,8 @@ export class Game {
                 placePiece: false, //Don't place the piece
                 playSound: (horzDirection != 0 || rotation != 0),
                 rotated: (rotation != 0),
-                chargeDas: false
+                chargeDas: false,
+                moved: (horzDirection != 0 || rotation != 0 || moveDown)
             }
         }
         //If blocked, undo horz move and maybe wall-charge
@@ -465,7 +485,8 @@ export class Game {
                 placePiece: false,
                 playSound: (rotation != 0),
                 rotated: (rotation != 0),
-                chargeDas: true
+                chargeDas: true,
+                moved: (rotation != 0 || moveDown)
             }
         }
 
@@ -481,6 +502,7 @@ export class Game {
                 playSound: false,
                 rotated: false,
                 chargeDas: (horzDirection != 0),
+                moved: (moveDown)
             }
         }
 
@@ -491,7 +513,8 @@ export class Game {
             placePiece: true, //Place the piece
             playSound: false,
             rotated: false,
-            chargeDas: false
+            chargeDas: false,
+            moved: false
         }
     }
 
@@ -535,6 +558,8 @@ class GameState {
         this.pieceSpeed = game.pieceSpeed;
         this.pushDownPoints = game.pushDownPoints;
         this.lastMoveDown = game.lastMoveDown;
+
+        this.pieceHasMoved = game.pieceHasMoved;
 
         this.spawnNextPiece = game.spawnNextPiece;
         this.animatingUntil = game.animatingUntil;

@@ -36,6 +36,10 @@ export default class ClientGame extends Game {
         return Date.now() < this.startTime;
     }
 
+    addSound(s) {
+        this.soundsToPlay[s] = true;
+    }
+
     playSounds(sounds, allSounds) {
         if (allSounds) { //Play all sounds
             for (const s in sounds) {

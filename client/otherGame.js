@@ -14,10 +14,6 @@ export default class OtherGame extends ClientGame {
         this.totalReceivedTimes = 0; //Used for calculating average
     }
 
-    addSound(s) {
-        this.soundsToPlay[s] = true;
-    }
-
     interpolateUpdate() {
         if (!this.frozen) {
             //Simulate gravity if there are no more inputs to simulate

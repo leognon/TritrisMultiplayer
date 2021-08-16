@@ -40,18 +40,15 @@ export default class MyGame extends ClientGame {
         } else if (this.animatingLines.length > 0) {
             let playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
             if (playSound)
-                this.soundsToPlay.levelup = true;
+                this.addSound('levelup');
         }
 
         if (this.shouldSpawnPiece()) {
             this.spawnPiece();
             this.lastMoveDown = this.time;
-            if (!this.isValid(this.currentPiece)) {
-                this.alive = false;
-                this.soundsToPlay.topout = true;
-            }
+            this.pieceHasMoved = false;
             this.redraw = true;
-            this.soundsToPlay.fall = true;
+            this.addSound('fall');
         }
 
         if (this.currentPiece !== null) {
@@ -61,8 +58,11 @@ export default class MyGame extends ClientGame {
                 this.redraw = true; //A piece has moved, so the game must be redrawn
                 const moveData = this.movePiece(horzDirection, rotation, moveDown);
 
+                if (moveData.moved) {
+                    this.pieceHasMoved = true;
+                }
                 if (moveData.playSound) {
-                    this.soundsToPlay.move = true;
+                    this.addSound('move');
                     //Play move sound
                 }
                 if (moveData.chargeDas) {
@@ -94,12 +94,18 @@ export default class MyGame extends ClientGame {
                     //Place the piece
                     const numLinesCleared = this.placePiece();
                     if (numLinesCleared == 3)
-                        this.soundsToPlay.tritris = true;
+                        this.addSound('tritris');
                     else if (numLinesCleared > 0)
-                        this.soundsToPlay.clear = true;
+                        this.addSound('clear');
 
                     this.zCharged = false; //After a piece is placed, don't rotate the next piece
                     this.xCharged = false;
+
+                    if (!this.pieceHasMoved) {
+                        this.alive = false; //A piece spawned and was not / could not be moved. Game over
+                        this.updateGameState();
+                        this.addSound('topout');
+                    }
                 }
             }
         }
@@ -181,6 +187,7 @@ export default class MyGame extends ClientGame {
         this.goToGameState(myGameData);
 
         this.updateToTime(Date.now() - this.startTime, false); //Recatch-up the game
+        for (const s in this.soundsToPlay) this.soundsToPlay[s] = false; //Only play new sounds
 
         this.lastFrame = Date.now();
         //TODO???? Should lastFrame not be set here because that might cause deltaTime to "skip" time
