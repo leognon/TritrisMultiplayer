@@ -101,9 +101,8 @@ export default class MyGame extends ClientGame {
                     this.zCharged = false; //After a piece is placed, don't rotate the next piece
                     this.xCharged = false;
 
-                    if (!this.pieceHasMoved) {
+                    if (numLinesCleared === 0 && !this.pieceHasMoved) {
                         this.alive = false; //A piece spawned and was not / could not be moved. Game over
-                        this.updateGameState();
                         this.addSound('topout');
                     }
                 }

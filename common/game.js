@@ -282,7 +282,7 @@ export class Game {
                         this.addSound('clear');
                     }
 
-                    if (!this.pieceHasMoved) {
+                    if (numLinesCleared === 0 && !this.pieceHasMoved) {
                         this.alive = false; //A piece spawned and was not / could not be moved. Game over
                         this.addSound('topout');
                     }
@@ -298,9 +298,17 @@ export class Game {
             this.lastMoveDown = this.time;
             if (moveData.moved) this.pieceHasMoved = true;
             if (moveData.placePiece) {
-                this.placePiece();
+                const numLinesCleared = this.placePiece();
+                this.score += this.pushDownPoints;
+                this.pushDownPoints = 0;
 
-                if (!this.pieceHasMoved) {
+                if (numLinesCleared == 3)
+                    this.addSound('tritris');
+                else if (numLinesCleared > 0) {
+                    this.addSound('clear');
+                }
+
+                if (numLinesCleared === 0 && !this.pieceHasMoved) {
                     this.alive = false; //A piece spawned and was not / could not be moved. Game over
                     this.addSound('topout');
                 }
