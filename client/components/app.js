@@ -14,18 +14,13 @@ class App extends React.Component {
     constructor(props) {
         super(props);
 
-        //Load from localStorage or use defaults
-        let currentControls = localStorage.hasOwnProperty('controls')
-            ? JSON.parse(localStorage.getItem('controls'))
-            : this.getDefaultControls();
-
         this.totalAssets = 3; //pieceImages, font and auth
 
         this.state = {
             state: states.LOADING,
             assetsLoaded: 0,
             name: localStorage.hasOwnProperty('name') ? localStorage.getItem('name') : ('player' + Math.floor(Math.random()*99+1)),
-            controls: currentControls,
+            controls: this.loadControls(),
             volume: localStorage.hasOwnProperty('volume') ? parseInt(localStorage.getItem('volume')) : 75,
             roomData: {
                 roomCode: '',
@@ -124,28 +119,43 @@ class App extends React.Component {
         }, this.saveControls);
     }
 
+    loadControls = () => {
+        let controls = this.getDefaultControls();
+        if (localStorage.hasOwnProperty('controls')) {
+            const loaded = JSON.parse(localStorage.getItem('controls'));
+            for (const control in loaded) {
+                controls[control].key = loaded[control].key;
+            }
+        }
+        return controls;
+    }
+
     getDefaultControls = () => {
         return {
-                counterClock: {
-                    key: 90, //Z
-                    controlName: "Counter Clockwise"
-                },
-                clock: {
-                    key: 88, //X
-                    controlName: "Clock"
-                },
-                left: {
-                    key: 37, //Left arrow
-                    controlName: "Left"
-                },
-                right: {
-                    key: 39, //Right arrow
-                    controlName: "Right"
-                },
-                down: {
-                    key: 40, //Down arrow
-                    controlName: "Down"
-                }
+            counterClock: {
+                key: 90, //Z
+                controlName: "Counter Clockwise"
+            },
+            clock: {
+                key: 88, //X
+                controlName: "Clock"
+            },
+            left: {
+                key: 37, //Left arrow
+                controlName: "Left"
+            },
+            right: {
+                key: 39, //Right arrow
+                controlName: "Right"
+            },
+            down: {
+                key: 40, //Down arrow
+                controlName: "Down"
+            },
+            start: {
+                key: 13, //Enter
+                controlName: "Start / End Game"
+            }
         }
     }
 

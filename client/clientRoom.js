@@ -7,6 +7,7 @@ import COMMON_CONFIG from '../common/config.js';
 import states from '../common/states.js';
 import MyGame from './myGame.js';
 import OtherGame from './otherGame.js';
+import keyboardMap from './components/keyboardMap.js';
 
 export default class ClientRoom extends React.Component {
     constructor(props) {
@@ -42,10 +43,8 @@ export default class ClientRoom extends React.Component {
 
     draw = p5 => {
         //Do everything necessary (update, show)
-        if (this.state.state == states.INGAME) {
-            this.update(p5);
-            this.showGame(p5, this.props.pieceImages, this.props.sounds);
-        }
+        this.update(p5);
+        this.showGame(p5, this.props.pieceImages, this.props.sounds);
     }
 
     render = () => {
@@ -58,7 +57,6 @@ export default class ClientRoom extends React.Component {
                         myId={this.socket.userId}
                         ownerId={this.state.ownerId}
                         toggleSpectator={this.changeSpectator}
-                        startGame={this.startGame}
                         changeReady={this.changeReady}
                         leaveRoom={this.leaveRoom}
                     />
@@ -66,6 +64,7 @@ export default class ClientRoom extends React.Component {
                     { this.state.ownerId == this.socket.userId ?
                         <LobbySettings
                             startGame={this.startGame}
+                            startKey={this.props.controls['start'].key}
                             startLevel={this.state.settings.startLevel}
                             startLevelChanged={this.startLevelChanged}
                             use4x8={this.state.settings.use4x8}
@@ -81,7 +80,13 @@ export default class ClientRoom extends React.Component {
                     <Background pieceImages={this.props.pieceImages}/>
                 </>
             case states.INGAME:
-                return <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized}/>
+            case states.GAME_OVER:
+                return <Sketch
+                    setup={this.setup}
+                    draw={this.draw}
+                    windowResized={this.windowResized}
+                    keyPressed={this.keyPressed}
+                />
             default:
                 console.log('No state for clientRoom', this.state.state);
                 return null;
@@ -209,9 +214,7 @@ export default class ClientRoom extends React.Component {
         this.setState({ state: states.INGAME });
     }
 
-    endMatch = () => {
-        this.match = null;
-
+    matchIsOver = () => {
         //Unready everyone after a match
         const newUsers = [...this.state.users];
         for (let i = 0; i < newUsers.length; i++) {
@@ -219,21 +222,40 @@ export default class ClientRoom extends React.Component {
         }
 
         this.setState({
-            state: states.LOBBY,
+            state: states.GAME_OVER,
             users: newUsers
         });
     }
 
     //Update the current game
     update = p5 => {
-        if (this.state.state == states.INGAME && this.match) {
+        if (this.isIngame() && this.match) {
             this.match.update(p5, this.socket);
         }
     }
 
     showGame = (p5, pieceImages, sounds) => {
-        if (this.state.state == states.INGAME && this.match) {
+        if (this.isIngame() && this.match) {
             this.match.show(p5, pieceImages, sounds);
+        }
+        if (this.state.state == states.GAME_OVER) {
+            const scale = p5.width * p5.height / (1920 * 1000);
+            p5.fill(0);
+            p5.textSize(35 * scale);
+            const key = this.props.controls['start'].key;
+            const name = keyboardMap[key];
+            p5.textAlign(p5.RIGHT, p5.BOTTOM);
+            p5.text(`Press [${name}] to continue.`, p5.width - 10*scale, p5.height - 10*scale);
+        }
+    }
+
+    keyPressed = p5 => {
+        const startKey = this.props.controls['start'].key;
+        if (this.state.state == states.GAME_OVER && p5.keyCode == startKey) { //If enter is pressed
+            this.match = null;
+            this.setState({
+                state: states.LOBBY
+            });
         }
     }
 
@@ -242,8 +264,8 @@ export default class ClientRoom extends React.Component {
             case 'matchStarted':
                 this.matchStarted(data.playerIds, data.settings);
                 break;
-            case 'endMatch':
-                this.endMatch();
+            case 'matchIsOver':
+                this.matchIsOver();
                 break;
             case 'playerJoined':
                 this.addUser(data.id, data.name);
@@ -271,8 +293,12 @@ export default class ClientRoom extends React.Component {
         }
     }
 
+    isIngame = () => {
+        return this.state.state == states.INGAME || this.state.state == states.GAME_OVER;
+    }
+
     gotGameState = d => {
-        if (this.state.state == states.INGAME && this.match) {
+        if (this.isIngame() && this.match) {
             this.match.gotGameState(d);
         }
     }

@@ -15,7 +15,7 @@ export default class ServerRoom {
         this.state = states.LOBBY;
 
         this.endMatchAt = 0;
-        this.endMatchDelay = 5000; //Wait 5 seconds before ending the match
+        this.endMatchDelay = 1500; //Wait 5 seconds before ending the match
 
         this.addUser(owner);
 
@@ -157,7 +157,7 @@ export default class ServerRoom {
 
         for (let u of this.users) {
             u.emit('room', {
-                type: 'endMatch'
+                type: 'matchIsOver'
             });
             u.isReady = false;
         }

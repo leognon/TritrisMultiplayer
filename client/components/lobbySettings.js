@@ -41,4 +41,18 @@ export default class LobbySettings extends React.Component {
             </div>
         );
     }
+
+    keyHandling = e => {
+        if (e.keyCode == this.props.startKey) {
+            this.props.startGame();
+        }
+    }
+
+    componentDidMount = () => {
+        window.addEventListener('keydown', this.keyHandling);
+    }
+
+    componentWillUnmount = () => {
+        window.removeEventListener('keydown', this.keyHandling);
+    }
 }
