@@ -272,6 +272,7 @@ export class Game {
                     this.lastMoveDown = this.time;
                 }
                 if (moveData.placePiece) {
+                    const pieceIsBlocked = !this.isValid(this.currentPiece);
                     const numLinesCleared = this.placePiece();
                     this.score += this.pushDownPoints;
                     this.pushDownPoints = 0;
@@ -282,7 +283,7 @@ export class Game {
                         this.addSound('clear');
                     }
 
-                    if (numLinesCleared === 0 && !this.pieceHasMoved) {
+                    if (numLinesCleared === 0 && !this.pieceHasMoved && pieceIsBlocked) {
                         this.alive = false; //A piece spawned and was not / could not be moved. Game over
                         this.addSound('topout');
                     }
@@ -298,6 +299,7 @@ export class Game {
             this.lastMoveDown = this.time;
             if (moveData.moved) this.pieceHasMoved = true;
             if (moveData.placePiece) {
+                const pieceIsBlocked = !this.isValid(this.currentPiece);
                 const numLinesCleared = this.placePiece();
                 this.score += this.pushDownPoints;
                 this.pushDownPoints = 0;
@@ -308,7 +310,7 @@ export class Game {
                     this.addSound('clear');
                 }
 
-                if (numLinesCleared === 0 && !this.pieceHasMoved) {
+                if (numLinesCleared === 0 && !this.pieceHasMoved && pieceIsBlocked) {
                     this.alive = false; //A piece spawned and was not / could not be moved. Game over
                     this.addSound('topout');
                 }

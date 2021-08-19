@@ -91,6 +91,7 @@ export default class MyGame extends ClientGame {
                     this.score += this.pushDownPoints;
                     this.pushDownPoints = 0;
 
+                    const pieceIsBlocked = !this.isValid(this.currentPiece);
                     //Place the piece
                     const numLinesCleared = this.placePiece();
                     if (numLinesCleared == 3)
@@ -101,7 +102,7 @@ export default class MyGame extends ClientGame {
                     this.zCharged = false; //After a piece is placed, don't rotate the next piece
                     this.xCharged = false;
 
-                    if (numLinesCleared === 0 && !this.pieceHasMoved) {
+                    if (numLinesCleared === 0 && !this.pieceHasMoved & pieceIsBlocked) {
                         this.alive = false; //A piece spawned and was not / could not be moved. Game over
                         this.addSound('topout');
                     }
