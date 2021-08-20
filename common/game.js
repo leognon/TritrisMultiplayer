@@ -272,21 +272,7 @@ export class Game {
                     this.lastMoveDown = this.time;
                 }
                 if (moveData.placePiece) {
-                    const pieceIsBlocked = !this.isValid(this.currentPiece);
-                    const numLinesCleared = this.placePiece();
-                    this.score += this.pushDownPoints;
-                    this.pushDownPoints = 0;
-
-                    if (numLinesCleared == 3)
-                        this.addSound('tritris');
-                    else if (numLinesCleared > 0) {
-                        this.addSound('clear');
-                    }
-
-                    if (numLinesCleared === 0 && !this.pieceHasMoved && pieceIsBlocked) {
-                        this.alive = false; //A piece spawned and was not / could not be moved. Game over
-                        this.addSound('topout');
-                    }
+                    this.placePiece();
                 }
                 this.redraw = true;
             }
@@ -299,21 +285,7 @@ export class Game {
             this.lastMoveDown = this.time;
             if (moveData.moved) this.pieceHasMoved = true;
             if (moveData.placePiece) {
-                const pieceIsBlocked = !this.isValid(this.currentPiece);
-                const numLinesCleared = this.placePiece();
-                this.score += this.pushDownPoints;
-                this.pushDownPoints = 0;
-
-                if (numLinesCleared == 3)
-                    this.addSound('tritris');
-                else if (numLinesCleared > 0) {
-                    this.addSound('clear');
-                }
-
-                if (numLinesCleared === 0 && !this.pieceHasMoved && pieceIsBlocked) {
-                    this.alive = false; //A piece spawned and was not / could not be moved. Game over
-                    this.addSound('topout');
-                }
+                this.placePiece();
             }
             this.redraw = true;
         }
@@ -345,6 +317,9 @@ export class Game {
     }
 
     placePiece() {
+        //Before its placed and lines are cleared
+        const pieceIsBlocked = !this.isValid(this.currentPiece);
+
         this.grid.addPiece(this.currentPiece);
         const row = this.currentPiece.getBottomRow();
 
@@ -359,11 +334,29 @@ export class Game {
         this.spawnNextPiece = this.time + entryDelay;
 
         this.currentPiece = null; //There is an entry delay for the next piece
+
+        this.score += this.pushDownPoints;
+        this.pushDownPoints = 0;
+
+        //Topout if the current piece isn't moved and its blocked
+        //However, if lines are cleared the the current piece isn't blocked keep going
+        if ((numLinesCleared === 0 || pieceIsBlocked) && (!this.pieceHasMoved && pieceIsBlocked)) {
+            this.alive = false; //A piece spawned and was not / could not be moved. Game over
+            this.animatingLines = [];
+            this.animatingUntil = -Infinity;
+            this.addSound('topout');
+        } else {
+            if (numLinesCleared == 3)
+                this.addSound('tritris');
+            else if (numLinesCleared > 0) {
+                this.addSound('clear');
+            }
+        }
         return numLinesCleared;
     }
 
     spawnPiece() {
-        if (this.bag.length == []) {
+        if (this.bag.length === 0) {
             for (let i = 0; i < this.piecesJSON.length; i++) {
                 this.bag.push(i); //Refill the bag with each piece
             }
