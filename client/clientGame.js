@@ -228,6 +228,12 @@ export default class ClientGame extends Game {
         if (this.currentPiece) {
             this.currentPiece.show(p5, x, y, cellW, cellH, pieceImages);
         }
+
+        const numGarbageLines = this.getGarbageToInsert().reduce((sum, garbage) => sum + garbage.numLines, 0);
+        const garbageHeight = numGarbageLines * cellH;
+        p5.fill(150, 50, 50);
+        p5.noStroke();
+        p5.rect(x + w, y + h - garbageHeight, cellW * 0.2, garbageHeight);
     }
 
     showNextBox(p5, x, y, w, h, scaleFactor, pieceImages) {

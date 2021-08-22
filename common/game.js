@@ -143,6 +143,11 @@ export class Game {
         this.animatingLines = []; //Which lines are being cleared/animated
         this.maxAnimationTime = 20 * msPerFrame; //How long the animation should last
 
+        this.garbageToSendId = 0;
+        this.garbageToSend = [];
+        this.garbageReceived = [];
+        this.doneGarbageId = -1; //The id of the garbage that has been added to the meter
+
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
         this.latestState = new GameState(this); //The game state with the highest input id completed
@@ -185,6 +190,16 @@ export class Game {
         this.spawnNextPiece = state.spawnNextPiece;
         this.animatingUntil = state.animatingUntil;
         this.animatingLines = state.animatingLines;
+        
+        this.garbageToSendId = state.garbageToSendId;
+        this.garbageToSend = [...state.garbageToSend];
+        this.doneGarbageId = state.doneGarbageId;
+
+        //Since garbage is an external event, resetting to the latestState may delete garbage (and it won't be readded since it's external)
+        //This if statement prevents that
+        if (state.garbageReceived.length > this.garbageReceived.length) {
+            this.garbageReceived = [...state.garbageReceived]; //TODO Deep copy?
+        }
 
         this.time = state.time;
     }
@@ -352,6 +367,9 @@ export class Game {
                 this.addSound('clear');
             }
         }
+
+        this.insertGarbage();
+
         return numLinesCleared;
     }
 
@@ -415,8 +433,38 @@ export class Game {
             //Set the time for when to stop animating
             this.animatingUntil = this.time + this.maxAnimationTime;
             this.animatingLines = linesCleared; //Which lines are being animated (and cleared)
+            this.sendGarbage(linesCleared.length, this.time);
         }
         return linesCleared.length;
+    }
+
+    sendGarbage(numLines, time) { //I have cleared lines
+        console.log('Sending ' + this.garbageToSendId + ' numLines: ' + numLines + ' at time ' + time);
+        this.garbageToSend.push({
+            id: this.garbageToSendId++,
+            numLines, time
+        });
+    }
+
+    receiveGarbage(garbage) { //The match is telling me I have received garbage
+        console.log('Received garabge ', garbage);
+        this.garbageReceived.push(...garbage);
+    }
+
+    getGarbageToInsert() {
+        //TODO Add delay. So you cant get sent garbage then immediately have it placed (if the piece is too soon)
+        return this.garbageReceived.filter(g => g.id > this.doneGarbageId && g.time <= this.time);
+    }
+
+    insertGarbage() { //Add garbage lines onto the board
+        let garbageToInsert = this.getGarbageToInsert();
+        if (garbageToInsert.length > 0) {
+            this.doneGarbageId = garbageToInsert[garbageToInsert.length-1].id;
+            console.log('Insert ', garbageToInsert);
+            for (const garbage of garbageToInsert) {
+                this.grid.insertGarbage(garbage);
+            }
+        }
     }
 
     playLineClearingAnimation() {
@@ -440,7 +488,7 @@ export class Game {
         this.redraw = true;
     }
 
-    addSound(s) {
+    addSound(_) {
         //Do nohing. Sounds aren't played on the server
     }
 
@@ -570,6 +618,11 @@ class GameState {
         this.spawnNextPiece = game.spawnNextPiece;
         this.animatingUntil = game.animatingUntil;
         this.animatingLines = [...game.animatingLines];
+
+        this.garbageToSendId = game.garbageToSendId;
+        this.garbageToSend = [...game.garbageToSend];
+        this.garbageReceived = [...game.garbageReceived];
+        this.doneGarbageId = game.doneGarbageId;
 
         this.doneInputId = game.doneInputId;
     }

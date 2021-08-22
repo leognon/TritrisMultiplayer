@@ -8,6 +8,15 @@ export default class ServerGame extends Game {
 
         this.lastReceivedTime = 0; //The time of the last input received from the player
         this.lastClientMoveDown = 0; //The time of the last move down received from the client
+
+        this.lastGarbageSentId = -1; //To avoid sending duplicate garbage
+    }
+
+    getNewGarbageToSend() {
+        let notSent = this.latestState.garbageToSend.filter(g => g.id > this.lastGarbageSentId);
+        if (notSent.length > 0)
+            this.lastGarbageSentId = notSent[notSent.length-1].id;
+        return notSent;
     }
 
     physicsUpdate(forceMove) {
@@ -15,7 +24,7 @@ export default class ServerGame extends Game {
         if (!this.alive) return;
         this.updateToTime(Date.now() - this.startTime, true);
         //TODO Make this condition better. 10 seconds will result in an instant top out no matter what...
-        const maxTime = 10 * 1000; //If nothing is received for 3 seconds, it will update automatically
+        const maxTime = 10 * 1000; //If nothing is received for 10 seconds, it will update automatically
         const maxMoveDownTime = this.pieceSpeed*2 + maxTime; //TODO Idk what the formula for this should be. Also, is this even necessary? People can still cheat by lengthening the time between move downs
         if (forceMove || this.time - maxTime >= this.lastReceivedTime || this.time - maxMoveDownTime >= this.lastClientMoveDown) {
             //If no inputs recieved for 7 seconds, force the state to update

@@ -54,6 +54,21 @@ export class Grid {
         return linesCleared;
     }
 
+    insertGarbage(garbage) {
+        let newGrid = this.grid.slice(garbage.numLines, this.grid.length);
+        for (let i = 0; i < garbage.numLines; i++) {
+            let newRow = [];
+            for (let j = 0; j < this.w; j++) {
+                if (j === this.w-1) //The last column
+                    newRow.push(new GridCell([[0,0],[1,0]], 7));
+                else
+                    newRow.push(new GridCell([[1,0],[0,1]], 7));
+            }
+            newGrid.push(newRow);
+        }
+        this.grid = newGrid;
+    }
+
     removeRightTri(row, col) {
         if (col < 0 || col >= this.w) return;
         this.grid[row][col].removeRightTri();

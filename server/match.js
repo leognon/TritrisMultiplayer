@@ -40,6 +40,18 @@ export default class ServerMatch {
         for (const p of this.players) {
             p.physicsUpdate();
         }
+        for (const p of this.players) {
+            let garbageToSend = p.getNewGarbageToSend();
+            if (garbageToSend.length > 0) {
+                this.sendGarbage(p, garbageToSend);
+            }
+        }
+    }
+
+    sendGarbage(fromPlayer, garbageToSend) {
+        let otherPlayers = this.players.filter(p => p !== fromPlayer);
+        let sendTo = otherPlayers[0];
+        sendTo.receiveGarbage(garbageToSend);
     }
 
     //Sends data to the clients
@@ -94,6 +106,14 @@ class ServerPlayer {
 
     gotInputs(data) {
         this.serverGame.gotInputs(data);
+    }
+
+    receiveGarbage(garbage) {
+        this.serverGame.receiveGarbage(garbage);
+    }
+
+    getNewGarbageToSend() {
+        return this.serverGame.getNewGarbageToSend();
     }
 
     getGameStateAndInputs() {

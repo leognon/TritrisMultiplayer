@@ -299,6 +299,7 @@ function loadPieces(spriteSheet) {
         }
     }
     pieceImages.push(load4Triangles(0, 3, spriteSheet)); //The white ninja
+    pieceImages.push(load4Triangles(1, 3, spriteSheet)); //The grey triangle
 
     function load4Triangles(i, j, piecesImage) { //Aaaaaah a function inside a function!!!
         const triWidth = piecesImage.width / 8;
