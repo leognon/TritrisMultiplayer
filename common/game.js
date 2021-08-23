@@ -147,6 +147,9 @@ export class Game {
         this.garbageToSend = [];
         this.garbageReceived = [];
         this.doneGarbageId = -1; //The id of the garbage that has been added to the meter
+        this.garbageDelayTime = 5000; //Once garbage is received, it wont be placed for at least a few seconds
+        this.garbageMeterWaiting = []; //Lines of garbage that are still waiting to be inserted
+        this.garbageMeterReady = []; //Lines of garbage the will be inserted when the piece is placed
 
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
@@ -190,16 +193,22 @@ export class Game {
         this.spawnNextPiece = state.spawnNextPiece;
         this.animatingUntil = state.animatingUntil;
         this.animatingLines = state.animatingLines;
-        
+
         this.garbageToSendId = state.garbageToSendId;
-        this.garbageToSend = [...state.garbageToSend];
+        //this.garbageToSend = [...state.garbageToSend];
+        this.garbageToSend = [];
+        for (const g of state.garbageToSend) {
+            this.garbageToSend.push(Garbage.deserialize(g));
+        }
         this.doneGarbageId = state.doneGarbageId;
 
         //Since garbage is an external event, resetting to the latestState may delete garbage (and it won't be readded since it's external)
         //This if statement prevents that
         if (state.garbageReceived.length > this.garbageReceived.length) {
-            this.garbageReceived = [...state.garbageReceived]; //TODO Deep copy?
+            this.garbageReceived = state.garbageReceived.map(g => Garbage.deserialize(g));
         }
+        this.garbageMeterWaiting = state.garbageMeterWaiting.map(g => Garbage.deserialize(g));
+        this.garbageMeterReady = state.garbageMeterReady.map(g => Garbage.deserialize(g));
 
         this.time = state.time;
     }
@@ -245,6 +254,9 @@ export class Game {
                 this.updateGameState();
             }
         }
+        if (this.doneGarbageId > this.latestState.doneGarbageId) {
+            this.updateGameState();
+        }
     }
 
     updateGameState() {
@@ -263,6 +275,21 @@ export class Game {
             const playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
             if (playSound) {
                 this.addSound('levelup');
+            }
+        }
+
+        let newGarbageWaiting = this.garbageReceived.filter(g => g.id > this.doneGarbageId && g.time <= this.time).map(g => Garbage.deserialize(g.serialize()));
+        if (newGarbageWaiting.length > 0) {
+            this.garbageMeterWaiting.push(...newGarbageWaiting); //Adds 
+            this.doneGarbageId = newGarbageWaiting[newGarbageWaiting.length - 1].id;
+        }
+        for (let i = 0; i < this.garbageMeterWaiting.length; i++) {
+            if (this.garbageMeterWaiting[i].time + this.garbageDelayTime < this.time) {
+                const newReady = this.garbageMeterWaiting[i];
+                this.garbageMeterReady.push(newReady);
+
+                this.garbageMeterWaiting.splice(i, 1);
+                i--; //Keep index correct
             }
         }
 
@@ -340,8 +367,10 @@ export class Game {
 
         //Only clear lines if the next piece is not a triangle, or the next piece is a triangle, but it is a new triplet
         let numLinesCleared = 0;
-        if (!this.piecesJSON[this.nextPieceIndex].hasOwnProperty('count') || //The next piece comes out once (a new sequence is starting)
-            this.nextPieceCount === this.piecesJSON[this.nextPieceIndex].count) { //A new sequence is starting
+        const shouldClearLines = !this.piecesJSON[this.nextPieceIndex].hasOwnProperty('count') || //The next piece comes out once (a new sequence is starting)
+                                 this.nextPieceCount === this.piecesJSON[this.nextPieceIndex].count; //A new sequence is starting
+
+        if (shouldClearLines) {
             numLinesCleared = this.clearLines(); //Clear any complete lines
         }
 
@@ -368,7 +397,10 @@ export class Game {
             }
         }
 
-        this.insertGarbage();
+        if (shouldClearLines) {
+            const remainingLines = this.blockGarbage(numLinesCleared);
+            this.sendGarbage(remainingLines);
+        }
 
         return numLinesCleared;
     }
@@ -380,6 +412,14 @@ export class Game {
             }
         }
         this.currentPiece = this.nextPiece; //Assign the new current piece
+
+        const shouldInsertGarbage = this.nextPieceIndex !== null &&
+                                (!this.piecesJSON[this.nextPieceIndex].hasOwnProperty('count') || //The next piece comes out once (a new sequence is starting)
+                                 this.nextPieceCount === this.piecesJSON[this.nextPieceIndex].count); //A new sequence is starting
+        if (shouldInsertGarbage) {
+            //When a new set of pieces (or just a new piece) is spawned, garbage is inserted
+            this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
+        }
         this.nextPieceCount--; //Used up one of the next pieces
 
         if (this.nextPieceCount <= 0) {
@@ -393,6 +433,7 @@ export class Game {
             } else {
                 this.nextPieceCount = 1;
             }
+
         } else {
             //Keep using the same next piece
         }
@@ -433,38 +474,50 @@ export class Game {
             //Set the time for when to stop animating
             this.animatingUntil = this.time + this.maxAnimationTime;
             this.animatingLines = linesCleared; //Which lines are being animated (and cleared)
-            this.sendGarbage(linesCleared.length, this.time);
         }
         return linesCleared.length;
     }
 
-    sendGarbage(numLines, time) { //I have cleared lines
-        console.log('Sending ' + this.garbageToSendId + ' numLines: ' + numLines + ' at time ' + time);
-        this.garbageToSend.push({
-            id: this.garbageToSendId++,
-            numLines, time
-        });
+    sendGarbage(numLines) { //I have cleared lines
+        this.garbageToSend.push(new Garbage(this.garbageToSendId++, this.time, numLines));
     }
 
     receiveGarbage(garbage) { //The match is telling me I have received garbage
-        console.log('Received garabge ', garbage);
-        this.garbageReceived.push(...garbage);
-    }
-
-    getGarbageToInsert() {
-        //TODO Add delay. So you cant get sent garbage then immediately have it placed (if the piece is too soon)
-        return this.garbageReceived.filter(g => g.id > this.doneGarbageId && g.time <= this.time);
+        for (const g of garbage) {
+            this.garbageReceived.push(Garbage.deserialize(g));
+        }
+        //this.garbageReceived.push(...garbage);
     }
 
     insertGarbage() { //Add garbage lines onto the board
-        let garbageToInsert = this.getGarbageToInsert();
-        if (garbageToInsert.length > 0) {
-            this.doneGarbageId = garbageToInsert[garbageToInsert.length-1].id;
-            console.log('Insert ', garbageToInsert);
-            for (const garbage of garbageToInsert) {
+        if (this.garbageMeterReady) { //Make sure that there is garbage (also fixes when spawning first pieces, before garbageMeterReady has been initialized)
+            for (const garbage of this.garbageMeterReady) {
                 this.grid.insertGarbage(garbage);
             }
+            this.garbageMeterReady = [];
         }
+    }
+
+    blockGarbage(numLines) {
+        const totalMeterLength = this.garbageMeterReady.length + this.garbageMeterWaiting.length;
+        for (let i = 0; i < totalMeterLength; i++) {
+            let garbage;
+            if (i < this.garbageMeterReady.length) {
+                garbage = this.garbageMeterReady[i];
+            } else {
+                garbage = this.garbageMeterWaiting[i - this.garbageMeterReady.length];
+            }
+
+            const numRemoved = Math.min(numLines, garbage.numLines);
+            garbage.numLines -= numRemoved;
+            numLines -= numRemoved;
+            if (numLines <= 0) break;
+        }
+
+        this.garbageMeterReady.filter(g => g.numLines > 0); //Remove empty garbage
+        this.garbageMeterWaiting.filter(g => g.numLines > 0);
+
+        return numLines; //How many lines are left to be sent
     }
 
     playLineClearingAnimation() {
@@ -620,9 +673,13 @@ class GameState {
         this.animatingLines = [...game.animatingLines];
 
         this.garbageToSendId = game.garbageToSendId;
-        this.garbageToSend = [...game.garbageToSend];
-        this.garbageReceived = [...game.garbageReceived];
+        //this.garbageToSend = [...game.garbageToSend];
+        this.garbageToSend = game.garbageToSend.map(g => g.serialize());
+        //this.garbageReceived = [...game.garbageReceived];
+        this.garbageReceived = game.garbageReceived.map(g => g.serialize());
         this.doneGarbageId = game.doneGarbageId;
+        this.garbageMeterWaiting = game.garbageMeterWaiting.map(g => g.serialize());
+        this.garbageMeterReady = game.garbageMeterReady.map(g => g.serialize());
 
         this.doneInputId = game.doneInputId;
     }
@@ -668,5 +725,25 @@ export class Input {
         if (inp.softDrop !== false && inp.softDrop !== true) return false;
 
         return true;
+    }
+}
+
+export class Garbage {
+    constructor(id, time, numLines) {
+        this.id = id;
+        this.time = time;
+        this.numLines = numLines;
+    }
+
+    serialize() {
+        return {
+            id: this.id,
+            time: this.time,
+            numLines: this.numLines
+        }
+    }
+
+    static deserialize(g) {
+        return new Garbage(g.id, g.time, g.numLines);
     }
 }

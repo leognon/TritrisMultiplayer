@@ -36,6 +36,10 @@ export default class ClientGame extends Game {
         return Date.now() < this.startTime;
     }
 
+    sendGarbage() {
+        //Do nothing. Garbage sending is handled server side
+    }
+
     addSound(s) {
         this.soundsToPlay[s] = true;
     }
@@ -229,11 +233,16 @@ export default class ClientGame extends Game {
             this.currentPiece.show(p5, x, y, cellW, cellH, pieceImages);
         }
 
-        const numGarbageLines = this.getGarbageToInsert().reduce((sum, garbage) => sum + garbage.numLines, 0);
-        const garbageHeight = numGarbageLines * cellH;
+        const waitingNumLines = this.garbageMeterWaiting.reduce((sum, garbage) => sum + garbage.numLines, 0);
+        const readyNumLines = this.garbageMeterReady.reduce((sum, garbage) => sum + garbage.numLines, 0);
+
+        const waitingHeight = waitingNumLines * cellH;
+        const readyHeight = readyNumLines * cellH;
+        p5.fill(150, 150, 50);
+        p5.rect(x + w, y + h - readyHeight - waitingHeight, cellW * 0.2, waitingHeight);
         p5.fill(150, 50, 50);
         p5.noStroke();
-        p5.rect(x + w, y + h - garbageHeight, cellW * 0.2, garbageHeight);
+        p5.rect(x + w, y + h - readyHeight, cellW * 0.2, readyHeight);
     }
 
     showNextBox(p5, x, y, w, h, scaleFactor, pieceImages) {
