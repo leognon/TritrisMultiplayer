@@ -371,7 +371,13 @@ export class Game {
                                  this.nextPieceCount === this.piecesJSON[this.nextPieceIndex].count; //A new sequence is starting
 
         if (shouldClearLines) {
-            numLinesCleared = this.clearLines(); //Clear any complete lines
+            const numCleared = this.grid.clearLines().length; //Gets how many lines to clear
+
+            const remainingLines = this.blockGarbage(numCleared); //Cancels out garbage from lines I just cleared
+            this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
+            this.sendGarbage(remainingLines); //Send garbage
+
+            this.clearLines(); //Actually clears lines
         }
 
         const entryDelay = this.calcEntryDelay(row);
@@ -397,11 +403,6 @@ export class Game {
             }
         }
 
-        if (shouldClearLines) {
-            const remainingLines = this.blockGarbage(numLinesCleared);
-            this.sendGarbage(remainingLines);
-        }
-
         return numLinesCleared;
     }
 
@@ -412,14 +413,6 @@ export class Game {
             }
         }
         this.currentPiece = this.nextPiece; //Assign the new current piece
-
-        const shouldInsertGarbage = this.nextPieceIndex !== null &&
-                                (!this.piecesJSON[this.nextPieceIndex].hasOwnProperty('count') || //The next piece comes out once (a new sequence is starting)
-                                 this.nextPieceCount === this.piecesJSON[this.nextPieceIndex].count); //A new sequence is starting
-        if (shouldInsertGarbage) {
-            //When a new set of pieces (or just a new piece) is spawned, garbage is inserted
-            this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
-        }
         this.nextPieceCount--; //Used up one of the next pieces
 
         if (this.nextPieceCount <= 0) {
