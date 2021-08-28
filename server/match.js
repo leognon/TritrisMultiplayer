@@ -40,10 +40,12 @@ export default class ServerMatch {
         for (const p of this.players) {
             p.physicsUpdate();
         }
-        for (const p of this.players) {
-            let garbageToSend = p.getNewGarbageToSend();
-            if (garbageToSend.length > 0) {
-                this.sendGarbage(p, garbageToSend);
+        if (this.settings.versus) {
+            for (const p of this.players) {
+                let garbageToSend = p.getNewGarbageToSend();
+                if (garbageToSend.length > 0) {
+                    this.sendGarbage(p, garbageToSend);
+                }
             }
         }
     }
@@ -95,6 +97,7 @@ class ServerPlayer {
     }
 
     physicsUpdate() {
+        //TODO What if they disconnect and rejoin soon after? Maybe not force move yet
         this.serverGame.physicsUpdate(this.client.isDisconnected());
     }
 

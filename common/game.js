@@ -37,6 +37,21 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *      [ ] Bitris
  *      [ ] Invisible-Tris
  *      [ ] No next
+ *      [ ] Versus Mode
+ *          [ ] Send garbage
+ *              [X] Double sends 1 line, Tritris sends 3 lines
+ *              [ ] Spins send lines?
+ *              [ ] A tritris with multiple phases adds difficult
+ *              [ ] Combos
+ *                  [ ] Back to back tritris
+ *              [ ] Depending on how difficult the send was, make garbage received difficult
+ *                  [X] Random open column
+ *                  [ ] Open columns in different places
+ *          [ ] 180 button
+ *          [ ] Hard drop
+ *          [ ] Incremental level increase (every 30 seconds)
+ *          [ ] Unclearable garbage forces topout eventually
+ *          [ ] Send garbage to another random person
  *  How should level starts be chosen?
  *  Database
  *      Save games / replay games
@@ -142,6 +157,8 @@ export class Game {
         this.animatingUntil = 0; //How long until the line clear animation is done
         this.animatingLines = []; //Which lines are being cleared/animated
         this.maxAnimationTime = 20 * msPerFrame; //How long the animation should last
+
+        this.versus = settings.versus;
 
         this.garbageToSendId = 0;
         this.garbageToSend = [];
@@ -352,9 +369,11 @@ export class Game {
         if (shouldClearLines) {
             numLinesCleared = this.grid.clearLines().length; //Gets how many lines to clear
 
-            const remainingLines = this.blockGarbage(numLinesCleared); //Cancels out garbage from lines I just cleared
-            this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
-            this.sendGarbage(remainingLines); //Send garbage
+            if (this.versus) {
+                const remainingLines = this.blockGarbage(numLinesCleared); //Cancels out garbage from lines I just cleared
+                this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
+                this.sendGarbage(remainingLines); //Send garbage
+            }
 
             this.clearLines(); //Actually clears lines
         }
@@ -451,6 +470,7 @@ export class Game {
     }
 
     sendGarbage(numLines) { //I have cleared lines
+        if (!this.versus) return;
         const garbage = new Garbage(this.garbageToSendId++, this.time, numLines);
         if (garbage.numLines > 0) {
             this.garbageToSend.push(garbage);
@@ -458,16 +478,19 @@ export class Game {
     }
 
     receiveGarbage(garbage) { //The match is telling me I have received garbage
+        if (!this.versus) return;
         for (const g of garbage) {
             this.garbageReceived.push(Garbage.deserialize(g));
         }
     }
 
     setGarbageReceived(garbage) {
+        if (!this.versus) return;
         this.garbageReceived = garbage.map(g => Garbage.deserialize(g));
     }
 
     insertGarbage() { //Add garbage lines onto the board
+        if (!this.versus) return;
         if (this.garbageMeterReady) { //Make sure that there is garbage (also fixes when spawning first pieces, before garbageMeterReady has been initialized)
             for (const garbage of this.garbageMeterReady) {
                 this.grid.insertGarbage(garbage);

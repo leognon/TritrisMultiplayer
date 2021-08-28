@@ -128,6 +128,11 @@ export default class ServerRoom {
             return;
         }
 
+        if (settings.versus !== false && settings.versus !== true) {
+            this.owner.emit('msg', { msg: 'Please check the versus checkbox correctly.' });
+            return;
+        }
+
         const players = this.users.filter(u => !u.isSpectator).map(u => u.client);
 
         if (players.length === 0) {

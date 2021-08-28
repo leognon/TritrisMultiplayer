@@ -20,7 +20,8 @@ export default class ClientRoom extends React.Component {
             settings: {
                 startLevel: 0,
                 use4x8: false,
-                quadtris: false
+                quadtris: false,
+                versus: true //TODO Make this false by default
             },
             roomIsLocked: false,
         }
@@ -65,12 +66,19 @@ export default class ClientRoom extends React.Component {
                         <LobbySettings
                             startGame={this.startGame}
                             startKey={this.props.controls['start'].key}
+
                             startLevel={this.state.settings.startLevel}
                             startLevelChanged={this.startLevelChanged}
+
                             use4x8={this.state.settings.use4x8}
                             use4x8Changed={this.use4x8Changed}
+
                             quadtris={this.state.settings.quadtris}
                             quadtrisChanged={this.quadtrisChanged}
+
+                            versus={this.state.settings.versus}
+                            versusChanged={this.versusChanged}
+
                             toggleLockRoom={this.toggleLockRoom}
                             roomIsLocked={this.state.roomIsLocked}
                         />
@@ -177,6 +185,12 @@ export default class ClientRoom extends React.Component {
     quadtrisChanged = evnt => {
         const newSettings = { ...this.state.settings };
         newSettings.quadtris = evnt.target.checked;
+        this.setState({ settings: newSettings });
+    }
+
+    versusChanged = evnt => {
+        const newSettings = { ...this.state.settings };
+        newSettings.versus = evnt.target.checked;
         this.setState({ settings: newSettings });
     }
 

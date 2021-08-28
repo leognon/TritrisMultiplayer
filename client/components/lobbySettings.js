@@ -32,6 +32,13 @@ export default class LobbySettings extends React.Component {
                 />
                 <br />
 
+                <label htmlFor="versus">Versus: </label>
+                <input id="versus" type="checkbox"
+                    checked={this.props.versus}
+                    onChange={this.props.versusChanged}
+                />
+                <br />
+
                 <button onClick={this.props.toggleLockRoom}>
                     { this.props.roomIsLocked ? 'Unlock room' : 'Lock room' }
                 </button>

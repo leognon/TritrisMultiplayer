@@ -103,6 +103,9 @@ io.on('connection', socket => {
 
     client.on('disconnect', () => {
         if (!client.leftPage) {
+            //TODO Add offline status and ability for owner to kick people out of room
+            //Currently, if someone disconnects while ingame for over 10 seconds, then reconnect they think they are in game, but they've left the room
+            //Only remove from room if in lobby?
             console.log(`Client ${client.getId()} disconnected`);
             setTimeout(() => {
                 if (client.socket.disconnected) {
