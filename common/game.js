@@ -451,7 +451,10 @@ export class Game {
     }
 
     sendGarbage(numLines) { //I have cleared lines
-        this.garbageToSend.push(new Garbage(this.garbageToSendId++, this.time, numLines));
+        const garbage = new Garbage(this.garbageToSendId++, this.time, numLines);
+        if (garbage.numLines > 0) {
+            this.garbageToSend.push(garbage);
+        }
     }
 
     receiveGarbage(garbage) { //The match is telling me I have received garbage
@@ -719,21 +722,39 @@ export class Input {
 }
 
 export class Garbage {
-    constructor(id, time, numLines) {
-        this.id = id;
-        this.time = time;
-        this.numLines = numLines;
+    constructor(a, time, numLinesCleared) {
+        if (a instanceof Object) { //Deserializing
+            this.id = a.id;
+            this.time = a.time;
+            this.numLines = a.numLines;
+            this.openCol = a.openCol;
+            this.openOrientation = a.openOrientation;
+        } else { //Creating new
+            const id = a;
+            this.id = id;
+            this.time = time;
+
+            this.numLines = 0;
+            if (numLinesCleared == 2) this.numLines = 1; //Double sends 1 line
+            else if (numLinesCleared == 3) this.numLines = 3; //Tritris sends 3 lines
+            else if (numLinesCleared == 4) this.numLines = 5; //Quadtris sends 5 lines
+
+            this.openCol = Math.random(); //Which col should be open. This will become an integer based on the grid size once garbage is inserted
+            this.openOrientation = Math.random(); //Which orientation the open triangles should be in
+        }
     }
 
     serialize() {
         return {
             id: this.id,
             time: this.time,
-            numLines: this.numLines
+            numLines: this.numLines,
+            openCol: this.openCol,
+            openOrientation: this.openOrientation
         }
     }
 
     static deserialize(g) {
-        return new Garbage(g.id, g.time, g.numLines);
+        return new Garbage(g);
     }
 }

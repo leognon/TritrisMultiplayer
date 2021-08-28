@@ -55,14 +55,20 @@ export class Grid {
     }
 
     insertGarbage(garbage) {
+        const openCol = Math.floor(garbage.openCol * this.w);
         let newGrid = this.grid.slice(garbage.numLines, this.grid.length);
         for (let i = 0; i < garbage.numLines; i++) {
             let newRow = [];
             for (let j = 0; j < this.w; j++) {
-                if (j === this.w-1) //The last column
-                    newRow.push(new GridCell([[0,0],[1,0]], 7));
-                else
+                if (j === openCol) {
+                    if (garbage.openOrientation < 0.5) {
+                        newRow.push(new GridCell([[0,0],[1,0]], 7));
+                    } else {
+                        newRow.push(new GridCell([[0,0],[0,1]], 7));
+                    }
+                } else {
                     newRow.push(new GridCell([[1,0],[0,1]], 7));
+                }
             }
             newGrid.push(newRow);
         }
