@@ -51,8 +51,11 @@ export default class ServerMatch {
     }
 
     sendGarbage(fromPlayer, garbageToSend) {
-        let otherPlayers = this.players.filter(p => p !== fromPlayer);
-        let sendTo = otherPlayers[0];
+        const alivePlayers = this.players.filter(p => p.serverGame.isAlive());
+        let otherPlayers = alivePlayers.filter(p => p !== fromPlayer);
+        if (otherPlayers.length === 0) otherPlayers = alivePlayers; //Send garbage to yourself
+
+        let sendTo = otherPlayers[Math.floor(Math.random() * otherPlayers.length)];
         sendTo.receiveGarbage(garbageToSend);
     }
 

@@ -51,7 +51,7 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *          [ ] Hard drop
  *          [ ] Incremental level increase (every 30 seconds)
  *          [ ] Unclearable garbage forces topout eventually
- *          [ ] Send garbage to another random person
+ *          [X] Send garbage to another random person
  *  How should level starts be chosen?
  *  Database
  *      Save games / replay games
