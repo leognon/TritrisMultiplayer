@@ -65,6 +65,9 @@ export default class OtherGame extends ClientGame {
 
         //The below code finds a game state that is just before desired time. It then sets it's state to that, then updates to be exactly at desTime
         if (data.changed) this.previousStates.push(gameData);
+
+        this.setGarbageReceived(data.garbageReceived);
+
         if (!this.frozen) {
             let mostRecentStateBeforeDesTimeIndex = -1; //That's quite a long name...
             for (let i = 0; i < this.previousStates.length; i++) {

@@ -43,20 +43,7 @@ export default class MyGame extends ClientGame {
                 this.addSound('levelup');
         }
 
-        let newGarbageWaiting = this.garbageReceived.filter(g => g.id > this.doneGarbageId && g.time <= this.time).map(g => Garbage.deserialize(g.serialize()));
-        if (newGarbageWaiting.length > 0) {
-            this.garbageMeterWaiting.push(...newGarbageWaiting); //Adds 
-            this.doneGarbageId = newGarbageWaiting[newGarbageWaiting.length - 1].id;
-        }
-        for (let i = 0; i < this.garbageMeterWaiting.length; i++) {
-            if (this.garbageMeterWaiting[i].time + this.garbageDelayTime < this.time) {
-                const newReady = this.garbageMeterWaiting[i];
-                this.garbageMeterReady.push(newReady);
-
-                this.garbageMeterWaiting.splice(i, 1);
-                i--; //Keep index correct
-            }
-        }
+        this.updateGarbageMeter();
 
         if (this.shouldSpawnPiece()) {
             this.spawnPiece();
@@ -176,6 +163,7 @@ export default class MyGame extends ClientGame {
 
     gotGameState(myData) {
         const myGameData = myData.gameData;
+        const myGarbageReceived = myData.garbageReceived;
 
         //Remove inputs already processed by the server
         this.doneInputId = myGameData.doneInputId;
@@ -186,6 +174,7 @@ export default class MyGame extends ClientGame {
         }
 
         this.goToGameState(myGameData);
+        this.setGarbageReceived(myGarbageReceived);
 
         this.updateToTime(Date.now() - this.startTime, false); //Recatch-up the game
         for (const s in this.soundsToPlay) this.soundsToPlay[s] = false; //Only play new sounds

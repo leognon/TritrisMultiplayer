@@ -81,12 +81,14 @@ export default class ServerGame extends Game {
          return true;
     }
 
-    getGameStateAndInputs() {
+    getGameStateAndInputs() { //Sent to otherGame
         let data = {
             changed: false,
-            gameData: {
+            gameData: { //TODO Even if not changed, send new garbage stuff
                 time: (Date.now() - this.startTime),
             },
+            garbageReceived: this.garbageReceived.map(g => g.serialize()),
+            //TODO Don't emit already sent garbage. Only when there is new. Also fix for getGameState()
             inputs: this.getCurrentInputs()
         };
         if (this.latestState.time > this.lastSentTime) {
@@ -106,11 +108,11 @@ export default class ServerGame extends Game {
         return notSent.map(inp => inp.encode());
     }
 
-
     //Gets the current game state to be applied to myGame
     getGameState() { //TODO Redo this system
         return {
-            gameData: this.latestState
+            gameData: this.latestState,
+            garbageReceived: this.garbageReceived.map(g => g.serialize()),
         }
     }
 }
