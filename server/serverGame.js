@@ -43,7 +43,7 @@ export default class ServerGame extends Game {
             if (!added) continue; //Invalid input
 
             if (inp.time > latestTime) latestTime = inp.time;
-            if (inp.vertDir && inp.time > this.lastClientMoveDown) {
+            if ((inp.vertDir || (this.versus && inp.hardDrop)) && inp.time > this.lastClientMoveDown) {
                 this.lastClientMoveDown = inp.time;
             }
         }

@@ -17,6 +17,7 @@ export default class MyGame extends ClientGame {
         this.zCharged = false;
         this.xWasPressed = false;
         this.xCharged = false;
+        this.hardDropWasPressed = false;
         this.controls = myControls;
 
         this.inputsQueue = []; //Fill up a queue of inputs to be sent to the server at regular intervals
@@ -55,20 +56,23 @@ export default class MyGame extends ClientGame {
 
         if (this.currentPiece !== null) {
             //If either left is pressed or right is pressed and down isn't
-            const { horzDirection, rotation, moveDown, softDrop } = this.getCurrentInputs(p5);
-            if (horzDirection != 0 || rotation != 0 || moveDown) {
+            const { horzDirection, rotation, moveDown, softDrop, hardDrop } = this.getCurrentInputs(p5);
+            if (horzDirection != 0 || rotation != 0 || moveDown || hardDrop) {
                 this.redraw = true; //A piece has moved, so the game must be redrawn
-                const moveData = this.movePiece(horzDirection, rotation, moveDown);
+                const moveData = this.movePiece(horzDirection, rotation, moveDown, hardDrop);
 
                 if (moveData.moved) {
                     this.pieceHasMoved = true;
                 }
                 if (moveData.playSound) {
-                    this.addSound('move');
-                    //Play move sound
+                    this.addSound('move'); //Play move sound
                 }
                 if (moveData.chargeDas) {
                     this.das = this.dasMax;
+                }
+                if (hardDrop) {
+                    this.leftWasPressed = true; //This ensures DAS is charged properly. If these aren't set, it will think the next piece was tapped, setting DAS to 0
+                    this.rightWasPressed = true;
                 }
                 if (moveData.rotated) {
                     this.zCharged = false;
@@ -80,7 +84,7 @@ export default class MyGame extends ClientGame {
                 }
 
                 const currentTime = this.time;
-                const inp = new Input(this.inputId++, currentTime, horzDirection, moveDown, rotation, softDrop);
+                const inp = new Input(this.inputId++, currentTime, horzDirection, moveDown, rotation, softDrop, hardDrop);
                 this.addInput(inp);
 
                 //If the piece was able to just move down, reset the timer
@@ -136,8 +140,11 @@ export default class MyGame extends ClientGame {
         else if (zPressed) rotation = -1;
 
         let softDrop = false;
+        let hardDrop = false;
         let pieceSpeed = this.pieceSpeed; //The default piece speed based on the current level
-        if (p5.keyIsDown(this.controls.down.key)) {
+        if (this.versus && p5.keyIsDown(this.controls.hardDrop.key) && !this.hardDropWasPressed) {
+            hardDrop = true;
+        } else if (p5.keyIsDown(this.controls.down.key)) {
             //Pressing down moves at 19 speed
             pieceSpeed = Math.min(pieceSpeed, this.softDropSpeed);
             softDrop = true;
@@ -148,11 +155,12 @@ export default class MyGame extends ClientGame {
         this.rightWasPressed = p5.keyIsDown(this.controls.right.key);
         this.zWasPressed = p5.keyIsDown(this.controls.counterClock.key); //If Z was pressed
         this.xWasPressed = p5.keyIsDown(this.controls.clock.key); //If X was pressed
+        this.hardDropWasPressed = p5.keyIsDown(this.controls.hardDrop.key);
         if (!p5.keyIsDown(this.controls.counterClock.key)) this.zCharged = false; //If the player is pressing anymore, they no longer want to rotate, so don't charge
         if (!p5.keyIsDown(this.controls.clock.key)) this.xCharged = false;
 
         return {
-            horzDirection, rotation, moveDown, softDrop
+            horzDirection, rotation, moveDown, softDrop, hardDrop
         };
     }
 

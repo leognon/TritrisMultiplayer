@@ -8,6 +8,7 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *  Add sound effect for countdown when game is starting
  *  Don't make screens swap with 3 players
  *  Make 4 players display like 3 players (without any small)
+ *  [ ] Ghost Piece
  *  [X] Better score display - Show score differential
  *  [ ] Fix number of points for double (should be 300)
  *  [ ] Figure out deltaTime stuff - Don't update deltaTime after receiving data on myGame?
@@ -41,7 +42,7 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *          [ ] Send garbage
  *              [X] Double sends 1 line, Tritris sends 3 lines
  *              [ ] Spins send lines?
- *              [ ] A tritris with multiple phases adds difficult
+ *              [ ] A tritris with multiple phases adds difficulty
  *              [ ] Combos
  *                  [ ] Back to back tritris
  *              [ ] Depending on how difficult the send was, make garbage received difficult
@@ -301,10 +302,10 @@ export class Game {
         //Piece Movement
         if (this.currentPiece !== null) {
             if (input) { //It is time for the input to be performed
-                const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir);
+                const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir, input.hardDrop);
                 if (moveData.moved) this.pieceHasMoved = true;
                 if (moveData.playSound) this.addSound('move');
-                if (input.vertDir) {
+                if (input.vertDir || (this.versus && input.hardDrop)) {
                     if (input.softDrop) this.pushDownPoints++; //Pushing down
                     else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
@@ -318,7 +319,7 @@ export class Game {
         //Move down based on timer
         const shouldMoveDown = gravity && this.time >= this.lastMoveDown + this.pieceSpeed;
         if (this.currentPiece !== null && shouldMoveDown) {
-            const moveData = this.movePiece(0, 0, true);
+            const moveData = this.movePiece(0, 0, true, false);
             this.pushDownPoints = 0;
             this.lastMoveDown = this.time;
             if (moveData.moved) this.pieceHasMoved = true;
@@ -581,7 +582,25 @@ export class Game {
         }
     }
 
-    movePiece(horzDirection, rotation, moveDown) {
+    movePiece(horzDirection, rotation, moveDown, hardDrop) {
+        if (this.versus && hardDrop) {
+            let moved = false; //Incase it doesn't move down at all
+            while (this.isValid(this.currentPiece)) {
+                this.currentPiece.move(0, 1);
+                moved = true;
+                //TODO Calculate push down points for hard drop??
+            }
+            if (moved) {
+                this.currentPiece.move(0, -1); //Move it back to so it is no longer in the ground
+            }
+            return {
+                placePiece: true,
+                playSound: false,
+                rotated: false,
+                chargeDas: true, //Hard drop charges DAS
+                moved
+            }
+        }
         //Apply all transformations
         const vertDirection = moveDown ? 1 : 0;
         this.currentPiece.move(horzDirection, vertDirection);
@@ -702,13 +721,14 @@ class GameState {
 }
 
 export class Input {
-    constructor(id, time, horzDir, vertDir, rot, softDrop) {
+    constructor(id, time, horzDir, vertDir, rot, softDrop, hardDrop) {
         this.id = id;
         this.time = time;
         this.horzDir = horzDir;
         this.vertDir = vertDir;
         this.rot = rot;
         this.softDrop = softDrop;
+        this.hardDrop = hardDrop;
     }
 
     encode() {
@@ -718,13 +738,14 @@ export class Input {
             horzDir: this.horzDir,
             vertDir: this.vertDir,
             rot: this.rot,
-            softDrop: this.softDrop
+            softDrop: this.softDrop,
+            hardDrop: this.hardDrop
             //dir: this.horzDir + ',' + this.vertDir + ',' + this.rot
         }
     }
 
     static decode(data) {
-        return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot, data.softDrop);
+        return new Input(data.id, data.time, data.horzDir, data.vertDir, data.rot, data.softDrop, data.hardDrop);
     }
 
     static isValid(inp) {
@@ -733,12 +754,14 @@ export class Input {
             !inp.hasOwnProperty('horzDir') ||
             !inp.hasOwnProperty('vertDir') ||
             !inp.hasOwnProperty('rot') ||
-            !inp.hasOwnProperty('softDrop')) return false;
+            !inp.hasOwnProperty('softDrop') ||
+            !inp.hasOwnProperty('hardDrop')) return false;
         if (!inp.hasOwnProperty('time') || inp.time < 0) return false;
         if (inp.horzDir !== 0 && inp.horzDir !== -1 && inp.horzDir !== 1) return false;
         if (inp.vertDir !== false && inp.vertDir !== true) return false;
         if (inp.rot !== 0 && inp.rot !== -1 && inp.rot !== 1 && inp.rot !== 2) return false;
         if (inp.softDrop !== false && inp.softDrop !== true) return false;
+        if (inp.hardDrop !== false && inp.hardDrop !== true) return false;
 
         return true;
     }

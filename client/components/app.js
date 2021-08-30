@@ -152,6 +152,10 @@ class App extends React.Component {
                 key: 40, //Down arrow
                 controlName: "Down"
             },
+            hardDrop: {
+                key: 32, //Space
+                controlName: "Hard Drop (versus mode)"
+            },
             start: {
                 key: 13, //Enter
                 controlName: "Start / End Game"
