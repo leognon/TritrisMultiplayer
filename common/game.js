@@ -49,8 +49,8 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *                  [X] Random open column
  *                  [ ] Open columns in different places
  *          [ ] 180 button
- *          [ ] Hard drop
- *          [ ] Incremental level increase (every 30 seconds)
+ *          [X] Hard drop
+ *          [X] Incremental level increase (every 30 seconds)
  *          [ ] Unclearable garbage forces topout eventually
  *          [X] Send garbage to another random person
  *  How should level starts be chosen?
@@ -99,6 +99,8 @@ export class Game {
         this.startLevel = lvl;
         this.level = this.startLevel;
         this.lines = 0;
+        this.versusTimePerStartLevel = 3 * 60 * 1000; //3 minutes on the start level
+        this.versusTimePerLevel = 30 * 1000; //Then 30 seconds on each level after
         this.score = 0;
         this.scoreWeights = { 1: 100, 2: 200*2, 3: 400*3, 4: 800*4 };
 
@@ -364,10 +366,10 @@ export class Game {
 
         //Only clear lines if the next piece is not a triangle, or the next piece is a triangle, but it is a new triplet
         let numLinesCleared = 0;
-        const shouldClearLines = !this.piecesJSON[this.nextPieceIndex].hasOwnProperty('count') || //The next piece comes out once (a new sequence is starting)
+        const finishedPieceSequence = !this.piecesJSON[this.nextPieceIndex].hasOwnProperty('count') || //The next piece comes out once (a new sequence is starting)
                                  this.nextPieceCount === this.piecesJSON[this.nextPieceIndex].count; //A new sequence is starting
 
-        if (shouldClearLines) {
+        if (finishedPieceSequence) {
             numLinesCleared = this.grid.clearLines().length; //Gets how many lines to clear
 
             if (this.versus) {
@@ -377,6 +379,19 @@ export class Game {
             }
 
             this.clearLines(); //Actually clears lines
+
+            if (this.versus) {
+                //In versus, the level increases from the start to the next after versusTimePerStartLevel then every versusTimePerLevel
+                if (this.time > this.versusTimePerStartLevel) {
+                    const timeAfterStart = this.time - this.versusTimePerStartLevel;
+                    const numIntervalsPassed = Math.ceil(timeAfterStart / this.versusTimePerLevel);
+                    if (numIntervalsPassed + this.startLevel > this.level) {
+                        this.level = numIntervalsPassed + this.startLevel;
+                        this.setSpeed();
+                        this.addSound('levelup');
+                    }
+                }
+            }
         }
 
         const entryDelay = this.calcEntryDelay(row);
@@ -441,7 +456,7 @@ export class Game {
 
         //Increase the level after a certain amt of lines, then every 10 lines
         let playSound = false;
-        if (this.shouldIncreaseLevel()) {
+        if (!this.versus && this.shouldIncreaseLevel()) {
             this.level++;
             playSound = true;
             this.setSpeed();
