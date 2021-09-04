@@ -54,6 +54,22 @@ export class Grid {
         return linesCleared;
     }
 
+    //If all the rows except for the ones in exlcuding are empty
+    isEmpty(exlcuding) {
+        for (let i = 0; i < this.h; i++) {
+            if (exlcuding.includes(i)) continue;
+            if (!this.isRowEmpty(i)) return false;
+        }
+        return true;
+    }
+
+    isRowEmpty(i) {
+        for (let j = 0; j < this.w; j++) {
+            if (!this.grid[i][j].isEmpty()) return false;
+        }
+        return true;
+    }
+
     insertGarbage(garbage) {
         const openCol = Math.floor(garbage.openCol * this.w);
         let newGrid = this.grid.slice(garbage.numLines, this.grid.length);
@@ -205,6 +221,11 @@ export class GridCell {
     removeLeftTri() {
         this.tris[0][0] = null;
         this.tris[1][0] = null;
+    }
+
+    isEmpty() {
+        return this.tris[0][0] === null && this.tris[1][1] === null &&
+            this.tris[1][0] === null && this.tris[0][1] === null;
     }
 
     isFull() {

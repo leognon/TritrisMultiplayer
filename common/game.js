@@ -5,6 +5,8 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
 /* TODO
  *
  *  Optional score differential
+ *      Make the colors still show the difference
+ *  Fix otherGame when no inputs are received. Pieces drop and it looks like they topped out. Freeze instead?
  *  Add sound effect for countdown when game is starting
  *  Don't make screens swap with 3 players
  *  Make 4 players display like 3 players (without any small)
@@ -43,6 +45,7 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *              [X] Double sends 1 line, Tritris sends 3 lines
  *              [ ] Spins send lines?
  *              [ ] A tritris with multiple phases adds difficulty
+ *              [X] Perfect Clear
  *              [ ] Combos
  *                  [ ] Back to back tritris
  *              [ ] Depending on how difficult the send was, make garbage received difficult
@@ -162,6 +165,22 @@ export class Game {
         this.maxAnimationTime = 20 * msPerFrame; //How long the animation should last
 
         this.versus = settings.versus;
+
+        //There are 2 types of blocking garbage
+        //Line clears
+            //Clearing X lines will block X lines. If there are leftover lines, those will be converted by the garbageWeight table to be sent
+        //Bonus clears
+            //A perfect clear will give 5 additional blocking lines. If X of those are used to blocked, the remaining ones are sent
+        this.garbageWeights = {
+            0: 0,
+            1: 0, //A single sends nothing
+            2: 1, //A double sends 1 line
+            3: 3, //A tritris sends 3 lines of garbage
+            4: 5,  //A quadtris sends 5 lines of garbage
+        }
+        this.bonusGarbageWeights = {
+            perfectClear: 5
+        }
 
         this.garbageToSendId = 0;
         this.garbageToSend = [];
@@ -371,15 +390,20 @@ export class Game {
         if (finishedPieceSequence) {
             numLinesCleared = this.grid.clearLines().length; //Gets how many lines to clear
 
-            if (this.versus) {
-                const remainingLines = this.blockGarbage(numLinesCleared); //Cancels out garbage from lines I just cleared
-                this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
-                this.sendGarbage(remainingLines); //Send garbage
-            }
-
             this.clearLines(); //Actually clears lines
 
             if (this.versus) {
+                const numLinesClearedToSend = this.getGarbageWeights(this.blockGarbage(numLinesCleared));
+
+                let bonusLinesCleared = 0;
+                if (this.grid.isEmpty(this.animatingLines)) bonusLinesCleared += this.bonusGarbageWeights['perfectClear']; //10 Lines for a perfect clear
+                const bonusLinesToSend = this.blockGarbage(bonusLinesCleared)
+
+                const numLinesToSend = numLinesClearedToSend + bonusLinesToSend;
+
+                this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
+                this.sendGarbage(numLinesToSend); //Send garbage
+
                 //In versus, the level increases from the start to the next after versusTimePerStartLevel then every versusTimePerLevel
                 if (this.time > this.versusTimePerStartLevel) {
                     const timeAfterStart = this.time - this.versusTimePerStartLevel;
@@ -484,7 +508,7 @@ export class Game {
         return linesCleared.length;
     }
 
-    sendGarbage(numLines) { //I have cleared lines
+    sendGarbage(numLines, bonusLines) { //I have cleared lines
         if (!this.versus) return;
         const garbage = new Garbage(this.garbageToSendId++, this.time, numLines);
         if (garbage.numLines > 0) {
@@ -534,6 +558,13 @@ export class Game {
         this.garbageMeterWaiting.filter(g => g.numLines > 0);
 
         return numLines; //How many lines are left to be sent
+    }
+
+    getGarbageWeights(numLines) {
+        if (this.garbageWeights.hasOwnProperty(numLines)) {
+            return this.garbageWeights[numLines];
+        }
+        return 0;
     }
 
     updateGarbageMeter() {
@@ -782,7 +813,7 @@ export class Input {
 }
 
 export class Garbage {
-    constructor(a, time, numLinesCleared) {
+    constructor(a, time, numLinesCleared, bonusLines) {
         if (a instanceof Object) { //Deserializing
             this.id = a.id;
             this.time = a.time;
@@ -794,10 +825,7 @@ export class Garbage {
             this.id = id;
             this.time = time;
 
-            this.numLines = 0;
-            if (numLinesCleared == 2) this.numLines = 1; //Double sends 1 line
-            else if (numLinesCleared == 3) this.numLines = 3; //Tritris sends 3 lines
-            else if (numLinesCleared == 4) this.numLines = 5; //Quadtris sends 5 lines
+            this.numLines = numLinesCleared;
 
             this.openCol = Math.random(); //Which col should be open. This will become an integer based on the grid size once garbage is inserted
             this.openOrientation = Math.random(); //Which orientation the open triangles should be in
