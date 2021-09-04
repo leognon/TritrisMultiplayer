@@ -29,8 +29,14 @@ export default class MyGame extends ClientGame {
     clientUpdate(p5) {
         const deltaTime = Date.now() - this.lastFrame;
 
-        //Dont update if not alive or during countdown
-        if (!this.alive || Date.now() < this.startTime) {
+        //Dont update if not alive
+        if (!this.alive) {
+            this.lastFrame = Date.now();
+            return;
+        }
+
+        if (Date.now() < this.startTime) { //Dont update during countdown
+            this.time += deltaTime;
             this.lastFrame = Date.now();
             return;
         }
