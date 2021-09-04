@@ -28,7 +28,6 @@ export default class MyGame extends ClientGame {
 
     clientUpdate(p5) {
         const deltaTime = Date.now() - this.lastFrame;
-        this.time += deltaTime;
 
         //Dont update if not alive or during countdown
         if (!this.alive || Date.now() < this.startTime) {
@@ -36,23 +35,7 @@ export default class MyGame extends ClientGame {
             return;
         }
 
-        if (this.time <= this.animatingUntil) {
-            this.playLineClearingAnimation();
-        } else if (this.animatingLines.length > 0) {
-            let playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
-            if (playSound)
-                this.addSound('levelup');
-        }
-
-        this.updateGarbageMeter();
-
-        if (this.shouldSpawnPiece()) {
-            this.spawnPiece();
-            this.lastMoveDown = this.time;
-            this.pieceHasMoved = false;
-            this.redraw = true;
-            this.addSound('fall');
-        }
+        this._update(deltaTime);
 
         if (this.currentPiece !== null) {
             //If either left is pressed or right is pressed and down isn't
@@ -88,7 +71,7 @@ export default class MyGame extends ClientGame {
                 this.addInput(inp);
 
                 //If the piece was able to just move down, reset the timer
-                if (moveDown) {
+                if (moveDown || (this.versus && hardDrop)) {
                     if (softDrop) this.pushDownPoints++; //Pushing down
                     else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;

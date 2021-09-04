@@ -278,28 +278,7 @@ export class Game {
     update(deltaTime, input, gravity) { //Move the game forward with a timestep of deltaTime, and perform the input if it's not null
         if (!this.alive) return;
 
-        this.time += deltaTime;
-
-        if (this.time <= this.animatingUntil) { //Line clear animation
-            this.playLineClearingAnimation();
-            this.redraw = true;
-        } else if (this.animatingLines.length > 0) { //Line clear animation finished
-            const playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
-            if (playSound) {
-                this.addSound('levelup');
-            }
-        }
-
-        this.updateGarbageMeter();
-
-        //Spawn the next piece after entry delay
-        if (this.shouldSpawnPiece()) {
-            this.spawnPiece();
-            this.lastMoveDown = this.time;
-            this.pieceHasMoved = false;
-            this.redraw = true;
-            this.addSound('fall');
-        }
+        this._update(deltaTime);
 
         //Piece Movement
         if (this.currentPiece !== null) {
@@ -315,7 +294,6 @@ export class Game {
                 if (moveData.placePiece) {
                     this.placePiece();
                 }
-                this.redraw = true;
             }
         }
         //Move down based on timer
@@ -328,7 +306,28 @@ export class Game {
             if (moveData.placePiece) {
                 this.placePiece();
             }
-            this.redraw = true;
+        }
+    }
+
+    _update(deltaTime) {
+        this.time += deltaTime;
+
+        if (this.time <= this.animatingUntil) {
+            this.playLineClearingAnimation();
+        } else if (this.animatingLines.length > 0) {
+            let playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
+            if (playSound)
+                this.addSound('levelup');
+        }
+
+        this.updateGarbageMeter();
+
+        //Spawn the next piece after entry delay
+        if (this.shouldSpawnPiece()) {
+            this.spawnPiece();
+            this.lastMoveDown = this.time;
+            this.pieceHasMoved = false;
+            this.addSound('fall');
         }
     }
 
