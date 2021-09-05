@@ -40,6 +40,12 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *      [ ] Bitris
  *      [ ] Invisible-Tris
  *      [ ] No next
+ *      [ ] Different Types of RNG
+ *          [ ] 7-bag
+ *          [ ] 14-bag
+ *          [ ] True Random
+ *          [ ] No Ninja
+ *          [ ] Mastery Mode (Ninjas get less frequent)
  *      [ ] Versus Mode
  *          [ ] Send garbage
  *              [X] Double sends 1 line, Tritris sends 3 lines
@@ -401,7 +407,9 @@ export class Game {
 
                 const numLinesToSend = numLinesClearedToSend + bonusLinesToSend;
 
-                this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
+                if (numLinesCleared === 0) { //During a combo, garbage isn't inserted
+                    this.insertGarbage(); //TODO If I clear garbage that was sent to me, it gets sent back to the other player. Should this happen?
+                }
                 this.sendGarbage(numLinesToSend); //Send garbage
 
                 //In versus, the level increases from the start to the next after versusTimePerStartLevel then every versusTimePerLevel
