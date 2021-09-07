@@ -86,4 +86,8 @@ class Client {
     isDisconnected = () => {
         return this.socket.disconnected;
     }
+
+    hasLeftPage = () => {
+        return this.leftPage;
+    }
 }

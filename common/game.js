@@ -6,7 +6,7 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *
  *  Optional score differential
  *      Make the colors still show the difference
- *  Fix otherGame when no inputs are received. Pieces drop and it looks like they topped out. Freeze instead?
+ *  Fix text size jittering (Name and score text when the value changes, it resizes constantly)
  *  Add sound effect for countdown when game is starting
  *  Don't make screens swap with 3 players
  *  Make 4 players display like 3 players (without any small)

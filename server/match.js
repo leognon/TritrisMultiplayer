@@ -101,7 +101,7 @@ class ServerPlayer {
 
     physicsUpdate() {
         //TODO What if they disconnect and rejoin soon after? Maybe not force move yet
-        this.serverGame.physicsUpdate(this.client.isDisconnected());
+        this.serverGame.physicsUpdate(this.client.hasLeftPage());
     }
 
     getId() {
