@@ -149,7 +149,7 @@ export default class ClientGame extends Game {
 
         p5.fill(0);
         p5.noStroke();
-        p5.textSize(elems.bottomText.fontSize);
+        p5.textSize(elems.bottomText.textSize);
         p5.textAlign(p5.CENTER, p5.TOP);
         p5.text(this.name, elems.bottomText.x, elems.bottomText.y);
 

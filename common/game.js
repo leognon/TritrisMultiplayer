@@ -6,7 +6,6 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *
  *  Optional score differential
  *      Make the colors still show the difference
- *  Fix text size jittering (Name and score text when the value changes, it resizes constantly)
  *  Add sound effect for countdown when game is starting
  *  Don't make screens swap with 3 players
  *  Make 4 players display like 3 players (without any small)
@@ -47,6 +46,8 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *          [ ] No Ninja
  *          [ ] Mastery Mode (Ninjas get less frequent)
  *      [ ] Versus Mode
+ *          [ ] Different Display
+ *              [ ] Since score doesn't matter, show other stats?
  *          [ ] Send garbage
  *              [X] Double sends 1 line, Tritris sends 3 lines
  *              [ ] Spins send lines?
@@ -60,7 +61,6 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *          [ ] 180 button
  *          [X] Hard drop
  *          [X] Incremental level increase (every 30 seconds)
- *          [ ] Unclearable garbage forces topout eventually
  *          [X] Send garbage to another random person
  *  How should level starts be chosen?
  *  Database

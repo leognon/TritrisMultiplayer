@@ -207,7 +207,7 @@ class App extends React.Component {
 
     joinRoom = () => {
         const code = prompt('Please enter the room code to join.');
-        if (code.length === 0) {
+        if (code && code.length === 0) {
             alert('Please enter a room code');
         } else {
             this.socket.emit('room', {
