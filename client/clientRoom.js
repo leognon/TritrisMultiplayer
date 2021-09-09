@@ -415,7 +415,8 @@ class ClientMatch {
         }
 
         //The orders are different and it has been long enough to change, then change
-        if (ordersAreDiff && Date.now() > this.lastShowOrderChange + this.minChangeOrderTime) {
+        //If there are 3 players total, the order doesn't change (except for when initialized)
+        if ((this.currentOrder.length === 0 || allOtherGames.length > 2) && ordersAreDiff && Date.now() > this.lastShowOrderChange + this.minChangeOrderTime) {
             this.currentOrder = desIndexes;
             this.lastShowOrderChange = Date.now();
         }
@@ -480,7 +481,7 @@ class ClientMatch {
 
         const leftBorder = x + padding; //The left side
         const totalWidth = p5.width - padding - leftBorder; //The total width to fit all of the small games
-        const totalHeight = p5.height - padding*2; //Padding for top and bottom
+        const totalHeight = p5.height - padding*10; //Padding for top and bottom
         //const gridRatio = totalHeight / totalWidth;
 
         let bestDiff = Infinity; //Keep track of the closest ration
@@ -503,7 +504,7 @@ class ClientMatch {
         let boardWidth = (totalWidth / gridW) - padding; //The width of each game board
         let boardHeight = boardWidth * 2; //The height of each game board
         let cellHeight = boardHeight * boardToTotalHeightRatio; //Including the text at the bottom, the total height of the grid cell
-        if ((cellHeight + padding) * gridH > p5.height) { //If the bottom will cut it off
+        if ((cellHeight + padding) * gridH > totalHeight) { //If the bottom will cut it off
             cellHeight = (totalHeight / gridH) - padding; //Recalculate so that each cell is as tall as possible
 
             boardHeight = cellHeight / boardToTotalHeightRatio; //Calculate the board height

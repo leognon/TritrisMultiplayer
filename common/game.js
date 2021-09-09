@@ -7,7 +7,6 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *  Optional score differential
  *      Make the colors still show the difference
  *  Add sound effect for countdown when game is starting
- *  Don't make screens swap with 3 players
  *  Make 4 players display like 3 players (without any small)
  *  [ ] Ghost Piece
  *  [X] Better score display - Show score differential
