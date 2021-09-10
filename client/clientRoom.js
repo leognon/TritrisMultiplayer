@@ -228,16 +228,17 @@ export default class ClientRoom extends React.Component {
         this.setState({ state: states.INGAME });
     }
 
-    matchIsOver = () => {
+    matchIsOver = winner => {
         //Unready everyone after a match
         const newUsers = [...this.state.users];
         for (let i = 0; i < newUsers.length; i++) {
             newUsers[i] = new User(newUsers[i].name, newUsers[i].getId(), newUsers[i].isSpectator, false);
         }
+        this.match.setWinner(winner);
 
         this.setState({
             state: states.GAME_OVER,
-            users: newUsers
+            users: newUsers,
         });
     }
 
@@ -279,7 +280,7 @@ export default class ClientRoom extends React.Component {
                 this.matchStarted(data.playerIds, data.settings);
                 break;
             case 'matchIsOver':
-                this.matchIsOver();
+                this.matchIsOver(data.winner);
                 break;
             case 'playerJoined':
                 this.addUser(data.id, data.name);
@@ -350,6 +351,8 @@ class ClientMatch {
         for (let other of others) {
             this.otherPlayers.push(new OtherPlayer(other.getId(), other.name, settings));
         }
+
+        this.winnerId = null;
 
         this.nextSendData = Date.now();
 
@@ -434,7 +437,15 @@ class ClientMatch {
         const mainGame = gamesToDisplay[0];
         if (gamesToDisplay.length === 1) {
             //Just show in center
-            mainGame.showBig(p5, p5.width/2, true, p5.width/2, pieceImages, true, mainGame);
+            mainGame.showBig({
+                p5,
+                left: p5.width/2,
+                centered: true,
+                maxWidth: p5.width/2,
+                pieceImages,
+                showGridLines: true,
+                baseGame: mainGame
+            });
         } else if (gamesToDisplay.length === 2 || gamesToDisplay.length === 3) {
             const elems = mainGame.getBigElements(p5, 0, false, Infinity);
             const boardWidthToTotalWidthRatio = elems.board.w / elems.bounding.right; //The ratio from board to total width (including next box)
@@ -448,7 +459,15 @@ class ClientMatch {
 
             let left = padding;
             for (let g of games) { //Show them each in a row
-                const gElems = g.showBig(p5, left, false, maxBoardWidth, pieceImages, true, mainGame);
+                const gElems = g.showBig({
+                    p5,
+                    left,
+                    centered: false,
+                    maxWidth: maxBoardWidth,
+                    pieceImages,
+                    showGridLines: true,
+                    baseGame: mainGame
+                });
                 left = gElems.bounding.right + padding;
             }
         } else {
@@ -459,11 +478,33 @@ class ClientMatch {
 
             const secondaryGame = gamesToDisplay[1];
 
-            const secondaryElems = secondaryGame.showBig(p5, padding, false, maxBoardWidth, pieceImages, true, mainGame);
-            const mainElems = mainGame.showBig(p5, secondaryElems.bounding.right + padding, false, maxBoardWidth, pieceImages, true, mainGame);
+            const secondaryElems = secondaryGame.showBig({
+                p5,
+                left: padding,
+                centered: false,
+                maxWidth: maxBoardWidth,
+                pieceImages,
+                showGridLines: true,
+                baseGame: mainGame
+            });
+            const mainElems = mainGame.showBig({
+                p5,
+                left: secondaryElems.bounding.right + padding,
+                centered: false,
+                maxWidth: maxBoardWidth,
+                pieceImages,
+                showGridLines: true,
+                baseGame: mainGame
+            });
 
             const smallGames = gamesToDisplay.slice(2, gamesToDisplay.length);
-            this.showSmallGames(p5, mainElems.bounding.right, smallGames, mainGame, pieceImages);
+            this.showSmallGames({
+                p5,
+                x: mainElems.bounding.right,
+                games: smallGames,
+                baseGame: mainGame,
+                pieceImages
+            });
         }
 
         for (let g of gamesToDisplay) {
@@ -472,7 +513,7 @@ class ClientMatch {
         }
     }
 
-    showSmallGames(p5, x, games, baseGame, pieceImages) {
+    showSmallGames({ p5, x, games, baseGame, pieceImages }) {
         const gameDim = games[0].getSmallElements(0, 0, 100, 200);
         const gameRatio = gameDim.bounding.bottom / gameDim.bounding.right; //The ratio of height to width
         const boardToTotalHeightRatio = gameDim.bounding.bottom / gameDim.board.h;
@@ -528,7 +569,28 @@ class ClientMatch {
 
             const posX = leftBorder + horzPadding + j * (boardWidth + padding); //The top left position of the cell
             const posY = verticalPadding + i * (cellHeight + padding); //The top left position of the cell
-            games[index].showSmall(p5, posX, posY, boardWidth, boardHeight, baseGame, pieceImages, true);
+            games[index].showSmall({
+                p5,
+                x: posX,
+                y: posY,
+                w: boardWidth,
+                h: boardHeight,
+                baseGame,
+                pieceImages,
+                showGridLines: true
+            });
+        }
+    }
+
+    setWinner(winnerId) {
+        this.winnerId = winnerId;
+        if (this.winnerId == this.myId) {
+            this.myGame.youWon();
+        }
+        for (const p of this.otherPlayers) {
+            if (this.winnerId == p.userId) {
+                p.youWon();
+            }
         }
     }
 }
@@ -543,6 +605,10 @@ class OtherPlayer {
 
     getId() {
         return this.userId;
+    }
+
+    youWon() {
+        this.game.youWon();
     }
 
     interpolateUpdate() {

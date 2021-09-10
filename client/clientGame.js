@@ -5,6 +5,7 @@ export default class ClientGame extends Game {
         super(settings);
 
         this.name = name;
+        this.isWinner = false;
         this.flashAmount = 4;
 
         this.soundsToPlay = {
@@ -42,6 +43,10 @@ export default class ClientGame extends Game {
 
     addSound(s) {
         this.soundsToPlay[s] = true;
+    }
+
+    youWon() {
+        this.winner = true;
     }
 
     playSounds(sounds, allSounds) {
@@ -137,8 +142,7 @@ export default class ClientGame extends Game {
         }
     }
 
-    //TODO Make an options object wit hall the data instead of a billion parameters
-    showBig(p5, left, centered, maxWidth, pieceImages, showGridLines, baseGame) {
+    showBig({ p5, left, centered, maxWidth, pieceImages, showGridLines, baseGame }) {
         const elems = this.getBigElements(p5, left, centered, maxWidth);
 
         this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.scaleFactor, baseGame);
@@ -147,7 +151,7 @@ export default class ClientGame extends Game {
 
         this.showNextBox(p5, elems.next.x, elems.next.y, elems.next.w, elems.next.h, elems.scaleFactor, pieceImages);
 
-        p5.fill(0);
+        p5.fill(this.winner ? p5.color(255, 215, 0) : p5.color(0)); //Winner has a gold name
         p5.noStroke();
         p5.textSize(elems.bottomText.textSize);
         p5.textAlign(p5.CENTER, p5.TOP);
@@ -187,7 +191,7 @@ export default class ClientGame extends Game {
         }
     }
 
-    showSmall(p5, x, y, w, h, baseGame, pieceImages, showGridLines) {
+    showSmall({ p5, x, y, w, h, baseGame, pieceImages, showGridLines }) {
         const elements = this.getSmallElements(x, y, w, h);
 
         this.showGameBoard(p5, x, y, w, h, pieceImages, showGridLines);
@@ -196,8 +200,12 @@ export default class ClientGame extends Game {
         const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
         const textObjs = [
             {
-                text: `${this.name} | `,
-                color: p5.color(0)
+                text: this.name,
+                color: (this.winner ? p5.color(255, 215, 0) : p5.color(0)) //Winner has a gold name
+            },
+            {
+                text: ' | ',
+                color: 0
             },
             scoreTextObj
         ];

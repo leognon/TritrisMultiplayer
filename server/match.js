@@ -11,6 +11,8 @@ export default class ServerMatch {
         for (let client of clients) {
             this.addPlayer(client);
         }
+
+        this.winner = null;
     }
 
     addPlayer(client) {
@@ -20,9 +22,36 @@ export default class ServerMatch {
     //If all players have lost
     isOver() {
         for (let p of this.players) {
-            if (p.serverGame.isAlive()) return false;
+            if (p.serverGame.isAlive()) return { over: false };
         }
-        return true;
+        this.winner = this.getWinner();
+        return {
+            over: true,
+            winner: this.winner
+        };
+    }
+
+    getWinner() {
+        if (this.players.length === 1) return null; //Only 1 player. No winner
+        let winnerId = null;
+        if (this.settings.versus) {
+            let winnerTime = -Infinity;
+            for (const p of this.players) {
+                if (p.serverGame.latestState.time > winnerTime) {
+                    winnerTime = p.serverGame.latestState.time;
+                    winnerId = p.client.userId;
+                }
+            }
+        } else {
+            let winnerScore = -Infinity;
+            for (const p of this.players) {
+                if (p.serverGame.latestState.score > winnerScore) {
+                    winnerScore = p.serverGame.latestState.score;
+                    winnerId = p.client.userId;
+                }
+            }
+        }
+        return winnerId;
     }
 
     //When inputs have been received from a player

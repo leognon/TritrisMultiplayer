@@ -162,7 +162,8 @@ export default class ServerRoom {
 
         for (let u of this.users) {
             u.emit('room', {
-                type: 'matchIsOver'
+                type: 'matchIsOver',
+                winner: this.winner
             });
             u.isReady = false;
         }
@@ -218,12 +219,14 @@ export default class ServerRoom {
         if (this.state == states.INGAME && this.match) {
             this.match.physicsUpdate();
 
-            if (this.match.isOver()) {
+            const isOver = this.match.isOver();
+            if (isOver.over) {
                 if (this.endMatchAt == -1) {
                     //The match just ended
                     this.endMatchAt = Date.now() + this.endMatchDelay;
                 } else if (Date.now() >= this.endMatchAt) {
                     //The match is still over, wait is over
+                    this.winner = isOver.winner;
                     this.endMatch();
                 }
             } else {

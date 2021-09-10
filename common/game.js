@@ -29,6 +29,7 @@ import { tritrisJSON, quadtrisJSON } from './pieces.js';
  *              [X] Set certain players to spectator
  *      [X] Join room
  *  [ ] More gamemodes
+ *      [X] Win condition for each gamemode
  *      [X] Quadtris
  *          [X] Fix colors (both versions of a mirror is purple)
  *          [X] Redo rotation center code
