@@ -352,6 +352,8 @@ class ClientMatch {
             this.otherPlayers.push(new OtherPlayer(other.getId(), other.name, settings));
         }
 
+        this.settings = settings;
+
         this.winnerId = null;
 
         this.nextSendData = Date.now();
@@ -396,13 +398,28 @@ class ClientMatch {
 
     show(p5, pieceImages, sounds) {
         const allOtherGames = this.otherPlayers.map(p => p.game);
+        let sortFn;
+        if (this.settings.versus) {
+            sortFn = (a, b) => {
+                if (b.alive === a.alive) { //They are both dead or both alive
+                    return b.score - a.score; //Show highest score first
+                } else if (a.alive) {
+                    return -1; //Show alive games first
+                } else {
+                    return 1;
+                }
+            }
+        } else {
+            sortFn = (a, b) => b.score - a.score;
+        }
         const desIndexes = allOtherGames.map((g, i) => {
             return { //This convuluted mess is done in order to preserve the original index when sorting
                 score: g.score,
+                alive: g.alive,
                 index: i
             }
-        }).sort((a, b) => b.score - a.score).map(obj => obj.index);
-        //Creates an array with the indices from allOtherGames that is sorted from highest score to lowest
+        }).sort(sortFn).map(obj => obj.index);
+        //Creates an array with the indices from allOtherGames that is sorted based on the sortFn
 
         let ordersAreDiff = false;
         if (this.lastShowOrderChange === -1) {
