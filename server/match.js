@@ -82,9 +82,12 @@ export default class ServerMatch {
     sendGarbage(fromPlayer, garbageToSend) {
         const alivePlayers = this.players.filter(p => p.serverGame.isAlive());
         let otherPlayers = alivePlayers.filter(p => p !== fromPlayer);
-        if (otherPlayers.length === 0) otherPlayers = alivePlayers; //Send garbage to yourself
+        let leastGarbReceived = Math.min(...otherPlayers.map(p => p.serverGame.totalGarbageEverReceived));
+        let playersWhoReceivedLeast = otherPlayers.filter(p => p.serverGame.totalGarbageEverReceived === leastGarbReceived);
 
-        let sendTo = otherPlayers[Math.floor(Math.random() * otherPlayers.length)];
+        if (playersWhoReceivedLeast.length === 0) playersWhoReceivedLeast = alivePlayers; //Send garbage to yourself
+
+        let sendTo = playersWhoReceivedLeast[Math.floor(Math.random() * playersWhoReceivedLeast.length)]; //Pick a random player who received the least
         sendTo.receiveGarbage(garbageToSend);
     }
 

@@ -241,7 +241,6 @@ export class Game {
         this.animatingLines = state.animatingLines;
 
         this.garbageToSendId = state.garbageToSendId;
-        //this.garbageToSend = [...state.garbageToSend];
         this.garbageToSend = [];
         for (const g of state.garbageToSend) {
             this.garbageToSend.push(Garbage.deserialize(g));
@@ -517,7 +516,7 @@ export class Game {
         return linesCleared.length;
     }
 
-    sendGarbage(numLines, bonusLines) { //I have cleared lines
+    sendGarbage(numLines) { //I have cleared lines
         if (!this.versus) return;
         const garbage = new Garbage(this.garbageToSendId++, this.time, numLines);
         if (garbage.numLines > 0) {
@@ -767,7 +766,6 @@ class GameState {
         this.animatingLines = [...game.animatingLines];
 
         this.garbageToSendId = game.garbageToSendId;
-        //this.garbageToSend = [...game.garbageToSend];
         this.garbageToSend = game.garbageToSend.map(g => g.serialize());
         this.doneGarbageId = game.doneGarbageId;
         this.garbageMeterWaiting = game.garbageMeterWaiting.map(g => g.serialize());

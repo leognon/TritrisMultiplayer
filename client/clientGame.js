@@ -197,7 +197,16 @@ export default class ClientGame extends Game {
         this.showGameBoard(p5, x, y, w, h, pieceImages, showGridLines);
 
         const scoreDiff = this.score - baseGame.score;
-        const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
+        let infoTextObj;
+        if (this.versus) {
+            infoTextObj = {
+                text: `Rec: ${this.totalGarbageEverReceived} Sent: ${this.getTotalNumLinesSent()}`,
+                color: 0
+            }
+        } else {
+            infoTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
+            //Display their score
+        }
         const textObjs = [
             {
                 text: this.name,
@@ -207,7 +216,7 @@ export default class ClientGame extends Game {
                 text: ' | ',
                 color: 0
             },
-            scoreTextObj
+            infoTextObj
         ];
 
         let textSize = elements.text.size;
@@ -284,7 +293,7 @@ export default class ClientGame extends Game {
                     ],
                     [ //Second line
                         {
-                            text: `Sent: ${this.garbageToSend.reduce((tot, g) => tot + g.numLines, 0)}`,
+                            text: `Sent: ${this.getTotalNumLinesSent()}`,
                             color: 0
                         }
                     ]
@@ -445,5 +454,9 @@ export default class ClientGame extends Game {
         }
         if (isNeg) formattedScore = '-' + formattedScore;
         return formattedScore;
+    }
+    
+    getTotalNumLinesSent() {
+        return this.garbageToSend.reduce((tot, g) => tot + g.numLines, 0);
     }
 }
