@@ -274,20 +274,37 @@ export default class ClientGame extends Game {
             let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
             if (this.lines == 0) tritrisPercent = '--';
 
-            textLines = [
-                [ //First line of text
-                    {
-                        text: `Score ${score} | ${tritrisPercent}%`,
-                        color: 0
-                    }
-                ],
-                [ //Second line of text
-                    {
-                        text: `Lines ${this.lines} | (${this.level})`,
-                        color: 0
-                    }
-                ]
-            ];
+            if (this.versus) {
+                textLines = [
+                    [ //First line
+                        {
+                            text: `Received: ${this.totalGarbageEverReceived}`,
+                            color: 0
+                        }
+                    ],
+                    [ //Second line
+                        {
+                            text: `Sent: ${this.garbageToSend.reduce((tot, g) => tot + g.numLines, 0)}`,
+                            color: 0
+                        }
+                    ]
+                ];
+            } else {
+                textLines = [
+                    [ //First line of text
+                        {
+                            text: `Score ${score} | ${tritrisPercent}%`,
+                            color: 0
+                        }
+                    ],
+                    [ //Second line of text
+                        {
+                            text: `Lines ${this.lines} | (${this.level})`,
+                            color: 0
+                        }
+                    ]
+                ];
+            }
         } else {
             const scoreDiff = this.score - baseGame.score; //Show comparison
             const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
@@ -304,40 +321,57 @@ export default class ClientGame extends Game {
             const levelDiff = this.level - baseGame.level;
             const levelTextObj = this.getDiffTextObj(levelDiff);
 
-            textLines = [
-                [ //First line
-                    {
-                        text: 'Score ',
-                        color: 0
-                    },
-                    scoreTextObj,
-                    {
-                        text: ' (',
-                        color: 0
-                    },
-                    tritrisPercentTextObj,
-                    {
-                        text: '%)',
-                        color: 0
-                    }
-                ],
-                [ //Second line
-                    {
-                        text: 'Lines: ',
-                        color: 0
-                    },
-                    lineTextObj,
-                    {
-                        text: ' (',
-                        color: 0
-                    },
-                    levelTextObj,
-                    {
-                        text: ')',
-                        color: 0
-                    }
-                ]
-            ];
+            if (this.versus) {
+                textLines = [
+                    [ //First line
+                        {
+                            text: `Received: ${this.totalGarbageEverReceived}`,
+                            color: 0
+                        }
+                    ],
+                    [ //Second line
+                        {
+                            text: `Sent: ${this.garbageToSend.reduce((tot, g) => tot + g.numLines, 0)}`,
+                            color: 0
+                        }
+                    ]
+                ];
+            } else {
+                textLines = [
+                    [ //First line
+                        {
+                            text: 'Score ',
+                            color: 0
+                        },
+                        scoreTextObj,
+                        {
+                            text: ' (',
+                            color: 0
+                        },
+                        tritrisPercentTextObj,
+                        {
+                            text: '%)',
+                            color: 0
+                        }
+                    ],
+                    [ //Second line
+                        {
+                            text: 'Lines: ',
+                            color: 0
+                        },
+                        lineTextObj,
+                        {
+                            text: ' (',
+                            color: 0
+                        },
+                        levelTextObj,
+                        {
+                            text: ')',
+                            color: 0
+                        }
+                    ]
+                ];
+            }
         }
         const innerTextHeight = h - 5*scaleFactor;
         const lineHeight = innerTextHeight / textLines.length;

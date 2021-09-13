@@ -191,6 +191,7 @@ export class Game {
         this.garbageToSendId = 0;
         this.garbageToSend = [];
         this.garbageReceived = []; //All of the garbage that this game has ever received. Since garbage is received externally, this does not change with latestState
+        this.totalGarbageEverReceived = 0;
         this.doneGarbageId = -1; //The id of the garbage that has been added to the meter
         this.garbageDelayTime = 5000; //Once garbage is received, it wont be placed for at least a few seconds
         this.garbageMeterWaiting = []; //Lines of garbage that are still waiting to be inserted
@@ -527,13 +528,16 @@ export class Game {
     receiveGarbage(garbage) { //The match is telling me I have received garbage
         if (!this.versus) return;
         for (const g of garbage) {
-            this.garbageReceived.push(Garbage.deserialize(g));
+            const garb = Garbage.deserialize(g);
+            this.garbageReceived.push(garb);
+            this.totalGarbageEverReceived += garb.numLines;
         }
     }
 
     setGarbageReceived(garbage) {
         if (!this.versus) return;
         this.garbageReceived = garbage.map(g => Garbage.deserialize(g));
+        this.totalGarbageEverReceived = this.garbageReceived.reduce((tot, garb) => tot + garb.numLines, 0);
     }
 
     insertGarbage() { //Add garbage lines onto the board
