@@ -375,6 +375,14 @@ export class Game {
         return false;
     }
 
+    nextLevelIncreaseVersus() {
+        const numIntervals = Math.max(this.level - this.startLevel, 0);
+        const intervalTime = numIntervals * this.versusTimePerLevel;
+
+        const nextLevelUpTime = intervalTime + this.versusTimePerStartLevel;
+        return nextLevelUpTime;
+    }
+
     shouldSpawnPiece() {
         return this.currentPiece == null &&
                 this.time > this.spawnNextPiece &&
@@ -413,14 +421,11 @@ export class Game {
                 this.sendGarbage(numLinesToSend); //Send garbage
 
                 //In versus, the level increases from the start to the next after versusTimePerStartLevel then every versusTimePerLevel
-                if (this.time > this.versusTimePerStartLevel) {
-                    const timeAfterStart = this.time - this.versusTimePerStartLevel;
-                    const numIntervalsPassed = Math.ceil(timeAfterStart / this.versusTimePerLevel);
-                    if (numIntervalsPassed + this.startLevel > this.level) {
-                        this.level = numIntervalsPassed + this.startLevel;
-                        this.setSpeed();
-                        this.addSound('levelup');
-                    }
+                const nextLevelIncrease = this.nextLevelIncreaseVersus();
+                if (this.time > nextLevelIncrease) {
+                    this.level++;
+                    this.setSpeed();
+                    this.addSound('levelup');
                 }
             }
         }

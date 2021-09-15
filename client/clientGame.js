@@ -283,18 +283,36 @@ export default class ClientGame extends Game {
             let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
             if (this.lines == 0) tritrisPercent = '--';
 
+            const totalSec = Math.floor(Math.max(this.time, 0) / 1000) % 60;
+            const totalM = Math.floor(Math.max(this.time, 0) / (1000*60));
+            const timeText = `${p5.nf(totalM,2)}:${p5.nf(totalSec,2)}`;
+            let timeColor = 0;
+            const timeToTextLevelUp = this.nextLevelIncreaseVersus() - this.time;
+            if (timeToTextLevelUp <= 0) timeColor = p5.color(220, 0, 0); //Red because it will levelup on the next piece
+            else if (timeToTextLevelUp < 3 * 1000) timeColor = p5.color(220,220,30); //Yellow because it is soon
+
+
+
             if (this.versus) {
                 textLines = [
                     [ //First line
                         {
                             text: `Received: ${this.totalGarbageEverReceived}`,
                             color: 0
+                        },
+                        {
+                            text: ` | Sent: ${this.getTotalNumLinesSent()}`,
+                            color: 0
                         }
                     ],
                     [ //Second line
                         {
-                            text: `Sent: ${this.getTotalNumLinesSent()}`,
+                            text: `Level: ${this.level} | Time: `,
                             color: 0
+                        },
+                        {
+                            text: timeText,
+                            color: timeColor
                         }
                     ]
                 ];
