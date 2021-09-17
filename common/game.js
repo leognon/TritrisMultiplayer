@@ -108,8 +108,8 @@ export class Game {
         this.startLevel = lvl;
         this.level = this.startLevel;
         this.lines = 0;
-        this.versusTimePerStartLevel = 1.5 * 60 * 1000; //1.5 minutes on the start level
-        this.versusTimePerLevel = 20 * 1000; //Then 30 seconds on each level after
+        this.versusTimePerStartLevel = 2 * 60 * 1000; //1.5 minutes on the start level
+        this.versusTimePerLevel = 30 * 1000; //Then 30 seconds on each level after
         this.score = 0;
         this.scoreWeights = { 1: 100, 2: 200*2, 3: 400*3, 4: 800*4 };
 
