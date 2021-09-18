@@ -63,8 +63,14 @@ export default class Settings extends React.Component {
                     <h3>Visual Settings</h3>
                     <label htmlFor="showGhost">Show Ghost Piece: </label>
                     <input id="showGhost" type="checkbox"
-                        checked={this.props.showGhost}
-                        onChange={this.props.showGhostChanged}
+                        checked={this.props.visualSettings.showGhost}
+                        onChange={evnt => this.props.visualSettingsChanged(evnt, 'showGhost')}
+                    />
+                    <br />
+                    <label htmlFor="showGridLines">Show Grid Lines: </label>
+                    <input id="showGridLines" type="checkbox"
+                        checked={this.props.visualSettings.showGridLines}
+                        onChange={evnt => this.props.visualSettingsChanged(evnt, 'showGridLines')}
                     />
                     <br />
 

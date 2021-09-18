@@ -27,9 +27,7 @@ class App extends React.Component {
                 ownerId: '',
                 originalUsers: []
             },
-            settings: {
-                showGhost: localStorage.hasOwnProperty('showGhost') ? JSON.parse(localStorage.getItem('showGhost')) : true
-            },
+            visualSettings: this.loadVisualSettings(),
             background: {
                 triangles: [],
                 nextSpawn: Date.now()
@@ -189,10 +187,28 @@ class App extends React.Component {
         });
     }
 
-    showGhostChanged = evnt => {
-        const newSettings = { ...this.state.settings };
-        newSettings.showGhost = evnt.target.checked;
-        this.setState({ settings: newSettings });
+    visualSettingsChanged = (evnt, setting) => {
+        const newSettings = { ...this.state.visualSettings };
+        newSettings[setting] = evnt.target.checked;
+        this.setState({ visualSettings: newSettings }, this.saveVisualSettings);
+    }
+
+    loadVisualSettings = () => {
+        let mySettings = {
+            showGhost: true,
+            showGridLines: true
+        }
+        if (localStorage.hasOwnProperty('visualSettings')) {
+            const loaded = JSON.parse(localStorage.getItem('visualSettings'));
+            for (const setting in loaded) {
+                mySettings[setting] = loaded[setting];
+            }
+        }
+        return mySettings;
+    }
+
+    saveVisualSettings = () => {
+        window.localStorage.setItem('visualSettings', JSON.stringify(this.state.visualSettings));
     }
 
     quickPlay = () => {
@@ -269,8 +285,8 @@ class App extends React.Component {
                             volume={this.state.volume}
                             setVolume={this.setVolume}
 
-                            showGhost={this.state.settings.showGhost}
-                            showGhostChanged={this.showGhostChanged}
+                            visualSettings={this.state.visualSettings}
+                            visualSettingsChanged={this.visualSettingsChanged}
                         />
                     </div>);
             case states.ROOM:
@@ -285,7 +301,7 @@ class App extends React.Component {
                             sounds={this.sounds}
                             font={this.font}
                             controls={this.state.controls}
-                            showGhost={this.state.settings.showGhost}
+                            visualSettings={this.state.visualSettings}
                         />
                     </div>);
             default:

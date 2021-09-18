@@ -40,8 +40,8 @@ export default class Menu extends React.Component {
                         volume={this.props.volume}
                         setVolume={this.props.setVolume}
 
-                        showGhost={this.props.showGhost}
-                        showGhostChanged={this.props.showGhostChanged}
+                        visualSettings={this.props.visualSettings}
+                        visualSettingsChanged={this.props.visualSettingsChanged}
                     />
                 }
             </div>

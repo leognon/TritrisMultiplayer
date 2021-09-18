@@ -17,6 +17,7 @@ export default class ClientRoom extends React.Component {
             users: this.props.originalUsers.map(u => new User(u.name, u.id, u.isSpectator, u.isReady)),
             ownerId: this.props.ownerId,
             roomCode: this.props.roomCode,
+            visualSettings: this.props.visualSettings,
             settings: {
                 startLevel: 0,
                 use4x8: false,
@@ -24,9 +25,6 @@ export default class ClientRoom extends React.Component {
                 versus: true //TODO Make this false by default
             },
             roomIsLocked: false,
-        }
-        this.visualSettings = {
-            showGhost: this.props.showGhost
         }
 
         this.socket = this.props.socket;
@@ -48,7 +46,7 @@ export default class ClientRoom extends React.Component {
     draw = p5 => {
         //Do everything necessary (update, show)
         this.update(p5);
-        this.showGame(p5, this.props.pieceImages, this.props.sounds, this.visualSettings);
+        this.showGame(p5, this.props.pieceImages, this.props.sounds, this.props.visualSettings);
     }
 
     render = () => {
