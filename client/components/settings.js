@@ -58,6 +58,16 @@ export default class Settings extends React.Component {
                     <h3>Controls</h3>
                     { this.renderControls(this.props.controls) }
                     <button onClick={this.props.resetControls}>Revert to Defaults</button>
+                    <hr />
+
+                    <h3>Visual Settings</h3>
+                    <label htmlFor="showGhost">Show Ghost Piece: </label>
+                    <input id="showGhost" type="checkbox"
+                        checked={this.props.showGhost}
+                        onChange={this.props.showGhostChanged}
+                    />
+                    <br />
+
 
                     <hr />
                     <h3>Volume</h3>

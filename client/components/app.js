@@ -27,6 +27,9 @@ class App extends React.Component {
                 ownerId: '',
                 originalUsers: []
             },
+            settings: {
+                showGhost: localStorage.hasOwnProperty('showGhost') ? JSON.parse(localStorage.getItem('showGhost')) : true
+            },
             background: {
                 triangles: [],
                 nextSpawn: Date.now()
@@ -89,7 +92,7 @@ class App extends React.Component {
         p5.createCanvas(window.innerWidth, window.innerHeight).parent(canvasParentRef);
         p5.background(100);
         p5.loadImage('../client/assets/piecesImage.png', img => {
-            this.pieceImages = loadPieces(img);
+            this.pieceImages = loadPieces(p5, img);
             this.assetLoaded();
         });
         p5.loadFont('../client/assets/fff-forward.ttf', fnt => {
@@ -186,6 +189,12 @@ class App extends React.Component {
         });
     }
 
+    showGhostChanged = evnt => {
+        const newSettings = { ...this.state.settings };
+        newSettings.showGhost = evnt.target.checked;
+        this.setState({ settings: newSettings });
+    }
+
     quickPlay = () => {
         /*this.socket.emit('joinMatch', {
             name: dom.name.value()
@@ -259,6 +268,9 @@ class App extends React.Component {
                             resetControls={this.resetControls}
                             volume={this.state.volume}
                             setVolume={this.setVolume}
+
+                            showGhost={this.state.settings.showGhost}
+                            showGhostChanged={this.showGhostChanged}
                         />
                     </div>);
             case states.ROOM:
@@ -273,6 +285,7 @@ class App extends React.Component {
                             sounds={this.sounds}
                             font={this.font}
                             controls={this.state.controls}
+                            showGhost={this.state.settings.showGhost}
                         />
                     </div>);
             default:
@@ -295,8 +308,8 @@ class App extends React.Component {
     }
 }
 
-function loadPieces(spriteSheet) {
-    let pieceImages = []; //A 2d array of each piece color and their rotations
+function loadPieces(p5, spriteSheet) {
+    let pieceImages = []; //A 2d array of each piece color and their rotations and tinted versions
     for (let i = 0; i < 2; i++) { //All of the colors (except white)
         for (let j = 0; j < 3; j++) {
             pieceImages.push(load4Triangles(i, j, spriteSheet));
@@ -313,7 +326,15 @@ function loadPieces(spriteSheet) {
                 const x = (j*2 + col) * triWidth; //The j*2 is because each set of 4 is a 2x2 square of triangles
                 const y = (i*2 + row) * triWidth;
                 const imageSlice = piecesImage.get(x, y, triWidth, triWidth);
-                triangles.push(imageSlice); //A single rotation
+                triangles.push(imageSlice); //A single rotation (not tinted)
+
+                let g = p5.createGraphics(triWidth, triWidth);
+                g.tint(255, 150); //Make it slightly transparent
+                g.image(imageSlice, 0, 0);
+                const tintedImg = g.get(); //Get the p5.Image that is now tinted. Drawing this will be fast
+                g.remove();
+
+                triangles.push(tintedImg); //That same rotation, tinted
             }
         }
         return triangles;

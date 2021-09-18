@@ -25,6 +25,9 @@ export default class ClientRoom extends React.Component {
             },
             roomIsLocked: false,
         }
+        this.visualSettings = {
+            showGhost: this.props.showGhost
+        }
 
         this.socket = this.props.socket;
 
@@ -45,7 +48,7 @@ export default class ClientRoom extends React.Component {
     draw = p5 => {
         //Do everything necessary (update, show)
         this.update(p5);
-        this.showGame(p5, this.props.pieceImages, this.props.sounds);
+        this.showGame(p5, this.props.pieceImages, this.props.sounds, this.visualSettings);
     }
 
     render = () => {
@@ -249,9 +252,9 @@ export default class ClientRoom extends React.Component {
         }
     }
 
-    showGame = (p5, pieceImages, sounds) => {
+    showGame = (p5, pieceImages, sounds, visualSettings) => {
         if (this.isIngame() && this.match) {
-            this.match.show(p5, pieceImages, sounds);
+            this.match.show(p5, pieceImages, sounds, visualSettings);
         }
         if (this.state.state == states.GAME_OVER) {
             const scale = p5.width * p5.height / (1920 * 1000);
@@ -396,7 +399,7 @@ class ClientMatch {
         }
     }
 
-    show(p5, pieceImages, sounds) {
+    show(p5, pieceImages, sounds, visualSettings) {
         const allOtherGames = this.otherPlayers.map(p => p.game);
         let sortFn;
         if (this.settings.versus) {
@@ -460,8 +463,8 @@ class ClientMatch {
                 centered: true,
                 maxWidth: p5.width/2,
                 pieceImages,
-                showGridLines: true,
-                baseGame: mainGame
+                baseGame: mainGame,
+                visualSettings
             });
         } else if (gamesToDisplay.length === 2 || gamesToDisplay.length === 3) {
             const elems = mainGame.getBigElements(p5, 0, false, Infinity);
@@ -482,8 +485,8 @@ class ClientMatch {
                     centered: false,
                     maxWidth: maxBoardWidth,
                     pieceImages,
-                    showGridLines: true,
-                    baseGame: mainGame
+                    baseGame: mainGame,
+                    visualSettings
                 });
                 left = gElems.bounding.right + padding;
             }
@@ -501,8 +504,8 @@ class ClientMatch {
                 centered: false,
                 maxWidth: maxBoardWidth,
                 pieceImages,
-                showGridLines: true,
-                baseGame: mainGame
+                baseGame: mainGame,
+                visualSettings
             });
             const mainElems = mainGame.showBig({
                 p5,
@@ -510,8 +513,8 @@ class ClientMatch {
                 centered: false,
                 maxWidth: maxBoardWidth,
                 pieceImages,
-                showGridLines: true,
-                baseGame: mainGame
+                baseGame: mainGame,
+                visualSettings
             });
 
             const smallGames = gamesToDisplay.slice(2, gamesToDisplay.length);
@@ -520,7 +523,8 @@ class ClientMatch {
                 x: mainElems.bounding.right,
                 games: smallGames,
                 baseGame: mainGame,
-                pieceImages
+                pieceImages,
+                visualSettings
             });
         }
 
@@ -530,7 +534,7 @@ class ClientMatch {
         }
     }
 
-    showSmallGames({ p5, x, games, baseGame, pieceImages }) {
+    showSmallGames({ p5, x, games, baseGame, pieceImages, visualSettings }) {
         const gameDim = games[0].getSmallElements(0, 0, 100, 200);
         const gameRatio = gameDim.bounding.bottom / gameDim.bounding.right; //The ratio of height to width
         const boardToTotalHeightRatio = gameDim.bounding.bottom / gameDim.board.h;
@@ -594,7 +598,7 @@ class ClientMatch {
                 h: boardHeight,
                 baseGame,
                 pieceImages,
-                showGridLines: true
+                visualSettings
             });
         }
     }

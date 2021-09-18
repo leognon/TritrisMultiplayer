@@ -723,6 +723,18 @@ export class Game {
         }
     }
 
+    getGhostPiece() {
+        //Make a copy of the current piece
+        const ghost = new Piece(this.currentPiece.serialized());
+        do {
+            ghost.move(0, 1);
+        } while (this.isValid(ghost));
+
+        ghost.move(0, -1); //Move it back to right before it will be placed
+
+        return ghost;
+    }
+
     calcEntryDelay(y) {
         if (y >= 18) return this.entryDelays[0];
         if (y >= 14) return this.entryDelays[1];

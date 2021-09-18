@@ -142,12 +142,12 @@ export default class ClientGame extends Game {
         }
     }
 
-    showBig({ p5, left, centered, maxWidth, pieceImages, showGridLines, baseGame }) {
+    showBig({ p5, left, centered, maxWidth, pieceImages, baseGame, visualSettings }) {
         const elems = this.getBigElements(p5, left, centered, maxWidth);
 
         this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.scaleFactor, baseGame);
 
-        this.showGameBoard(p5, elems.board.x, elems.board.y, elems.board.w, elems.board.h, pieceImages, showGridLines);
+        this.showGameBoard(p5, elems.board.x, elems.board.y, elems.board.w, elems.board.h, pieceImages, visualSettings);
 
         this.showNextBox(p5, elems.next.x, elems.next.y, elems.next.w, elems.next.h, elems.scaleFactor, pieceImages);
 
@@ -191,10 +191,10 @@ export default class ClientGame extends Game {
         }
     }
 
-    showSmall({ p5, x, y, w, h, baseGame, pieceImages, showGridLines }) {
+    showSmall({ p5, x, y, w, h, baseGame, pieceImages, visualSettings }) {
         const elements = this.getSmallElements(x, y, w, h);
 
-        this.showGameBoard(p5, x, y, w, h, pieceImages, showGridLines);
+        this.showGameBoard(p5, x, y, w, h, pieceImages, visualSettings);
 
         const scoreDiff = this.score - baseGame.score;
         let infoTextObj;
@@ -237,7 +237,7 @@ export default class ClientGame extends Game {
     }
 
 
-    showGameBoard(p5, x, y, w, h, pieceImages, showGridLines) {
+    showGameBoard(p5, x, y, w, h, pieceImages, visualSettings) {
         p5.noStroke();
         p5.fill(0);
         p5.rect(x, y, w, h);
@@ -245,9 +245,13 @@ export default class ClientGame extends Game {
         const cellW = w / this.w;
         const cellH = h / this.h;
 
-        this.grid.show(p5, x, y, w, h, pieceImages, showGridLines);
+        this.grid.show(p5, x, y, w, h, pieceImages, true);
         if (this.currentPiece) {
             this.currentPiece.show(p5, x, y, cellW, cellH, pieceImages);
+
+            if (visualSettings.showGhost) {
+                this.showGhostPiece(p5, x, y, cellW, cellH, pieceImages);
+            }
         }
 
         const waitingNumLines = this.garbageMeterWaiting.reduce((sum, garbage) => sum + garbage.numLines, 0);
@@ -274,6 +278,10 @@ export default class ClientGame extends Game {
                 this.nextPiece.showAt(p5, x + spacing * positionRelativeToCenter, y + spacing * positionRelativeToCenter, w, h, pieceImages);
             }
         }
+    }
+
+    showGhostPiece(p5, x, y, cellW, cellH, pieceImages) {
+        this.getGhostPiece().show(p5, x, y, cellW, cellH, pieceImages, true);
     }
 
     showScoreAndLines(p5, x, y, w, h, scaleFactor, baseGame) {

@@ -275,11 +275,11 @@ export class GridCell {
         return false;
     }
 
-    show(p5, x, y, w, h, pieceImages) {
+    show(p5, x, y, w, h, pieceImages, ghost = false) {
         for (let row = 0; row < this.tris.length; row++) {
             for (let col = 0; col < this.tris[0].length; col++) {
                 if (this.tris[row][col])
-                    this.tris[row][col].show(p5, x, y, w, h, row, col, pieceImages);
+                    this.tris[row][col].show(p5, x, y, w, h, row, col, pieceImages, ghost);
             }
         }
     }
@@ -290,7 +290,7 @@ export class Triangle {
         this.clr = clr;
     }
 
-    show(p5, x, y, w, h, row, col, pieceImages) {
+    show(p5, x, y, w, h, row, col, pieceImages, ghost = false) {
         const thisColor = pieceImages[this.clr];
         let rot;
         if (row == 0 && col == 0) { //Top left
@@ -302,7 +302,9 @@ export class Triangle {
         } else if (row == 1 && col == 1) { //Bottom right
             rot = 0;
         }
-        p5.image(thisColor[rot], x, y, w, h);
+
+        const imageIndex = rot * 2 + (ghost ? 1 : 0);
+        p5.image(thisColor[imageIndex], x, y, w, h);
     }
 }
 
@@ -463,7 +465,7 @@ export class Piece {
         );
     }
 
-    show(p5, originX, originY, cellW, cellH, pieceImages) {
+    show(p5, originX, originY, cellW, cellH, pieceImages, ghost = false) {
         originX += this.pos.x * cellW;
         originY += this.pos.y * cellH;
         for (let row = 0; row < this.grid.length; row++) {
@@ -474,7 +476,8 @@ export class Piece {
                     originY + row * cellH,
                     cellW,
                     cellH,
-                    pieceImages
+                    pieceImages,
+                    ghost
                 );
             }
         }
