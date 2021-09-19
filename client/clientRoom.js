@@ -361,7 +361,7 @@ class ClientMatch {
 
         this.currentOrder = [];
         this.lastShowOrderChange = -1;
-        this.minChangeOrderTime = 10 * 1000; //It can only change every 10 seconds to stop flickering
+        this.minChangeOrderTime = 30 * 1000; //It can only change every 10 seconds to stop flickering
     }
 
     update(p5, socket) {
