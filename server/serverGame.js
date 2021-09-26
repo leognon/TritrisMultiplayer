@@ -1,4 +1,5 @@
 import { Game, Input } from '../common/game.js';
+import SERVER_CONFIG from '../server/config.js';
 
 export default class ServerGame extends Game {
     constructor(settings) {
@@ -23,11 +24,10 @@ export default class ServerGame extends Game {
         //TODO The line below is slightly pointless. It will get overriden 99.99% of the time. It might only help to check if someone loses??
         if (!this.alive) return;
         this.updateToTime(Date.now() - this.startTime, true);
-        //TODO Make this condition better. 10 seconds will result in an instant top out no matter what...
-        const maxTime = 10 * 1000; //If nothing is received for 10 seconds, it will update automatically
-        const maxMoveDownTime = this.pieceSpeed*2 + maxTime; //TODO Idk what the formula for this should be. Also, is this even necessary? People can still cheat by lengthening the time between move downs
+        const maxTime = SERVER_CONFIG.FORCE_MOVE_AFTER; //If nothing is received for too long, it will update automatically
+        const maxMoveDownTime = this.pieceSpeed*2 + SERVER_CONFIG.FORCE_MOVE_AFTER;
         if (forceMove || this.time - maxTime >= this.lastReceivedTime || this.time - maxMoveDownTime >= this.lastClientMoveDown) {
-            //If no inputs recieved for 7 seconds, force the state to update
+            //If no inputs recieved for too long, force the state to update
             this.goToGameState(this.latestState);
             this.updateToTime(Date.now() - this.startTime, true);
             this.updateGameState();
@@ -54,6 +54,7 @@ export default class ServerGame extends Game {
         //else
             //console.log(`Not going back from ${this.time} to ${latestTime}`);
         this.physicsUpdate(false); //Updates to the current time (simulating gravity)
+        //Pretty sure this is useless. It doesnt update latests state, so whats the point?
     }
 
     isAlive() {

@@ -27,6 +27,10 @@ export default class ClientRoom extends React.Component {
             roomIsLocked: false,
         }
 
+        this.frameRate = 60;
+        this.lastFrameRateUpdate = -Infinity;
+        this.updateFrameRateEvery = 5 * 1000;
+
         this.socket = this.props.socket;
 
         this.match = null;
@@ -47,6 +51,26 @@ export default class ClientRoom extends React.Component {
         //Do everything necessary (update, show)
         this.update(p5);
         this.showGame(p5, this.props.pieceImages, this.props.sounds, this.props.visualSettings);
+
+        const scl = p5.width * p5.height / (1920 * 1080);
+        let text, col;
+
+        if (Date.now() > this.lastFrameRateUpdate + this.updateFrameRateEvery) {
+            this.frameRate = Math.round(p5.frameRate());
+            this.lastFrameRateUpdate = Date.now();
+        }
+
+        if (this.socket.disconnected) {
+            text = `Disconnected... | ${this.frameRate}fps`;
+            col = p5.color(200, 0, 0);
+        } else {
+            text = `Ping: ${this.socket.latency}ms | ${this.frameRate}fps`;
+            col = p5.color(0);
+        }
+        p5.textSize(20 * scl);
+        p5.fill(col);
+        p5.textAlign(p5.RIGHT, p5.TOP);
+        p5.text(text, p5.width - 10*scl, 10*scl);
     }
 
     render = () => {
@@ -90,6 +114,7 @@ export default class ClientRoom extends React.Component {
                 </>
             case states.INGAME:
             case states.GAME_OVER:
+                //TODO Try rendering without react-p5!!
                 return <Sketch
                     setup={this.setup}
                     draw={this.draw}

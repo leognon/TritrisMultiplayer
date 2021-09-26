@@ -46,14 +46,21 @@ class App extends React.Component {
         this.socket.userId = '';
 
         this.socket.on('auth', ({ sessionId, userId }) => {
+            console.log('Auth as ' + userId);
             this.socket.userId = userId;
             auth.sessionId = sessionId;
 
             if (this.state.state === states.LOADING) //Make sure to not go back to menu
                 this.assetLoaded();
+            else
+                alert('It seems you have been disconnected for too long. Please refresh the page.');
             //localStorage.setItem('sessionId', sessionId);
         });
         this.socket.on('reAuth', ({ sessionId, userId }) => {
+            console.log('Reauth as ' + userId);
+            if (this.socket.userId !== userId) {
+                console.log('New auth!');
+            }
             this.socket.userId = userId;
             auth.sessionId = sessionId;
 
@@ -61,6 +68,14 @@ class App extends React.Component {
                 this.assetLoaded();
             //localStorage.setItem('sessionId', sessionId);
         });
+
+        this.socket.latency = '0';
+        setInterval(() => {
+            const start = Date.now();
+            this.socket.volatile.emit('ping', () => { // volatile, so the packet will be discarded if the socket is not connected
+                this.socket.latency = Math.round((Date.now() - start) / 2);
+            });
+        }, 5000);
 
         window.onbeforeunload = () => {
             this.socket.emit('leftPage');
@@ -69,10 +84,6 @@ class App extends React.Component {
         this.socket.on('msg', this.gotMessage);
         this.socket.on('joinedRoom', this.joinedRoom);
         this.socket.on('leftRoom', this.leaveRoom);
-        this.socket.on('disconnect', () => {
-            //TODO Add disconnect indicator
-            console.log('Disconnected!!!');
-        });
 
         this.pieceImages = null;
 

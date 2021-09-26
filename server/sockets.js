@@ -65,6 +65,11 @@ class Client {
         this.userId = userId;
         this.name = 'UnknownPlayer';
         this.leftPage = false;
+        this.lastDisconnectedAt = 0; //The last time they disconnected. Used to calculate how long they've been disconnected for
+
+        this.socket.on('ping', cb => {
+            if (typeof cb === 'function') cb();
+        });
     }
 
     getId = () => {
