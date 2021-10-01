@@ -130,7 +130,7 @@ export class Grid {
         return true;
     }
 
-    show(p5, x, y, w, h, pieceImages, showGridLines) {
+    show(p5, x, y, w, h, pieceImages, showGridLines, alive) {
         const cellW = w / this.w;
         const cellH = h / this.h;
 
@@ -155,7 +155,8 @@ export class Grid {
                     y + i * cellH,
                     cellW,
                     cellH,
-                    pieceImages
+                    pieceImages,
+                    !alive
                 );
             }
         }

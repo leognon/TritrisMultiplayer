@@ -245,7 +245,7 @@ export default class ClientGame extends Game {
         const cellW = w / this.w;
         const cellH = h / this.h;
 
-        this.grid.show(p5, x, y, w, h, pieceImages, visualSettings.showGridLines);
+        this.grid.show(p5, x, y, w, h, pieceImages, visualSettings.showGridLines, this.alive);
         if (this.currentPiece) {
             this.currentPiece.show(p5, x, y, cellW, cellH, pieceImages);
 
