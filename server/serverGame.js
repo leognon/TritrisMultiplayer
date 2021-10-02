@@ -23,7 +23,7 @@ export default class ServerGame extends Game {
     physicsUpdate(forceMove) {
         //TODO The line below is slightly pointless. It will get overriden 99.99% of the time. It might only help to check if someone loses??
         if (!this.alive) return;
-        this.updateToTime(Date.now() - this.startTime, true);
+        //this.updateToTime(Date.now() - this.startTime, true);
         const maxTime = SERVER_CONFIG.FORCE_MOVE_AFTER; //If nothing is received for too long, it will update automatically
         const maxMoveDownTime = this.pieceSpeed*2 + SERVER_CONFIG.FORCE_MOVE_AFTER;
         if (forceMove || this.time - maxTime >= this.lastReceivedTime || this.time - maxMoveDownTime >= this.lastClientMoveDown) {
@@ -31,6 +31,7 @@ export default class ServerGame extends Game {
             this.goToGameState(this.latestState);
             this.updateToTime(Date.now() - this.startTime, true);
             this.updateGameState();
+            console.log('Force updating to ' + this.time);
         }
     }
 
