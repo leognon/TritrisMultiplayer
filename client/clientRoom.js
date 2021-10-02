@@ -270,7 +270,8 @@ export default class ClientRoom extends React.Component {
 
     //Update the current game
     update = p5 => {
-        if (this.isIngame() && this.match) {
+        //Only update during a game. Not in game over
+        if (this.state.state == states.INGAME && this.match) {
             this.match.update(p5, this.socket);
         }
     }

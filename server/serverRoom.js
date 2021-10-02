@@ -105,7 +105,7 @@ export default class ServerRoom {
                 }
                 break;
             case 'inputs':
-                if (this.state == states.INGAME && this.match) {
+                if (this.isIngame()) {
                     this.match.gotInputs(client, data.inps);
                 }
                 break;
@@ -171,6 +171,10 @@ export default class ServerRoom {
         this.state = states.LOBBY;
     }
 
+    isIngame() {
+        return (this.state == states.INGAME && this.match);
+    }
+
     changeSpectator(id, isSpectator) {
         const valid = (isSpectator === true || isSpectator === false);
         if (!valid) {
@@ -216,7 +220,7 @@ export default class ServerRoom {
     }
 
     physicsUpdate() {
-        if (this.state == states.INGAME && this.match) {
+        if (this.isIngame()) {
             this.match.physicsUpdate();
 
             const isOver = this.match.isOver();
@@ -237,7 +241,7 @@ export default class ServerRoom {
     }
 
     clientsUpdate() {
-        if (this.state == states.INGAME && this.match) {
+        if (this.isIngame()) {
             const spectatorClients = this.users.filter(u => u.isSpectator).map(s => s.client);
             this.match.clientsUpdate(spectatorClients);
         }

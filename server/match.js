@@ -21,14 +21,26 @@ export default class ServerMatch {
 
     //If all players have lost
     isOver() {
-        for (let p of this.players) {
-            if (p.serverGame.isAlive()) return { over: false };
+        if (this.settings.versus) {
+            let numAlive = this.players.filter(p => p.serverGame.isAlive()).length;
+            if (numAlive === 0 || (numAlive === 1 && this.players.length > 1)) {
+                return {
+                    over: true,
+                    winner: this.getWinner()
+                }
+            } else {
+                return { over: false };
+            }
+        } else {
+            for (let p of this.players) {
+                if (p.serverGame.isAlive()) return { over: false };
+            }
+            this.winner = this.getWinner();
+            return {
+                over: true,
+                winner: this.winner
+            };
         }
-        this.winner = this.getWinner();
-        return {
-            over: true,
-            winner: this.winner
-        };
     }
 
     getWinner() {
@@ -132,7 +144,6 @@ class ServerPlayer {
     }
 
     physicsUpdate() {
-        //TODO What if they disconnect and rejoin soon after? Maybe not force move yet
         this.serverGame.physicsUpdate(this.client.hasLeftPage());
     }
 
