@@ -552,9 +552,14 @@ class ClientMatch {
             });
         }
 
+        let hasPlayedSounds = false;
         for (let g of gamesToDisplay) {
-            if (g === mainGame) g.playSounds(sounds, true); //Play all sounds for main game
-            else g.playSounds(sounds, false); //Only play tritris
+            if (g.alive && !hasPlayedSounds) {
+                g.playSounds(sounds, true); //Play all sounds for the first alive game
+                hasPlayedSounds = true;
+            } else {
+                g.playSounds(sounds, false); //Only play tritris sound
+            }
         }
     }
 
