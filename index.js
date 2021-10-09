@@ -97,8 +97,7 @@ io.on('connection', socket => {
     //The client left the page. Remove them from any rooms
     client.on('leftPage', () => {
         console.log(`Client ${client.getId()} left the page`);
-        leaveRoom(client);
-        client.leftPage = true;
+        completeDisconnect(client);
     });
 
     client.on('disconnect', () => {
@@ -113,15 +112,20 @@ io.on('connection', socket => {
                 //After a timeout, make sure they are still disconnected (and have been for long enough)
                 if (Date.now() - client.lastDisconnectedAt > SERVER_CONFIG.DISCONNECT_TIMEOUT - 1000 && client.socket.disconnected) {
                     console.log(`Client ${client.getId()} is still disconnected`);
-                    leaveRoom(client);
-                    removeClient(client);
+                    completeDisconnect(client);
                 }
             }, SERVER_CONFIG.DISCONNECT_TIMEOUT);
         } else {
-            removeClient(client);
+            completeDisconnect(client);
         }
     });
 });
+
+function completeDisconnect(client) { //The client has either left the page (and wont return) or has been disconnected for too long
+    leaveRoom(client);
+    client.leftPage = true;
+    removeClient(client);
+}
 
 function enqueue(socket) {
     /*
