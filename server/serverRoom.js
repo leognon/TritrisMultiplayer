@@ -1,5 +1,6 @@
 import validator from 'validator';
 import states from '../common/states.js';
+import gameTypes from '../common/gameTypes.js';
 import ServerMatch from './match.js';
 
 export default class ServerRoom {
@@ -128,8 +129,8 @@ export default class ServerRoom {
             return;
         }
 
-        if (settings.versus !== false && settings.versus !== true) {
-            this.owner.emit('msg', { msg: 'Please check the versus checkbox correctly.' });
+        if (!validator.isNumeric(settings.gameType + '') || !Object.values(gameTypes).includes(settings.gameType)) {
+            this.owner.emit('msg', { msg: 'Please choose a game type.' });
             return;
         }
 

@@ -1,4 +1,5 @@
 import ServerGame from './serverGame.js';
+import gameTypes from '../common/gameTypes.js';
 
 export default class ServerMatch {
     constructor(clients, settings) {
@@ -21,7 +22,7 @@ export default class ServerMatch {
 
     //If all players have lost
     isOver() {
-        if (this.settings.versus) {
+        if (this.settings.gameType == gameTypes.VERSUS) {
             let numAlive = this.players.filter(p => p.serverGame.isAlive()).length;
             if (numAlive === 0 || (numAlive === 1 && this.players.length > 1)) {
                 return {
@@ -46,7 +47,7 @@ export default class ServerMatch {
     getWinner() {
         if (this.players.length === 1) return null; //Only 1 player. No winner
         let winnerId = null;
-        if (this.settings.versus) {
+        if (this.settings.gameType == gameTypes.VERSUS) {
             let winnerTime = -Infinity;
             for (const p of this.players) {
                 if (p.serverGame.latestState.time > winnerTime) {
@@ -81,7 +82,7 @@ export default class ServerMatch {
         for (const p of this.players) {
             p.physicsUpdate();
         }
-        if (this.settings.versus) {
+        if (this.settings.gameType == gameTypes.VERSUS) {
             for (const p of this.players) {
                 let garbageToSend = p.getNewGarbageToSend();
                 if (garbageToSend.length > 0) {

@@ -1,4 +1,5 @@
 import React from 'react';
+import gameTypes from '../../common/gameTypes.js';
 
 export default class LobbySettings extends React.Component {
     constructor(props) {
@@ -32,11 +33,14 @@ export default class LobbySettings extends React.Component {
                 />
                 <br />
 
-                <label htmlFor="versus">Versus: </label>
-                <input id="versus" type="checkbox"
-                    checked={this.props.versus}
-                    onChange={this.props.versusChanged}
-                />
+                <label htmlFor="gameType">Game Type: </label>
+                <select name="gameType" id="gameType"
+                    value={this.props.gameType}
+                    onChange={this.props.gameTypeChanged}
+                >
+                    <option value={gameTypes.CLASSIC}>Classic Mode</option>
+                    <option value={gameTypes.VERSUS}>Versus Mode</option>
+                </select>
                 <br />
 
                 <button onClick={this.props.toggleLockRoom}>

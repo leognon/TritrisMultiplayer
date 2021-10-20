@@ -1,4 +1,5 @@
 import { Game } from '../common/game.js';
+import gameTypes from '../common/gameTypes.js';
 
 export default class ClientGame extends Game {
     constructor(name, settings) {
@@ -198,7 +199,7 @@ export default class ClientGame extends Game {
 
         const scoreDiff = this.score - baseGame.score;
         let infoTextObj;
-        if (this.versus) {
+        if (this.gameType == gameTypes.VERSUS) {
             infoTextObj = {
                 text: `Rec: ${this.totalGarbageEverReceived} Sent: ${this.getTotalNumLinesSent()}`,
                 color: 0
@@ -284,28 +285,28 @@ export default class ClientGame extends Game {
         this.getGhostPiece().show(p5, x, y, cellW, cellH, pieceImages, true);
     }
 
+    //TODO Break this into 2 functions. One for when its mainGame, one for other
     showScoreAndLines(p5, x, y, w, h, scaleFactor, baseGame) {
         let textLines;
+
+        const totalSec = Math.floor(Math.max(this.time, 0) / 1000) % 60;
+        const totalM = Math.floor(Math.max(this.time, 0) / (1000*60));
+        const timeText = `${p5.nf(totalM,2)}:${p5.nf(totalSec,2)}`;
+        let timeColor = 0;
+        const timeToTextLevelUp = this.nextLevelIncreaseVersus() - this.time;
+        if (timeToTextLevelUp <= 0) timeColor = p5.color(220, 0, 0); //Red because it will levelup on the next piece
+        else if (timeToTextLevelUp < 3 * 1000) timeColor = p5.color(220,220,30); //Yellow because it is soon
+
         if (baseGame === this) {
             const score = this.formatScore(this.score);
             let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
             if (this.lines == 0) tritrisPercent = '--';
 
-            const totalSec = Math.floor(Math.max(this.time, 0) / 1000) % 60;
-            const totalM = Math.floor(Math.max(this.time, 0) / (1000*60));
-            const timeText = `${p5.nf(totalM,2)}:${p5.nf(totalSec,2)}`;
-            let timeColor = 0;
-            const timeToTextLevelUp = this.nextLevelIncreaseVersus() - this.time;
-            if (timeToTextLevelUp <= 0) timeColor = p5.color(220, 0, 0); //Red because it will levelup on the next piece
-            else if (timeToTextLevelUp < 3 * 1000) timeColor = p5.color(220,220,30); //Yellow because it is soon
-
-
-
-            if (this.versus) {
+            if (this.gameType == gameTypes.VERSUS) {
                 textLines = [
                     [ //First line
                         {
-                            text: `Received: ${this.totalGarbageEverReceived}`,
+                            text: `Rec: ${this.totalGarbageEverReceived}`,
                             color: 0
                         },
                         {
@@ -356,18 +357,26 @@ export default class ClientGame extends Game {
             const levelDiff = this.level - baseGame.level;
             const levelTextObj = this.getDiffTextObj(levelDiff);
 
-            if (this.versus) {
+            if (this.gameType == gameTypes.VERSUS) {
                 textLines = [
                     [ //First line
                         {
-                            text: `Received: ${this.totalGarbageEverReceived}`,
+                            text: `Rec: ${this.totalGarbageEverReceived}`,
+                            color: 0
+                        },
+                        {
+                            text: ` | Sent: ${this.getTotalNumLinesSent()}`,
                             color: 0
                         }
                     ],
                     [ //Second line
                         {
-                            text: `Sent: ${this.garbageToSend.reduce((tot, g) => tot + g.numLines, 0)}`,
+                            text: `Level: ${this.level} | Time: `,
                             color: 0
+                        },
+                        {
+                            text: timeText,
+                            color: timeColor
                         }
                     ]
                 ];

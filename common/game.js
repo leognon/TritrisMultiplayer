@@ -1,83 +1,86 @@
 import { Grid, Piece } from './classes.js';
 import RandomGenerator from 'random-seed';
 import { tritrisJSON, quadtrisJSON } from './pieces.js';
+import gameTypes from '../common/gameTypes.js';
 
 /* TODO
- *
- *  Optional score differential
- *      Make the colors still show the difference
- *  Add sound effect for countdown when game is starting
- *  Make 4 players display like 3 players (without any small)
- *  [ ] Ghost Piece
- *  [X] Better score display - Show score differential
- *  [ ] Fix number of points for double (should be 300)
- *  [ ] Figure out deltaTime stuff - Don't update deltaTime after receiving data on myGame?
- *  [ ] Make server more authoritative. Validate inputs, ensure piece falls consistently
- *  [X] Look into obfuscating client side code (https://www.npmjs.com/package/javascript-obfuscator)
- *  [ ] Round decimals to make game more deterministic
- *  [ ] Add version numbers
- *      [ ] Disconnect message if server changed
- *      [ ] Remember last version so update dialogues and popup
- *  [X] Game id system
- *      [X] Create custom lobby
- *      [X] Spectate games
- *
- *      [X] Click create room button
- *          [X] Creates custom room with id
- *          [X] Settings
- *              [X] Change gamemode, level start, etc.
- *              [X] Set certain players to spectator
- *      [X] Join room
- *  [ ] More gamemodes
- *      [X] Win condition for each gamemode
- *      [X] Quadtris
- *          [X] Fix colors (both versions of a mirror is purple)
- *          [X] Redo rotation center code
- *          [X] Make pieces.json format better (add names)
- *      [ ] B-Type
- *      [X] 4x8
- *      [ ] Bitris
- *      [ ] Invisible-Tris
- *      [ ] No next
- *      [ ] Different Types of RNG
- *          [ ] 7-bag
- *          [ ] 14-bag
- *          [ ] True Random
- *          [ ] No Ninja
- *          [ ] Mastery Mode (Ninjas get less frequent)
- *      [ ] Versus Mode
- *          [ ] Different Display
- *              [ ] Since score doesn't matter, show other stats?
- *          [ ] Send garbage
- *              [X] Double sends 1 line, Tritris sends 3 lines
- *              [ ] Spins send lines?
- *              [ ] A tritris with multiple phases adds difficulty
- *              [X] Perfect Clear
- *              [ ] Combos
- *                  [ ] Back to back tritris
- *              [ ] Depending on how difficult the send was, make garbage received difficult
- *                  [X] Random open column
- *                  [ ] Open columns in different places
- *          [ ] 180 button
- *          [X] Hard drop
- *          [X] Incremental level increase (every 30 seconds)
- *          [X] Send garbage to another random person
- *  How should level starts be chosen?
- *  Database
- *      Save games / replay games
- *      Accounts
- *          Sign in with Google?
- *          Ranked matches - ELO
- *      Donate
- *          Get custom skins
- *          More lobby customization
- *              Customize pieces and counts (like get 5 ninjas or 2 razors)
- *              Custom board size
- *
- * Ping display (ms)
- * When one player tops out, switch the sounds to the other
- *      Same with flash
- *
+
+Optional score differential
+    Make the colors still show the difference
+Add sound effect for countdown when game is starting
+Make 4 players display like 3 players (without any small)
+
+change your color based on who is in the lead (show leaders name in gold?)
+
+Fix LAG!!!!!!!!!!!!!!!!
+    Maybe it is caused by React
+        Try downgrading to the version dreadnought and I tested
+    If you phase, it moves the next piece
+
+Show game history and winners
+
+If the person receiving garbage is disconnected, could there be a desync?
+    On the server, the garbage will be placed within a few seconds
+    On they disconnected client, the garbage will be placed much later
+    Once reconnected, the authoritative state will correct
+
+Click off tab before topping out?
+
+
+Get a tritris while disconnected??? Does it instantly send the garbage unfairly??
+    It sends all the lines with no warning
+
+Add all settings in room
+
+[X] Better score display - Show score differential
+[ ] Fix number of points for double (should be 300)
+[ ] Figure out deltaTime stuff - Don't update deltaTime after receiving data on myGame?
+[ ] Make server more authoritative. Validate inputs, ensure piece falls consistently
+[ ] Round decimals to make game more deterministic
+[ ] Add version numbers
+    [X] Disconnect message if server changed
+    [ ] Remember last version so update dialogues and popup
+[ ] More gamemodes
+    [X] Win condition for each gamemode
+    [ ] B-Type
+    [X] 4x8
+    [ ] Bitris
+    [ ] Invisible-Tris
+    [ ] No next
+    [ ] Different Types of RNG
+        [ ] 7-bag
+        [ ] 14-bag
+        [ ] True Random
+        [ ] No Ninja
+        [ ] Mastery Mode (Ninjas get less frequent)
+    [ ] Versus Mode
+        [X] Different Display
+            [X] Since score doesn't matter, show other stats?
+            [ ] Pieces per second
+            [ ] Tapping speed
+        [ ] Send garbage
+            [X] Double sends 1 line, Tritris sends 3 lines
+            [ ] Spins send lines?
+            [ ] A tritris with multiple phases adds difficulty
+            [X] Perfect Clear
+            [ ] Combos
+                [ ] Back to back tritris
+            [ ] Depending on how difficult the send was, make garbage received difficult
+                [X] Random open column
+                [ ] Open columns in different places
+        [ ] 180 button
+How should level starts be chosen?
+Database
+    Save games / replay games
+    Accounts
+        Sign in with Google?
+        Ranked matches - ELO
+    Donate
+        Get custom skins
+        More lobby customization
+            Customize pieces and counts (like get 5 ninjas or 2 razors)
+            Custom board size
+
  */
 
 export class Game {
@@ -170,7 +173,7 @@ export class Game {
         this.animatingLines = []; //Which lines are being cleared/animated
         this.maxAnimationTime = 20 * msPerFrame; //How long the animation should last
 
-        this.versus = settings.versus;
+        this.gameType = settings.gameType;
 
         //There are 2 types of blocking garbage
         //Line clears
@@ -311,7 +314,7 @@ export class Game {
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir, input.hardDrop);
                 if (moveData.moved) this.pieceHasMoved = true;
                 if (moveData.playSound) this.addSound('move');
-                if (input.vertDir || (this.versus && input.hardDrop)) {
+                if (input.vertDir || (this.gameType == gameTypes.VERSUS && input.hardDrop)) {
                     if (input.softDrop) this.pushDownPoints++; //Pushing down
                     else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
@@ -406,7 +409,7 @@ export class Game {
 
             this.clearLines(); //Actually clears lines
 
-            if (this.versus) {
+            if (this.gameType == gameTypes.VERSUS) {
                 const numLinesClearedToSend = this.getGarbageWeights(this.blockGarbage(numLinesCleared));
 
                 let bonusLinesCleared = 0;
@@ -492,7 +495,7 @@ export class Game {
 
         //Increase the level after a certain amt of lines, then every 10 lines
         let playSound = false;
-        if (!this.versus && this.shouldIncreaseLevel()) {
+        if (this.gameType == gameTypes.CLASSIC && this.shouldIncreaseLevel()) {
             this.level++;
             playSound = true;
             this.setSpeed();
@@ -522,7 +525,7 @@ export class Game {
     }
 
     sendGarbage(numLines) { //I have cleared lines
-        if (!this.versus) return;
+        if (this.gameType == gameTypes.CLASSIC) return;
         const garbage = new Garbage(this.garbageToSendId++, this.time, numLines);
         if (garbage.numLines > 0) {
             this.garbageToSend.push(garbage);
@@ -530,7 +533,7 @@ export class Game {
     }
 
     receiveGarbage(garbage) { //The match is telling me I have received garbage
-        if (!this.versus) return;
+        if (this.gameType == gameTypes.CLASSIC) return;
         for (const g of garbage) {
             const garb = Garbage.deserialize(g);
             this.garbageReceived.push(garb);
@@ -539,13 +542,13 @@ export class Game {
     }
 
     setGarbageReceived(garbage) {
-        if (!this.versus) return;
+        if (this.gameType == gameTypes.CLASSIC) return;
         this.garbageReceived = garbage.map(g => Garbage.deserialize(g));
         this.totalGarbageEverReceived = this.garbageReceived.reduce((tot, garb) => tot + garb.numLines, 0);
     }
 
     insertGarbage() { //Add garbage lines onto the board
-        if (!this.versus) return;
+        if (this.gameType == gameTypes.CLASSIC) return;
         if (this.garbageMeterReady) { //Make sure that there is garbage (also fixes when spawning first pieces, before garbageMeterReady has been initialized)
             for (const garbage of this.garbageMeterReady) {
                 this.grid.insertGarbage(garbage);
@@ -644,7 +647,7 @@ export class Game {
     }
 
     movePiece(horzDirection, rotation, moveDown, hardDrop) {
-        if (this.versus && hardDrop) {
+        if (this.gameType == gameTypes.VERSUS && hardDrop) {
             let moved = false; //Incase it doesn't move down at all
             while (this.isValid(this.currentPiece)) {
                 this.currentPiece.move(0, 1);

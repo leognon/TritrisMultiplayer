@@ -1,5 +1,6 @@
 import { Game, Input } from '../common/game.js';
 import SERVER_CONFIG from '../server/config.js';
+import gameTypes from '../common/gameTypes.js';
 
 export default class ServerGame extends Game {
     constructor(settings) {
@@ -44,7 +45,7 @@ export default class ServerGame extends Game {
             if (!added) continue; //Invalid input
 
             if (inp.time > latestTime) latestTime = inp.time;
-            if ((inp.vertDir || (this.versus && inp.hardDrop)) && inp.time > this.lastClientMoveDown) {
+            if ((inp.vertDir || (this.gameType == gameTypes.VERSUS && inp.hardDrop)) && inp.time > this.lastClientMoveDown) {
                 this.lastClientMoveDown = inp.time;
             }
         }

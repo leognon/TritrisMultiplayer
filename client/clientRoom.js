@@ -5,6 +5,7 @@ import LobbySettings from './components/lobbySettings.js';
 import Background from './components/background.js';
 import COMMON_CONFIG from '../common/config.js';
 import states from '../common/states.js';
+import gameTypes from '../common/gameTypes.js';
 import MyGame from './myGame.js';
 import OtherGame from './otherGame.js';
 import keyboardMap from './components/keyboardMap.js';
@@ -22,7 +23,7 @@ export default class ClientRoom extends React.Component {
                 startLevel: 0,
                 use4x8: false,
                 quadtris: false,
-                versus: true //TODO Make this false by default
+                gameType: gameTypes.CLASSIC,
             },
             roomIsLocked: false,
         }
@@ -101,8 +102,8 @@ export default class ClientRoom extends React.Component {
                             quadtris={this.state.settings.quadtris}
                             quadtrisChanged={this.quadtrisChanged}
 
-                            versus={this.state.settings.versus}
-                            versusChanged={this.versusChanged}
+                            gameType={this.state.settings.gameType}
+                            gameTypeChanged={this.gameTypeChanged}
 
                             toggleLockRoom={this.toggleLockRoom}
                             roomIsLocked={this.state.roomIsLocked}
@@ -214,9 +215,9 @@ export default class ClientRoom extends React.Component {
         this.setState({ settings: newSettings });
     }
 
-    versusChanged = evnt => {
+    gameTypeChanged = evnt => {
         const newSettings = { ...this.state.settings };
-        newSettings.versus = evnt.target.checked;
+        newSettings.gameType = parseInt(evnt.target.value);
         this.setState({ settings: newSettings });
     }
 
@@ -426,7 +427,7 @@ class ClientMatch {
     show(p5, pieceImages, sounds, visualSettings) {
         const allOtherGames = this.otherPlayers.map(p => p.game);
         let sortFn;
-        if (this.settings.versus) {
+        if (this.settings.gameType = gameTypes.VERSUS) {
             sortFn = (a, b) => {
                 if (b.alive === a.alive) { //They are both dead or both alive
                     return b.score - a.score; //Show highest score first

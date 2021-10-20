@@ -1,5 +1,6 @@
 import { Input } from '../common/game.js';
 import ClientGame from '../client/clientGame';
+import gameTypes from '../common/gameTypes.js';
 
 export default class MyGame extends ClientGame {
     constructor(name, myControls, settings) {
@@ -77,7 +78,7 @@ export default class MyGame extends ClientGame {
                 this.addInput(inp);
 
                 //If the piece was able to just move down, reset the timer
-                if (moveDown || (this.versus && hardDrop)) {
+                if (moveDown || (this.gameType == gameTypes.VERSUS && hardDrop)) {
                     if (softDrop) this.pushDownPoints++; //Pushing down
                     else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
@@ -131,7 +132,7 @@ export default class MyGame extends ClientGame {
         let softDrop = false;
         let hardDrop = false;
         let pieceSpeed = this.pieceSpeed; //The default piece speed based on the current level
-        if (this.versus && p5.keyIsDown(this.controls.hardDrop.key) && !this.hardDropWasPressed) {
+        if (this.gameType == gameTypes.VERSUS && p5.keyIsDown(this.controls.hardDrop.key) && !this.hardDropWasPressed) {
             hardDrop = true;
         } else if (p5.keyIsDown(this.controls.down.key)) {
             //Pressing down moves at 19 speed
@@ -177,10 +178,6 @@ export default class MyGame extends ClientGame {
         for (const s in this.soundsToPlay) this.soundsToPlay[s] = false; //Only play new sounds
 
         this.lastFrame = Date.now();
-        //TODO???? Should lastFrame not be set here because that might cause deltaTime to "skip" time
-        //In testing it was causing minor lagbacks (especially on 19)
-
-        this.redraw = true;
     }
 
     getInputs() {
