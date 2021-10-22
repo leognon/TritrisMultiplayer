@@ -226,10 +226,11 @@ export default class ServerRoom {
 
             const isOver = this.match.isOver();
             if (isOver.over) {
-                if (this.endMatchAt == -1) {
+                if (isOver.delay && this.endMatchAt == -1) {
                     //The match just ended
                     this.endMatchAt = Date.now() + this.endMatchDelay;
-                } else if (Date.now() >= this.endMatchAt) {
+                }
+                if (!isOver.delay || Date.now() >= this.endMatchAt) {
                     //The match is still over, wait is over
                     this.winner = isOver.winner;
                     this.endMatch();

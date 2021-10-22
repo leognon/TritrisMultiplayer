@@ -85,22 +85,32 @@ Database
 
 export class Game {
     constructor(settings) {
+        this.gameType = settings.gameType;
+
         this.w = 8;
         this.h = 16;
         if (settings.use4x8) {
             this.w = 4;
             this.h = 8;
         }
+
+        this.seed = settings.seed;
+        this.gen = new RandomGenerator(this.seed);
+        this.numGens = 0; //Used to know how many steps to advance the rng from the initial state when the client recieves an update
+
         this.grid = new Grid(this.w, this.h);
+
+        if (this.gameType == gameTypes.B_TYPE) {
+            const bTypeGen = new RandomGenerator(settings.bTypeSeed);
+            const percentGarbage = 0.9;
+            const garbageHeight = 6;
+            this.grid.insertBType(bTypeGen, garbageHeight, percentGarbage);
+        }
 
         this.tritrisAmt = 0; //For statistics
         const countDownLength = 3 * 1000;
         this.startTime = Date.now() + countDownLength; //A 5 second countdown before the game starts
         this.time = -countDownLength;
-
-        this.seed = settings.seed;
-        this.gen = new RandomGenerator(this.seed);
-        this.numGens = 0; //Used to know how many steps to advance the rng from the initial state when the client recieves an update
 
         this.alive = true;
 
@@ -172,8 +182,6 @@ export class Game {
         this.animatingUntil = 0; //How long until the line clear animation is done
         this.animatingLines = []; //Which lines are being cleared/animated
         this.maxAnimationTime = 20 * msPerFrame; //How long the animation should last
-
-        this.gameType = settings.gameType;
 
         //There are 2 types of blocking garbage
         //Line clears
@@ -647,7 +655,7 @@ export class Game {
     }
 
     movePiece(horzDirection, rotation, moveDown, hardDrop) {
-        if (this.gameType == gameTypes.VERSUS && hardDrop) {
+        if (this.gameType != gameTypes.CLASSIC && hardDrop) {
             let moved = false; //Incase it doesn't move down at all
             while (this.isValid(this.currentPiece)) {
                 this.currentPiece.move(0, 1);

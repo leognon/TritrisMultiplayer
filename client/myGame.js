@@ -132,7 +132,7 @@ export default class MyGame extends ClientGame {
         let softDrop = false;
         let hardDrop = false;
         let pieceSpeed = this.pieceSpeed; //The default piece speed based on the current level
-        if (this.gameType == gameTypes.VERSUS && p5.keyIsDown(this.controls.hardDrop.key) && !this.hardDropWasPressed) {
+        if (this.gameType != gameTypes.CLASSIC && p5.keyIsDown(this.controls.hardDrop.key) && !this.hardDropWasPressed) {
             hardDrop = true;
         } else if (p5.keyIsDown(this.controls.down.key)) {
             //Pressing down moves at 19 speed

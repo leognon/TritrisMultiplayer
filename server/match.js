@@ -7,6 +7,9 @@ export default class ServerMatch {
             seed: Math.random(),
             ...settings,
         }
+        if (this.settings.gameType == gameTypes.B_TYPE) {
+            this.settings.bTypeSeed = Math.random();
+        }
 
         this.players = [];
         for (let client of clients) {
@@ -22,49 +25,86 @@ export default class ServerMatch {
 
     //If all players have lost
     isOver() {
-        if (this.settings.gameType == gameTypes.VERSUS) {
-            let numAlive = this.players.filter(p => p.serverGame.isAlive()).length;
-            if (numAlive === 0 || (numAlive === 1 && this.players.length > 1)) {
+        let numAlive = this.players.filter(p => p.serverGame.isAlive()).length;
+
+        switch (this.settings.gameType) {
+            case gameTypes.VERSUS:
+                //Last one alive
+                if (numAlive === 0 || (numAlive === 1 && this.players.length > 1)) {
+                    return {
+                        over: true,
+                        winner: this.getWinner(),
+                        delay: true
+                    }
+                } else {
+                    return { over: false };
+                }
+            case gameTypes.CLASSIC:
+                for (let p of this.players) {
+                    if (p.serverGame.isAlive()) return { over: false };
+                }
+                this.winner = this.getWinner();
                 return {
                     over: true,
-                    winner: this.getWinner()
+                    winner: this.winner,
+                    delay: true
+                };
+            case gameTypes.B_TYPE:
+                for (let p of this.players) {
+                    if (!p.serverGame.hasGarbage()) {
+                        //TODO Just use getWinner function...
+                        return {
+                            over: true,
+                            winner: p.client.userId,
+                            delay: false
+                        }
+                    }
                 }
-            } else {
-                return { over: false };
-            }
-        } else {
-            for (let p of this.players) {
-                if (p.serverGame.isAlive()) return { over: false };
-            }
-            this.winner = this.getWinner();
-            return {
-                over: true,
-                winner: this.winner
-            };
+                if (numAlive === 0) {
+                    return { //Nobody cleared all the garbage
+                        over: true,
+                        winner: null,
+                        delay: true
+                    }
+                }
+                return { over: false }
         }
     }
 
     getWinner() {
         if (this.players.length === 1) return null; //Only 1 player. No winner
+
         let winnerId = null;
-        if (this.settings.gameType == gameTypes.VERSUS) {
-            let winnerTime = -Infinity;
-            for (const p of this.players) {
-                if (p.serverGame.latestState.time > winnerTime) {
-                    winnerTime = p.serverGame.latestState.time;
-                    winnerId = p.client.userId;
+
+        switch (this.settings.gameType) {
+            case gameTypes.VERSUS:
+                let winnerTime = -Infinity;
+                for (const p of this.players) {
+                    if (p.serverGame.latestState.time > winnerTime) {
+                        winnerTime = p.serverGame.latestState.time;
+                        winnerId = p.client.userId;
+                    }
                 }
-            }
-        } else {
-            let winnerScore = -Infinity;
-            for (const p of this.players) {
-                if (p.serverGame.latestState.score > winnerScore) {
-                    winnerScore = p.serverGame.latestState.score;
-                    winnerId = p.client.userId;
+                return winnerId;
+            case gameTypes.CLASSIC:
+                let winnerScore = -Infinity;
+                for (const p of this.players) {
+                    if (p.serverGame.latestState.score > winnerScore) {
+                        winnerScore = p.serverGame.latestState.score;
+                        winnerId = p.client.userId;
+                    }
                 }
-            }
+                return winnerId;
+            case gameTypes.B_TYPE:
+                for (const p of this.players) {
+                    debugger;
+                    if (!p.serverGame.latestState.grid.hasGarbage()) {
+                        winnerId = p.client.userId;
+                    }
+                }
+                return winnerId;
         }
-        return winnerId;
+        return null;
     }
 
     //When inputs have been received from a player

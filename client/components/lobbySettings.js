@@ -38,8 +38,9 @@ export default class LobbySettings extends React.Component {
                     value={this.props.gameType}
                     onChange={this.props.gameTypeChanged}
                 >
-                    <option value={gameTypes.CLASSIC}>Classic Mode</option>
-                    <option value={gameTypes.VERSUS}>Versus Mode</option>
+                    <option value={gameTypes.CLASSIC}>Classic</option>
+                    <option value={gameTypes.VERSUS}>Versus (Modern)</option>
+                    <option value={gameTypes.B_TYPE}>B-Type</option>
                 </select>
                 <br />
 

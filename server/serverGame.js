@@ -1,4 +1,5 @@
 import { Game, Input } from '../common/game.js';
+import { Grid } from '../common/classes.js';
 import SERVER_CONFIG from '../server/config.js';
 import gameTypes from '../common/gameTypes.js';
 
@@ -61,6 +62,12 @@ export default class ServerGame extends Game {
 
     isAlive() {
         return this.latestState.alive;
+    }
+
+    hasGarbage() {
+        const latestGrid = new Grid(this.latestState.serializedGrid);
+        //This DOESNT account for latest state, but that would require the player to have an extra input even once they've cleared all garbage. This should work well enough
+        return latestGrid.hasGarbage();
     }
 
     addInput(inp) {

@@ -37,6 +37,29 @@ export class Grid {
         return output;
     }
 
+    insertBType(rand, garbageHeight, percentGarbage) {
+        for (let i = this.h - garbageHeight; i < this.h; i++) {
+            for (let j = 0; j < this.w; j++) {
+                const isFilled = rand.random() < percentGarbage;
+                if (isFilled) {
+                    this.insertBTypeCell(i, j, rand);
+                }
+            }
+        }
+    }
+
+    insertBTypeCell(i, j, rand) {
+        const triFilled = rand.range(5);
+        if (triFilled < 4) { //If triFilled is 0-3 then it fills 1 triangles
+            const row = Math.floor(triFilled / 2);
+            const col = triFilled % 2;
+            this.grid[i][j].tris[row][col] = new Triangle(7);
+        } else { //If its 4, it fills both
+            this.grid[i][j].tris[0][0] = new Triangle(7);
+            this.grid[i][j].tris[1][1] = new Triangle(7);
+        }
+    }
+
     clearLines() {
         let linesCleared = [];
         for (let row = 0; row < this.h; row++) {
@@ -52,6 +75,15 @@ export class Grid {
             }
         }
         return linesCleared;
+    }
+
+    hasGarbage() {
+        for (let i = 0; i < this.h; i++) {
+            for (let j = 0; j < this.w; j++) {
+                if (this.grid[i][j].hasGarbage()) return true;
+            }
+        }
+        return false;
     }
 
     //If all the rows except for the ones in exlcuding are empty
@@ -222,6 +254,15 @@ export class GridCell {
     removeLeftTri() {
         this.tris[0][0] = null;
         this.tris[1][0] = null;
+    }
+
+    hasGarbage() {
+        for (let i = 0; i < 2; i++) {
+            for (let j = 0; j < 2; j++) {
+                if (this.tris[i][j] !== null && this.tris[i][j].clr == 7) return true;
+            }
+        }
+        return false;
     }
 
     isEmpty() {
