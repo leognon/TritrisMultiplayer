@@ -337,17 +337,17 @@ export default class ClientGame extends Game {
                 return [
                     [ //First line
                         {
-                            text: `Rec: ${this.totalGarbageEverReceived}`,
+                            text: `Rec ${this.totalGarbageEverReceived}`,
                             color: 0
                         },
                         {
-                            text: ` | Sent: ${this.getTotalNumLinesSent()}`,
+                            text: ` | Sent ${this.getTotalNumLinesSent()}`,
                             color: 0
                         }
                     ],
                     [ //Second line
                         {
-                            text: `Level: ${this.level} | Time: `,
+                            text: `Level ${this.level} | Time `,
                             color: 0
                         },
                         this.getTimeText()
@@ -378,7 +378,11 @@ export default class ClientGame extends Game {
                     ],
                     [ //Second line
                         {
-                            text: `Lines Remaining: ${this.grid.countGarbageRows()}`,
+                            text: `Garbage Left ${this.grid.countGarbageRows()} | Time `,
+                            color: 0
+                        },
+                        {
+                            text: this.getTimeText().text,
                             color: 0
                         }
                     ]
@@ -407,17 +411,17 @@ export default class ClientGame extends Game {
                 return [
                     [ //First line
                         {
-                            text: `Rec: ${this.totalGarbageEverReceived}`,
+                            text: `Rec ${this.totalGarbageEverReceived}`,
                             color: 0
                         },
                         {
-                            text: ` | Sent: ${this.getTotalNumLinesSent()}`,
+                            text: ` | Sent ${this.getTotalNumLinesSent()}`,
                             color: 0
                         }
                     ],
                     [ //Second line
                         {
-                            text: `Level: ${this.level} | Time: `,
+                            text: `Level ${this.level} | Time `,
                             color: 0
                         },
                         this.getTimeText()
@@ -443,7 +447,7 @@ export default class ClientGame extends Game {
                     ],
                     [ //Second line
                         {
-                            text: 'Lines: ',
+                            text: 'Lines ',
                             color: 0
                         },
                         lineTextObj,
@@ -468,7 +472,11 @@ export default class ClientGame extends Game {
                     ],
                     [ //Second line
                         {
-                            text: `Lines Remaining: ${this.grid.countGarbageRows()}`,
+                            text: `Garbage Left ${this.grid.countGarbageRows()} | Time `,
+                            color: 0
+                        },
+                        {
+                            text: this.getTimeText().text,
                             color: 0
                         }
                     ]
