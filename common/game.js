@@ -208,7 +208,7 @@ export class Game {
         this.garbageMeterWaiting = []; //Lines of garbage that are still waiting to be inserted
         this.garbageMeterReady = []; //Lines of garbage the will be inserted when the piece is placed
 
-        this.hasClearedGarbage = false; //A persistent value for B-type winning. Once garbage is cleared, it will always be true
+        this.leastAmountOfGarbage = this.grid.countGarbageRows(); //A persistent value for B-type winning. Once a line of garbage is cleared, it will be changed forever
 
         this.inputs = [];
         this.doneInputId = -1; //The higheset input id that has been completed
@@ -356,9 +356,8 @@ export class Game {
             let playSound = this.updateScoreAndLevel(); //After a line clear, update score and level and removed the lines from the grid
             if (playSound) this.addSound('levelup');
 
-            if (!this.grid.hasGarbage() && !this.hasClearedGarbage) {
-                this.hasClearedGarbage = true; //Used for B type win detection
-            }
+            //Once lines are removed, check if all garbage is cleared
+            this.leastAmountOfGarbage = Math.min(this.grid.countGarbageRows(), this.leastAmountOfGarbage); //Used for B type win detection
         }
 
         this.updateGarbageMeter();

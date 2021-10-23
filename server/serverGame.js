@@ -65,9 +65,9 @@ export default class ServerGame extends Game {
         return this.latestState.alive;
     }
 
-    hasWonBType() {
-        //If the player has ever cleared all the garbage
-        return this.hasClearedGarbage;
+    getLeastAmountOfGarbage() {
+        //How much garbage the player has cleared
+        return this.leastAmountOfGarbage;
     }
 
     addInput(inp) {

@@ -77,13 +77,17 @@ export class Grid {
         return linesCleared;
     }
 
-    hasGarbage() {
+    countGarbageRows() {
+        let numRows = 0;
         for (let i = 0; i < this.h; i++) {
             for (let j = 0; j < this.w; j++) {
-                if (this.grid[i][j].hasGarbage()) return true;
+                if (this.grid[i][j].hasGarbage()) {
+                    numRows++;
+                    break; //This row has garbage
+                }
             }
         }
-        return false;
+        return numRows;
     }
 
     //If all the rows except for the ones in exlcuding are empty

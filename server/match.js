@@ -50,21 +50,12 @@ export default class ServerMatch {
                     delay: true
                 };
             case gameTypes.B_TYPE:
-                for (let p of this.players) {
-                    if (p.serverGame.hasWonBType()) {
-                        //TODO Just use getWinner function...
-                        return {
-                            over: true,
-                            winner: p.client.userId,
-                            delay: false
-                        }
-                    }
-                }
-                if (numAlive === 0) {
-                    return { //Nobody cleared all the garbage
+                const { winner, delay } = this.getWinner();
+                if (winner !== null) {
+                    return {
                         over: true,
-                        winner: null,
-                        delay: true
+                        winner,
+                        delay
                     }
                 }
                 return { over: false }
@@ -96,15 +87,40 @@ export default class ServerMatch {
                 }
                 return winnerId;
             case gameTypes.B_TYPE:
-                for (const p of this.players) {
-                    debugger;
-                    if (!p.serverGame.latestState.grid.hasGarbage()) {
-                        winnerId = p.client.userId;
+                let allDead = true;
+                let leastGarbagePlayer = null;
+                for (let p of this.players) {
+                    //Whoever clears all garbage first wins
+                    const myAmount = p.serverGame.getLeastAmountOfGarbage();
+                    if (myAmount === 0) {
+                        return {
+                            winner: p.client.userId,
+                            delay: false
+                        }
+                    } else {
+                        if (leastGarbagePlayer === null) {
+                            leastGarbagePlayer = p;
+                        } else if (myAmount < leastGarbagePlayer.serverGame.getLeastAmountOfGarbage()) {
+                            //Whoever cleared the most garbage wins
+                            leastGarbagePlayer = p;
+                        } else if (myAmount == leastGarbagePlayer.serverGame.getLeastAmountOfGarbage() &&
+                                    p.serverGame.latestState.time < leastGarbagePlayer.serverGame.time) {
+                            //If the same amount was cleared, whoever cleared it first wins
+                            //TODO Currently it is actually who died first, which isn't really right. Perhaps a better delimeter like score?
+                            leastGarbagePlayer = p;
+                        }
+                    }
+                    if (p.serverGame.isAlive()) allDead = false;
+                }
+                if (allDead && leastGarbagePlayer !== null) {
+                    //If everyone dies before anyone has cleared all garbage, winner is who cleared the most
+                    return {
+                        winner: leastGarbagePlayer.client.userId,
+                        delay: true
                     }
                 }
-                return winnerId;
         }
-        return null;
+        return { winner: null, delay: true };
     }
 
     //When inputs have been received from a player
