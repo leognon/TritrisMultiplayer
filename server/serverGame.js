@@ -1,5 +1,4 @@
 import { Game, Input } from '../common/game.js';
-import { Grid } from '../common/classes.js';
 import SERVER_CONFIG from '../server/config.js';
 import gameTypes from '../common/gameTypes.js';
 
@@ -23,13 +22,15 @@ export default class ServerGame extends Game {
     }
 
     physicsUpdate(forceMove) {
-        //TODO The line below is slightly pointless. It will get overriden 99.99% of the time. It might only help to check if someone loses??
         if (!this.alive) return;
-        //this.updateToTime(Date.now() - this.startTime, true);
+
+        //This will almost always get overridden by user inputs. It is really only for calculating a win in B type without requiring the player to have an extra input to advance the state
+        this.updateToTime(Date.now() - this.startTime, true);
+
         const maxTime = SERVER_CONFIG.FORCE_MOVE_AFTER; //If nothing is received for too long, it will update automatically
         const maxMoveDownTime = this.pieceSpeed*2 + SERVER_CONFIG.FORCE_MOVE_AFTER;
         if (forceMove || this.time - maxTime >= this.lastReceivedTime || this.time - maxMoveDownTime >= this.lastClientMoveDown) {
-            //If no inputs recieved for too long, force the state to update
+            //If no inputs received for too long, force the state to update
             this.goToGameState(this.latestState);
             this.updateToTime(Date.now() - this.startTime, true);
             this.updateGameState();
@@ -64,10 +65,9 @@ export default class ServerGame extends Game {
         return this.latestState.alive;
     }
 
-    hasGarbage() {
-        const latestGrid = new Grid(this.latestState.serializedGrid);
-        //This DOESNT account for latest state, but that would require the player to have an extra input even once they've cleared all garbage. This should work well enough
-        return latestGrid.hasGarbage();
+    hasWonBType() {
+        //If the player has ever cleared all the garbage
+        return this.hasClearedGarbage;
     }
 
     addInput(inp) {

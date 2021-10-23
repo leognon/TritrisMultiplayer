@@ -51,7 +51,7 @@ export default class ServerMatch {
                 };
             case gameTypes.B_TYPE:
                 for (let p of this.players) {
-                    if (!p.serverGame.hasGarbage()) {
+                    if (p.serverGame.hasWonBType()) {
                         //TODO Just use getWinner function...
                         return {
                             over: true,
