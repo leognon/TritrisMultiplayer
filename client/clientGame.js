@@ -146,7 +146,7 @@ export default class ClientGame extends Game {
     showBig({ p5, left, centered, maxWidth, pieceImages, baseGame, visualSettings }) {
         const elems = this.getBigElements(p5, left, centered, maxWidth);
 
-        this.showScoreAndLines(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.scaleFactor, baseGame);
+        this.showBigStats(p5, elems.topText.x, elems.topText.y, elems.topText.w, elems.topText.h, elems.scaleFactor, baseGame);
 
         this.showGameBoard(p5, elems.board.x, elems.board.y, elems.board.w, elems.board.h, pieceImages, visualSettings);
 
@@ -199,14 +199,22 @@ export default class ClientGame extends Game {
 
         const scoreDiff = this.score - baseGame.score;
         let infoTextObj;
-        if (this.gameType == gameTypes.VERSUS) {
-            infoTextObj = {
-                text: `Rec: ${this.totalGarbageEverReceived} Sent: ${this.getTotalNumLinesSent()}`,
-                color: 0
-            }
-        } else {
-            infoTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
-            //Display their score
+        switch (this.gameType) {
+            case gameTypes.VERSUS:
+                infoTextObj = {
+                    text: `Rec: ${this.totalGarbageEverReceived} Sent: ${this.getTotalNumLinesSent()}`,
+                    color: 0
+                }
+                break;
+            case gameTypes.CLASSIC:
+                infoTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff)); //Display their score
+                break;
+            case gameTypes.B_TYPE:
+                infoTextObj = {
+                    text: `Remaining: ${this.grid.countGarbageRows()}`,
+                    color: 0
+                }
+                break;
         }
         const textObjs = [
             {
@@ -285,25 +293,48 @@ export default class ClientGame extends Game {
         this.getGhostPiece().show(p5, x, y, cellW, cellH, pieceImages, true);
     }
 
-    //TODO Break this into 2 functions. One for when its mainGame, one for other
-    showScoreAndLines(p5, x, y, w, h, scaleFactor, baseGame) {
+    showBigStats(p5, x, y, w, h, scaleFactor, baseGame) {
+
         let textLines;
-
-        const totalSec = Math.floor(Math.max(this.time, 0) / 1000) % 60;
-        const totalM = Math.floor(Math.max(this.time, 0) / (1000*60));
-        const timeText = `${p5.nf(totalM,2)}:${p5.nf(totalSec,2)}`;
-        let timeColor = 0;
-        const timeToTextLevelUp = this.nextLevelIncreaseVersus() - this.time;
-        if (timeToTextLevelUp <= 0) timeColor = p5.color(220, 0, 0); //Red because it will levelup on the next piece
-        else if (timeToTextLevelUp < 3 * 1000) timeColor = p5.color(220,220,30); //Yellow because it is soon
-
         if (baseGame === this) {
-            const score = this.formatScore(this.score);
-            let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
-            if (this.lines == 0) tritrisPercent = '--';
+            textLines = this.getMainGameScoreTextLines();
+        } else {
+            textLines = this.getOtherGameTextLines(baseGame);
+        }
+        const innerTextHeight = h - 5*scaleFactor;
+        const lineHeight = innerTextHeight / textLines.length;
+        let fontSize = lineHeight - 10*scaleFactor;
 
-            if (this.gameType == gameTypes.VERSUS) {
-                textLines = [
+        const textPadding = 8 * scaleFactor;
+        p5.textSize(fontSize); //Needed to calcualte the text width accurately
+        const lineWidths = textLines.map(parts => this.getColorfulLineWidth(p5, parts));
+        const longestLineWidth = Math.max(...lineWidths) + textPadding*2;
+        if (longestLineWidth > w) {
+            const scale = w / longestLineWidth;
+            fontSize *= scale;
+        }
+
+        p5.stroke(0);
+        p5.strokeWeight(3 * scaleFactor);
+        p5.fill(100); //Box border
+        p5.rect(x, y, w, h);
+
+        p5.textSize(fontSize);
+        p5.textAlign(p5.LEFT, p5.TOP);
+        //p5.fill(0);
+        p5.noStroke();
+        for (let i = 0; i < textLines.length; i++) {
+            this.showColorfulText(p5, textLines[i], x + textPadding, y + lineHeight*i + textPadding);
+        }
+    }
+
+    getMainGameScoreTextLines() {
+        let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
+        if (this.lines == 0) tritrisPercent = '--';
+
+        switch (this.gameType) {
+            case gameTypes.VERSUS:
+                return [
                     [ //First line
                         {
                             text: `Rec: ${this.totalGarbageEverReceived}`,
@@ -319,17 +350,14 @@ export default class ClientGame extends Game {
                             text: `Level: ${this.level} | Time: `,
                             color: 0
                         },
-                        {
-                            text: timeText,
-                            color: timeColor
-                        }
+                        this.getTimeText()
                     ]
                 ];
-            } else {
-                textLines = [
+            case gameTypes.CLASSIC:
+                return [
                     [ //First line of text
                         {
-                            text: `Score ${score} | ${tritrisPercent}%`,
+                            text: `Score ${this.formatScore(this.score)} | ${tritrisPercent}%`,
                             color: 0
                         }
                     ],
@@ -340,25 +368,43 @@ export default class ClientGame extends Game {
                         }
                     ]
                 ];
-            }
-        } else {
-            const scoreDiff = this.score - baseGame.score; //Show comparison
-            const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
+            case gameTypes.B_TYPE:
+                return [
+                    [ //First line of text
+                        {
+                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines}`,
+                            color: 0
+                        }
+                    ],
+                    [ //Second line
+                        {
+                            text: `Lines Remaining: ${this.grid.countGarbageRows()}`,
+                            color: 0
+                        }
+                    ]
+                ];
+        }
+    }
 
-            const myTritrisPercent = (this.lines !== 0) ? Math.round(100 * 3*this.tritrisAmt / this.lines) : 0;
-            const otherTritrisPercent = (baseGame.lines !== 0) ? Math.round(100 * 3*baseGame.tritrisAmt / baseGame.lines) : 0;
-            const tritrisPercentDiff = myTritrisPercent - otherTritrisPercent;
-            const tritrisPercentTextObj = this.getDiffTextObj(tritrisPercentDiff);
+    getOtherGameTextLines(baseGame) {
+        const scoreDiff = this.score - baseGame.score; //Show comparison
+        const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
 
-            const lineDiff = this.lines - baseGame.lines; //Show comparison
-            const lineTextObj = this.getDiffTextObj(lineDiff);
+        const myTritrisPercent = (this.lines !== 0) ? Math.round(100 * 3*this.tritrisAmt / this.lines) : 0;
+        const otherTritrisPercent = (baseGame.lines !== 0) ? Math.round(100 * 3*baseGame.tritrisAmt / baseGame.lines) : 0;
+        const tritrisPercentDiff = myTritrisPercent - otherTritrisPercent;
+        const tritrisPercentTextObj = this.getDiffTextObj(tritrisPercentDiff);
 
-            //TODO What if they have the same score? It looks like they have 0 points
-            const levelDiff = this.level - baseGame.level;
-            const levelTextObj = this.getDiffTextObj(levelDiff);
+        const lineDiff = this.lines - baseGame.lines; //Show comparison
+        const lineTextObj = this.getDiffTextObj(lineDiff);
 
-            if (this.gameType == gameTypes.VERSUS) {
-                textLines = [
+        //TODO What if they have the same score? It looks like they have 0 points
+        const levelDiff = this.level - baseGame.level;
+        const levelTextObj = this.getDiffTextObj(levelDiff);
+
+        switch (this.gameType) {
+            case gameTypes.VERSUS:
+                return [
                     [ //First line
                         {
                             text: `Rec: ${this.totalGarbageEverReceived}`,
@@ -374,14 +420,11 @@ export default class ClientGame extends Game {
                             text: `Level: ${this.level} | Time: `,
                             color: 0
                         },
-                        {
-                            text: timeText,
-                            color: timeColor
-                        }
+                        this.getTimeText()
                     ]
                 ];
-            } else {
-                textLines = [
+            case gameTypes.CLASSIC:
+                return [
                     [ //First line
                         {
                             text: 'Score ',
@@ -415,32 +458,21 @@ export default class ClientGame extends Game {
                         }
                     ]
                 ];
-            }
-        }
-        const innerTextHeight = h - 5*scaleFactor;
-        const lineHeight = innerTextHeight / textLines.length;
-        let fontSize = lineHeight - 10*scaleFactor;
-
-        const textPadding = 8 * scaleFactor;
-        p5.textSize(fontSize); //Needed to calcualte the text width accurately
-        const lineWidths = textLines.map(parts => this.getColorfulLineWidth(p5, parts));
-        const longestLineWidth = Math.max(...lineWidths) + textPadding*2;
-        if (longestLineWidth > w) {
-            const scale = w / longestLineWidth;
-            fontSize *= scale;
-        }
-
-        p5.stroke(0);
-        p5.strokeWeight(3 * scaleFactor);
-        p5.fill(100); //Box border
-        p5.rect(x, y, w, h);
-
-        p5.textSize(fontSize);
-        p5.textAlign(p5.LEFT, p5.TOP);
-        //p5.fill(0);
-        p5.noStroke();
-        for (let i = 0; i < textLines.length; i++) {
-            this.showColorfulText(p5, textLines[i], x + textPadding, y + lineHeight*i + textPadding);
+            case gameTypes.B_TYPE:
+                return [
+                    [ //First line of text
+                        {
+                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines}`,
+                            color: 0
+                        }
+                    ],
+                    [ //Second line
+                        {
+                            text: `Lines Remaining: ${this.grid.countGarbageRows()}`,
+                            color: 0
+                        }
+                    ]
+                ];
         }
     }
 
@@ -490,7 +522,21 @@ export default class ClientGame extends Game {
         if (isNeg) formattedScore = '-' + formattedScore;
         return formattedScore;
     }
-    
+
+    getTimeText() {
+        const nf = x => x.toString().length == 1 ? '0'+x : x; //Format to 2 digits (leading 0)
+
+        const totalSec = Math.floor(Math.max(this.time, 0) / 1000) % 60;
+        const totalM = Math.floor(Math.max(this.time, 0) / (1000*60));
+        const timeText = `${nf(totalM,2)}:${nf(totalSec,2)}`;
+        let timeColor = 0;
+        const timeToTextLevelUp = this.nextLevelIncreaseVersus() - this.time;
+        if (timeToTextLevelUp <= 0) timeColor = p5.color(220, 0, 0); //Red because it will levelup on the next piece
+        else if (timeToTextLevelUp < 3 * 1000) timeColor = p5.color(220,220,30); //Yellow because it is soon
+
+        return { text: timeText, color: timeColor }
+    }
+
     getTotalNumLinesSent() {
         return this.garbageToSend.reduce((tot, g) => tot + g.numLines, 0);
     }
