@@ -69,7 +69,6 @@ Add all settings in room
                 [X] Random open column
                 [ ] Open columns in different places
         [ ] 180 button
-How should level starts be chosen?
 Database
     Save games / replay games
     Accounts
@@ -103,7 +102,7 @@ export class Game {
         if (this.gameType == gameTypes.B_TYPE) {
             const bTypeGen = new RandomGenerator(settings.bTypeSeed);
             const percentGarbage = 0.9;
-            const garbageHeight = 6;
+            const garbageHeight = 5;
             this.grid.insertBType(bTypeGen, garbageHeight, percentGarbage);
         }
 
