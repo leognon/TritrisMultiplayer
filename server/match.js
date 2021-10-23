@@ -16,7 +16,7 @@ export default class ServerMatch {
             this.addPlayer(client);
         }
 
-        this.winner = null; //TODO What is this for??
+        this.someoneHasWon = false;
     }
 
     addPlayer(client) {
@@ -90,7 +90,7 @@ export default class ServerMatch {
                 return {
                     over: true,
                     winner: p.client.userId,
-                    delay: false
+                    delay: true
                 }
             } else {
                 if (leastGarbagePlayer === null) {
