@@ -16,7 +16,7 @@ export default class ServerMatch {
             this.addPlayer(client);
         }
 
-        this.winner = null;
+        this.winner = null; //TODO What is this for??
     }
 
     addPlayer(client) {
@@ -25,102 +25,99 @@ export default class ServerMatch {
 
     //If all players have lost
     isOver() {
-        let numAlive = this.players.filter(p => p.serverGame.isAlive()).length;
-
         switch (this.settings.gameType) {
             case gameTypes.VERSUS:
-                //Last one alive
-                if (numAlive === 0 || (numAlive === 1 && this.players.length > 1)) {
-                    return {
-                        over: true,
-                        winner: this.getWinner(),
-                        delay: true
-                    }
-                } else {
-                    return { over: false };
-                }
+                return this.isOverVersus();
             case gameTypes.CLASSIC:
-                for (let p of this.players) {
-                    if (p.serverGame.isAlive()) return { over: false };
-                }
-                this.winner = this.getWinner();
-                return {
-                    over: true,
-                    winner: this.winner,
-                    delay: true
-                };
+                return this.isOverClassic();
             case gameTypes.B_TYPE:
-                const { winner, delay } = this.getWinner();
-                if (winner !== null) {
-                    return {
-                        over: true,
-                        winner,
-                        delay
-                    }
-                }
-                return { over: false }
+                return this.isOverBType();
         }
     }
 
-    getWinner() {
-        if (this.players.length === 1) return null; //Only 1 player. No winner
+    isOverVersus() {
+        let numAlive = this.players.filter(p => p.serverGame.isAlive()).length;
 
-        let winnerId = null;
+        //Last one alive
+        if (numAlive === 0 || (numAlive === 1 && this.players.length > 1)) {
+            let winnerTime = -Infinity;
+            let winnerId = null;
+            for (const p of this.players) {
+                if (p.serverGame.latestState.time > winnerTime) {
+                    winnerTime = p.serverGame.latestState.time;
+                    winnerId = p.client.userId;
+                }
+            }
 
-        switch (this.settings.gameType) {
-            case gameTypes.VERSUS:
-                let winnerTime = -Infinity;
-                for (const p of this.players) {
-                    if (p.serverGame.latestState.time > winnerTime) {
-                        winnerTime = p.serverGame.latestState.time;
-                        winnerId = p.client.userId;
-                    }
-                }
-                return winnerId;
-            case gameTypes.CLASSIC:
-                let winnerScore = -Infinity;
-                for (const p of this.players) {
-                    if (p.serverGame.latestState.score > winnerScore) {
-                        winnerScore = p.serverGame.latestState.score;
-                        winnerId = p.client.userId;
-                    }
-                }
-                return winnerId;
-            case gameTypes.B_TYPE:
-                let allDead = true;
-                let leastGarbagePlayer = null;
-                for (let p of this.players) {
-                    //Whoever clears all garbage first wins
-                    const myAmount = p.serverGame.getLeastAmountOfGarbage();
-                    if (myAmount === 0) {
-                        return {
-                            winner: p.client.userId,
-                            delay: false
-                        }
-                    } else {
-                        if (leastGarbagePlayer === null) {
-                            leastGarbagePlayer = p;
-                        } else if (myAmount < leastGarbagePlayer.serverGame.getLeastAmountOfGarbage()) {
-                            //Whoever cleared the most garbage wins
-                            leastGarbagePlayer = p;
-                        } else if (myAmount == leastGarbagePlayer.serverGame.getLeastAmountOfGarbage() &&
-                                    p.serverGame.latestState.time < leastGarbagePlayer.serverGame.time) {
-                            //If the same amount was cleared, whoever cleared it first wins
-                            //TODO Currently it is actually who died first, which isn't really right. Perhaps a better delimeter like score?
-                            leastGarbagePlayer = p;
-                        }
-                    }
-                    if (p.serverGame.isAlive()) allDead = false;
-                }
-                if (allDead && leastGarbagePlayer !== null) {
-                    //If everyone dies before anyone has cleared all garbage, winner is who cleared the most
-                    return {
-                        winner: leastGarbagePlayer.client.userId,
-                        delay: true
-                    }
-                }
+            return {
+                over: true,
+                winner: this.players.length > 1 ? winnerId : null, //If only 1 player, dont mark as winner
+                delay: true
+            }
         }
-        return { winner: null, delay: true };
+
+        return { over: false };
+    }
+
+    isOverClassic() {
+        for (let p of this.players) {
+            if (p.serverGame.isAlive()) return { over: false };
+        }
+
+        let winnerScore = -Infinity;
+        let winnerId = null;
+        for (const p of this.players) {
+            if (p.serverGame.latestState.score > winnerScore) {
+                winnerScore = p.serverGame.latestState.score;
+                winnerId = p.client.userId;
+            }
+        }
+
+        return {
+            over: true,
+            winner: this.players.length > 1 ? winnerId : null, //If only 1 player, dont mark as winner
+            delay: true
+        };
+    }
+
+    isOverBType() {
+        let allDead = true;
+        let leastGarbagePlayer = null;
+        for (let p of this.players) {
+            //Whoever clears all garbage first wins
+            const myAmount = p.serverGame.getLeastAmountOfGarbage();
+            if (myAmount === 0) {
+                return {
+                    over: true,
+                    winner: p.client.userId,
+                    delay: false
+                }
+            } else {
+                if (leastGarbagePlayer === null) {
+                    leastGarbagePlayer = p;
+                } else if (myAmount < leastGarbagePlayer.serverGame.getLeastAmountOfGarbage()) {
+                    //Whoever cleared the most garbage wins
+                    leastGarbagePlayer = p;
+                } else if (myAmount == leastGarbagePlayer.serverGame.getLeastAmountOfGarbage() &&
+                            p.serverGame.latestState.time < leastGarbagePlayer.serverGame.time) {
+                    //If the same amount was cleared, whoever cleared it first wins
+                    //TODO Currently it is actually who died first, which isn't really right. Perhaps a better delimeter like score?
+                    leastGarbagePlayer = p;
+                }
+            }
+            if (p.serverGame.isAlive()) allDead = false;
+        }
+        if (allDead && leastGarbagePlayer !== null) {
+            //If everyone dies before anyone has cleared all garbage, winner is who cleared the most
+            return {
+                over: true,
+                winner: this.players.length > 1 ? leastGarbagePlayer.client.userId : null, //If there is only 1 player, only show they won if they cleared all garbage (which happens above)
+                delay: true
+            }
+        }
+
+        return { over: false }
+        
     }
 
     //When inputs have been received from a player
