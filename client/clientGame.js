@@ -297,9 +297,9 @@ export default class ClientGame extends Game {
 
         let textLines;
         if (baseGame === this) {
-            textLines = this.getMainGameScoreTextLines();
+            textLines = this.getMainGameScoreTextLines(p5);
         } else {
-            textLines = this.getOtherGameTextLines(baseGame);
+            textLines = this.getOtherGameTextLines(p5, baseGame);
         }
         const innerTextHeight = h - 5*scaleFactor;
         const lineHeight = innerTextHeight / textLines.length;
@@ -328,7 +328,7 @@ export default class ClientGame extends Game {
         }
     }
 
-    getMainGameScoreTextLines() {
+    getMainGameScoreTextLines(p5) {
         let tritrisPercent = Math.round(100 * 3*this.tritrisAmt / this.lines);
         if (this.lines == 0) tritrisPercent = '--';
 
@@ -350,7 +350,7 @@ export default class ClientGame extends Game {
                             text: `Level ${this.level} | Time `,
                             color: 0
                         },
-                        this.getTimeText()
+                        this.getTimeText(p5)
                     ]
                 ];
             case gameTypes.CLASSIC:
@@ -382,7 +382,7 @@ export default class ClientGame extends Game {
                             color: 0
                         },
                         {
-                            text: this.getTimeText().text,
+                            text: this.getTimeText(p5).text,
                             color: 0
                         }
                     ]
@@ -390,7 +390,7 @@ export default class ClientGame extends Game {
         }
     }
 
-    getOtherGameTextLines(baseGame) {
+    getOtherGameTextLines(p5, baseGame) {
         const scoreDiff = this.score - baseGame.score; //Show comparison
         const scoreTextObj = this.getDiffTextObj(scoreDiff, this.formatScore(scoreDiff));
 
@@ -424,7 +424,7 @@ export default class ClientGame extends Game {
                             text: `Level ${this.level} | Time `,
                             color: 0
                         },
-                        this.getTimeText()
+                        this.getTimeText(p5)
                     ]
                 ];
             case gameTypes.CLASSIC:
@@ -476,7 +476,7 @@ export default class ClientGame extends Game {
                             color: 0
                         },
                         {
-                            text: this.getTimeText().text,
+                            text: this.getTimeText(p5).text,
                             color: 0
                         }
                     ]
@@ -531,12 +531,10 @@ export default class ClientGame extends Game {
         return formattedScore;
     }
 
-    getTimeText() {
-        const nf = x => x.toString().length == 1 ? '0'+x : x; //Format to 2 digits (leading 0)
-
+    getTimeText(p5) {
         const totalSec = Math.floor(Math.max(this.time, 0) / 1000) % 60;
         const totalM = Math.floor(Math.max(this.time, 0) / (1000*60));
-        const timeText = `${nf(totalM,2)}:${nf(totalSec,2)}`;
+        const timeText = `${p5.nf(totalM,2)}:${p5.nf(totalSec,2)}`;
         let timeColor = 0;
         const timeToTextLevelUp = this.nextLevelIncreaseVersus() - this.time;
         if (timeToTextLevelUp <= 0) timeColor = p5.color(220, 0, 0); //Red because it will levelup on the next piece
