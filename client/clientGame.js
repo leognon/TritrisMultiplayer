@@ -294,7 +294,6 @@ export default class ClientGame extends Game {
     }
 
     showBigStats(p5, x, y, w, h, scaleFactor, baseGame) {
-
         let textLines;
         if (baseGame === this) {
             textLines = this.getMainGameScoreTextLines(p5);
@@ -372,7 +371,7 @@ export default class ClientGame extends Game {
                 return [
                     [ //First line of text
                         {
-                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines}`,
+                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines} (${this.level})`,
                             color: 0
                         }
                     ],

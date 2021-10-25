@@ -102,7 +102,7 @@ export class Game {
         if (this.gameType == gameTypes.B_TYPE) {
             const bTypeGen = new RandomGenerator(settings.bTypeSeed);
             const percentGarbage = 0.9;
-            const garbageHeight = 5;
+            const garbageHeight = Math.ceil(this.h * 5/16); //5 for normal, 3 for 4x8
             this.grid.insertBType(bTypeGen, garbageHeight, percentGarbage);
         }
 
