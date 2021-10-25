@@ -70,6 +70,10 @@ io.on('connection', socket => {
         switch (data.type) {
             case 'create':
             case 'join':
+                const alreadyIn = getRoom(client);
+                if (alreadyIn.found) //They are already in a room
+                    break;
+
                 const valid = validateName(data.name);
                 if (!valid.valid) {
                     socket.emit('msg', { msg: valid.msg });
