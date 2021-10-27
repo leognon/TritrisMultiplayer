@@ -39,10 +39,24 @@ export class Grid {
 
     insertBType(rand, garbageHeight, percentGarbage) {
         for (let i = Math.max(0, this.h - garbageHeight); i < this.h; i++) {
+            let hasFilledAtLeastOne = false; //Make sure each row has at least 1 filled garbage
+            let hasFilledAll = true; //Make sure an entire row is not solid
             for (let j = 0; j < this.w; j++) {
-                const isFilled = rand.random() < percentGarbage;
+                let isFilled = rand.random() < percentGarbage;
+
+                if (j == this.w-1) { //On the last cell
+                    if (!hasFilledAtLeastOne) isFilled = true; //If empty so far, fill at least one
+                    if (hasFilledAll) isFilled = false; //If totally filled so far, don't fill the last one
+                }
+
                 if (isFilled) {
-                    this.insertBTypeCell(i, j, rand);
+                    hasFilledAtLeastOne = true;
+
+                    const triFilled = this.insertBTypeCell(i, j, rand);
+
+                    if (triFilled < 4) hasFilledAll = false;
+                } else {
+                    hasFilledAll = false;
                 }
             }
         }
@@ -58,6 +72,7 @@ export class Grid {
             this.grid[i][j].tris[0][0] = new Triangle(7);
             this.grid[i][j].tris[1][1] = new Triangle(7);
         }
+        return triFilled;
     }
 
     clearLines() {
