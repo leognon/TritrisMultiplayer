@@ -100,10 +100,12 @@ export class Game {
         this.grid = new Grid(this.w, this.h);
 
         if (this.gameType == gameTypes.B_TYPE) {
+            this.initialGarbageHeight = settings.garbageHeight;
+
             const bTypeGen = new RandomGenerator(settings.bTypeSeed);
             const percentGarbage = 0.9;
-            const garbageHeight = Math.ceil(this.h * 5/16); //5 for normal, 3 for 4x8
-            this.grid.insertBType(bTypeGen, garbageHeight, percentGarbage);
+            //const garbageHeight = Math.ceil(this.h * 5/16); //5 for normal, 3 for 4x8
+            this.grid.insertBType(bTypeGen, this.initialGarbageHeight, percentGarbage);
         }
 
         this.tritrisAmt = 0; //For statistics

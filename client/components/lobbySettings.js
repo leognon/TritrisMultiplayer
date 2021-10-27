@@ -44,6 +44,20 @@ export default class LobbySettings extends React.Component {
                 </select>
                 <br />
 
+                {
+                    this.props.gameType == gameTypes.B_TYPE ?
+                        <>
+                            <label htmlFor="garbageHeight">Garbage Height: </label>
+                            <input id="garbageHeight" type="number"
+                                style={ {width: "50px" } }
+                                value={this.props.garbageHeight}
+                                onChange={this.props.garbageHeightChanged} />
+                            <br />
+
+                        </>
+                        : ''
+                }
+
                 <button onClick={this.props.toggleLockRoom}>
                     { this.props.roomIsLocked ? 'Unlock room' : 'Lock room' }
                 </button>

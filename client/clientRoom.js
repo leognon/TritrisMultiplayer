@@ -24,6 +24,7 @@ export default class ClientRoom extends React.Component {
                 use4x8: false,
                 quadtris: false,
                 gameType: gameTypes.CLASSIC,
+                garbageHeight: 5
             },
             roomIsLocked: false,
         }
@@ -104,6 +105,9 @@ export default class ClientRoom extends React.Component {
 
                             gameType={this.state.settings.gameType}
                             gameTypeChanged={this.gameTypeChanged}
+
+                            garbageHeight={this.state.settings.garbageHeight}
+                            garbageHeightChanged={this.garbageHeightChanged}
 
                             toggleLockRoom={this.toggleLockRoom}
                             roomIsLocked={this.state.roomIsLocked}
@@ -206,7 +210,8 @@ export default class ClientRoom extends React.Component {
     use4x8Changed = evnt => {
         const newSettings = { ...this.state.settings };
         newSettings.use4x8 = evnt.target.checked;
-        this.setState({ settings: newSettings });
+
+        this.setState({ settings: newSettings }, this.garbageHeightChanged);
     }
 
     quadtrisChanged = evnt => {
@@ -218,6 +223,26 @@ export default class ClientRoom extends React.Component {
     gameTypeChanged = evnt => {
         const newSettings = { ...this.state.settings };
         newSettings.gameType = parseInt(evnt.target.value);
+        this.setState({ settings: newSettings });
+    }
+
+    garbageHeightChanged = evnt => {
+        //What the height is trying to be set to. If the 4x8 checkbox has been updated, evnt is undefined and we correct the boundaries
+        let height;
+        if (evnt !== undefined) {
+            height = parseInt(evnt.target.value);
+        } else {
+            height = this.state.settings.use4x8 ? 3 : 5;
+        }
+
+        if (height < 1) height = 1;
+        const mx = this.state.settings.use4x8 ? 8 : 16;
+        if (height > mx) height = mx;
+
+        if (isNaN(height)) height = "";
+
+        const newSettings = { ...this.state.settings };
+        newSettings.garbageHeight = height;
         this.setState({ settings: newSettings });
     }
 

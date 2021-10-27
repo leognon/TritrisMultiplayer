@@ -134,6 +134,15 @@ export default class ServerRoom {
             return;
         }
 
+        if (settings.gameType == gameTypes.B_TYPE) {
+            const min = 1;
+            const max = settings.use4x8 ? 8 : 16;
+            if (!validator.isNumeric(settings.garbageHeight + '') || parseInt(settings.garbageHeight) < min || parseInt(settings.garbageHeight) > max) {
+                this.owner.emit('msg', { msg: `Please choose a garbage height between ${min} and ${max}` });
+                return;
+            }
+        }
+
         const players = this.users.filter(u => !u.isSpectator).map(u => u.client);
 
         if (players.length === 0) {

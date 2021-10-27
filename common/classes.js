@@ -38,7 +38,7 @@ export class Grid {
     }
 
     insertBType(rand, garbageHeight, percentGarbage) {
-        for (let i = this.h - garbageHeight; i < this.h; i++) {
+        for (let i = Math.max(0, this.h - garbageHeight); i < this.h; i++) {
             for (let j = 0; j < this.w; j++) {
                 const isFilled = rand.random() < percentGarbage;
                 if (isFilled) {

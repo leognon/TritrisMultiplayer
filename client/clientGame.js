@@ -377,7 +377,7 @@ export default class ClientGame extends Game {
                     ],
                     [ //Second line
                         {
-                            text: `Garbage Left ${this.grid.countGarbageRows()} | Time `,
+                            text: `Garbage Left ${this.grid.countGarbageRows()} (${this.initialGarbageHeight}) | Time `,
                             color: 0
                         },
                         {
@@ -471,7 +471,7 @@ export default class ClientGame extends Game {
                     ],
                     [ //Second line
                         {
-                            text: `Garbage Left ${this.grid.countGarbageRows()} | Time `,
+                            text: `Garbage Left ${this.grid.countGarbageRows()} (${this.initialGarbageHeight}) | Time `,
                             color: 0
                         },
                         {
