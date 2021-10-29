@@ -95,6 +95,7 @@ class App extends React.Component {
             levelup: new Sound('../client/assets/levelup.wav'),
             topout: new Sound('../client/assets/topout.wav')
         };
+        this.setSoundVolumeTo(this.state.volume);
     }
 
     setup = (p5, canvasParentRef) => {
@@ -188,14 +189,18 @@ class App extends React.Component {
     setVolume = evnt => {
         let vol = parseInt(evnt.target.value);
         if (vol <= 3) vol = 0; //It doesn't have to be exactly 0 to be muted
-        for (const sound in this.sounds) {
-            this.sounds[sound].setVolume(vol / 100);
-        }
+        this.setSoundVolumeTo(vol);
         this.setState({
             volume: evnt.target.value
         }, () => {
             localStorage.setItem('volume', this.state.volume);
         });
+    }
+
+    setSoundVolumeTo = vol => {
+        for (const sound in this.sounds) {
+            this.sounds[sound].setVolume(vol / 100);
+        }
     }
 
     visualSettingsChanged = (evnt, setting) => {
