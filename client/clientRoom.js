@@ -660,6 +660,8 @@ class ClientMatch {
 
     setWinner(winnerId) {
         this.winnerId = winnerId;
+        if (this.winnerId === null) return;
+
         if (this.winnerId == this.myId) {
             this.myGame.youWon();
         }
