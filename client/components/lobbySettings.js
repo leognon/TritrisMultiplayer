@@ -50,6 +50,7 @@ export default class LobbySettings extends React.Component {
                             <label htmlFor="garbageHeight">Garbage Height: </label>
                             <input id="garbageHeight" type="number"
                                 style={ {width: "50px" } }
+                                onClick={e => e.target.select()} //Select all the text when clicked
                                 value={this.props.garbageHeight}
                                 onChange={this.props.garbageHeightChanged} />
                             <br />

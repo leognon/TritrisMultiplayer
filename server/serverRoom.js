@@ -16,7 +16,6 @@ export default class ServerRoom {
         this.state = states.LOBBY;
 
         this.endMatchAt = 0;
-        this.endMatchDelay = 1500; //Wait 5 seconds before ending the match
 
         this.addUser(owner);
 
@@ -241,12 +240,10 @@ export default class ServerRoom {
                     this.winner = isOver.winner;
                 }
 
-                if (isOver.delay && this.endMatchAt == -1) {
-                    //The match just ended
-                    this.endMatchAt = Date.now() + this.endMatchDelay;
+                if (this.endMatchAt == -1) { //The match just ended
+                    this.endMatchAt = Date.now() + isOver.delay;
                 }
-                if (!isOver.delay || Date.now() >= this.endMatchAt) {
-                    //The match is still over, wait is over
+                if (isOver.delay === 0 || Date.now() >= this.endMatchAt) { //The match is still over, wait is over
                     this.endMatch();
                 }
             } else {

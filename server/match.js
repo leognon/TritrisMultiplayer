@@ -17,6 +17,7 @@ export default class ServerMatch {
         }
 
         this.someoneHasWon = false;
+        this.endMatchDelay = 1000;
     }
 
     addPlayer(client) {
@@ -52,7 +53,7 @@ export default class ServerMatch {
             return {
                 over: true,
                 winner: this.players.length > 1 ? winnerId : null, //If only 1 player, dont mark as winner
-                delay: true
+                delay: this.players.length > 1 ? this.endMatchDelay : 0
             }
         }
 
@@ -76,7 +77,7 @@ export default class ServerMatch {
         return {
             over: true,
             winner: this.players.length > 1 ? winnerId : null, //If only 1 player, dont mark as winner
-            delay: true
+            delay: this.players.length > 1 ? this.endMatchDelay : 0
         };
     }
 
@@ -90,7 +91,7 @@ export default class ServerMatch {
                 return {
                     over: true,
                     winner: p.client.userId,
-                    delay: true
+                    delay: this.players.length > 1 ? this.endMatchDelay : 0
                 }
             } else {
                 if (leastGarbagePlayer === null) {
@@ -112,12 +113,11 @@ export default class ServerMatch {
             return {
                 over: true,
                 winner: this.players.length > 1 ? leastGarbagePlayer.client.userId : null, //If there is only 1 player, only show they won if they cleared all garbage (which happens above)
-                delay: true
+                delay: this.players.length > 1 ? this.endMatchDelay : 0
             }
         }
 
         return { over: false }
-        
     }
 
     //When inputs have been received from a player

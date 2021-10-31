@@ -359,6 +359,11 @@ export class Game {
 
             //Once lines are removed, check if all garbage is cleared
             this.leastAmountOfGarbage = Math.min(this.grid.countGarbageRows(), this.leastAmountOfGarbage); //Used for B type win detection
+
+            if (this.gameType == gameTypes.B_TYPE && this.leastAmountOfGarbage === 0) {
+                this.alive = false;
+                return;
+            }
         }
 
         this.updateGarbageMeter();
