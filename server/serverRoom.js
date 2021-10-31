@@ -15,6 +15,7 @@ export default class ServerRoom {
 
         this.state = states.LOBBY;
 
+        this.winner = null;
         this.endMatchAt = 0;
 
         this.addUser(owner);
@@ -109,6 +110,15 @@ export default class ServerRoom {
                     this.match.gotInputs(client, data.inps);
                 }
                 break;
+            case 'restart':
+                if (this.state == states.INGAME) {
+                    //If there is only 1 player and that player is the one who chose to restart
+                    if (this.match.players.length === 1 && this.match.players[0].client.getId() == user.getId()) {
+                        this.winner = null; //It should be null anyway, but just to make sure
+                        this.endMatch();
+                    }
+                }
+                break;
         }
     }
 
@@ -151,6 +161,7 @@ export default class ServerRoom {
 
         console.log(`Starting match between ${players.map(c => c.name).join(', ')}`, settings);
 
+        this.winner = null;
         this.match = new ServerMatch(players, settings);
         for (let u of this.users) {
             u.emit('room', {

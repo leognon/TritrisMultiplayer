@@ -171,7 +171,11 @@ class App extends React.Component {
             },
             start: {
                 key: 13, //Enter
-                controlName: "Start / End Game"
+                controlName: "Start / Exit Game"
+            },
+            restart: {
+                key: 27,
+                controlName: "Quick Restart (Single-player only)"
             }
         }
     }
@@ -361,7 +365,7 @@ function loadPieces(p5, spriteSheet) {
                 triangles.push(imageSlice); //A single rotation (not tinted)
 
                 let g = p5.createGraphics(triWidth, triWidth);
-                g.tint(255, 150); //Make it slightly transparent
+                g.tint(255, 100); //Make it slightly transparent
                 g.image(imageSlice, 0, 0);
                 const tintedImg = g.get(); //Get the p5.Image that is now tinted. Drawing this will be fast
                 g.remove();

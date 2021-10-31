@@ -319,11 +319,19 @@ export default class ClientRoom extends React.Component {
 
     keyPressed = p5 => {
         const startKey = this.props.controls['start'].key;
-        if (this.state.state == states.GAME_OVER && p5.keyCode == startKey) { //If enter is pressed
+        const restartKey = this.props.controls['restart'].key;
+        if (p5.keyCode == startKey && this.state.state == states.GAME_OVER) { //If enter is pressed
             this.match = null;
             this.setState({
                 state: states.LOBBY
             });
+        }
+        if (p5.keyCode == restartKey && this.state.state == states.INGAME) {
+            if (this.match.otherPlayers.length === 0) { //It is just me playing
+                this.socket.emit('room', {
+                    type: 'restart'
+                });
+            }
         }
     }
 
