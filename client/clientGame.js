@@ -371,17 +371,17 @@ export default class ClientGame extends Game {
                 return [
                     [ //First line of text
                         {
-                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines} (${this.level})`,
+                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines} (${this.level}) | Time `,
+                            color: 0
+                        },
+                        {
+                            text: this.getTimeText(p5).text,
                             color: 0
                         }
                     ],
                     [ //Second line
                         {
-                            text: `Garbage Left ${this.grid.countGarbageRows()} (${this.initialGarbageHeight}) | Time `,
-                            color: 0
-                        },
-                        {
-                            text: this.getTimeText(p5).text,
+                            text: `Garbage Left ${this.grid.countGarbageRows()} (${this.initialGarbageHeight} | ${this.initialGarbageDensity}%)`,
                             color: 0
                         }
                     ]
@@ -465,17 +465,17 @@ export default class ClientGame extends Game {
                 return [
                     [ //First line of text
                         {
-                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines}`,
+                            text: `Score ${this.formatScore(this.score)} | Lines ${this.lines} | Time `,
+                            color: 0
+                        },
+                        {
+                            text: this.getTimeText(p5).text,
                             color: 0
                         }
                     ],
                     [ //Second line
                         {
-                            text: `Garbage Left ${this.grid.countGarbageRows()} (${this.initialGarbageHeight}) | Time `,
-                            color: 0
-                        },
-                        {
-                            text: this.getTimeText(p5).text,
+                            text: `Garbage Left ${this.grid.countGarbageRows()} (${this.initialGarbageHeight} | ${this.initialGarbageDensity}%)`,
                             color: 0
                         }
                     ]

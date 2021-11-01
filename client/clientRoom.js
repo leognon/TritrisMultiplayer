@@ -24,7 +24,10 @@ export default class ClientRoom extends React.Component {
                 use4x8: false,
                 quadtris: false,
                 gameType: gameTypes.CLASSIC,
-                garbageHeight: 5
+                garbageSettings: {
+                    height: 5,
+                    density: 90
+                }
             },
             roomIsLocked: false,
         }
@@ -106,8 +109,9 @@ export default class ClientRoom extends React.Component {
                             gameType={this.state.settings.gameType}
                             gameTypeChanged={this.gameTypeChanged}
 
-                            garbageHeight={this.state.settings.garbageHeight}
+                            garbageSettings={this.state.settings.garbageSettings}
                             garbageHeightChanged={this.garbageHeightChanged}
+                            garbageDensityChanged={this.garbageDensityChanged}
 
                             toggleLockRoom={this.toggleLockRoom}
                             roomIsLocked={this.state.roomIsLocked}
@@ -169,6 +173,7 @@ export default class ClientRoom extends React.Component {
     }
 
     startGame = () => {
+        //TODO Dont send B type when not b type
         this.socket.emit('room', {
             type: 'start',
             settings: this.state.settings
@@ -242,7 +247,22 @@ export default class ClientRoom extends React.Component {
         if (isNaN(height)) height = "";
 
         const newSettings = { ...this.state.settings };
-        newSettings.garbageHeight = height;
+        newSettings.garbageSettings.height = height;
+        this.setState({ settings: newSettings });
+    }
+
+    garbageDensityChanged = evnt => {
+        let density;
+        if (evnt !== undefined) density = parseInt(evnt.target.value);
+        else density = 90; //Default
+
+        if (density < 1) density = 1;
+        if (density > 99) density = 99;
+
+        if (isNaN(density)) density = "";
+
+        const newSettings = { ...this.state.settings };
+        newSettings.garbageSettings.density = density;
         this.setState({ settings: newSettings });
     }
 

@@ -51,8 +51,15 @@ export default class LobbySettings extends React.Component {
                             <input id="garbageHeight" type="number"
                                 style={ {width: "50px" } }
                                 onClick={e => e.target.select()} //Select all the text when clicked
-                                value={this.props.garbageHeight}
+                                value={this.props.garbageSettings.height}
                                 onChange={this.props.garbageHeightChanged} />
+                            <br />
+                            <label htmlFor="garbageDensity">Garbage Density: </label>
+                            <input id="garbageDensity" type="number"
+                                style={ {width: "50px" } }
+                                onClick={e => e.target.select()} //Select all the text when clicked
+                                value={this.props.garbageSettings.density}
+                                onChange={this.props.garbageDensityChanged} />
                             <br />
 
                         </>

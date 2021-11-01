@@ -39,26 +39,41 @@ export class Grid {
 
     insertBType(rand, garbageHeight, percentGarbage) {
         for (let i = Math.max(0, this.h - garbageHeight); i < this.h; i++) {
-            let hasFilledAtLeastOne = false; //Make sure each row has at least 1 filled garbage
-            let hasFilledAll = true; //Make sure an entire row is not solid
-            for (let j = 0; j < this.w; j++) {
-                let isFilled = rand.random() < percentGarbage;
+            this.insertBTypeRow(rand, percentGarbage, i);
+        }
+    }
 
-                if (j == this.w-1) { //On the last cell
-                    if (!hasFilledAtLeastOne) isFilled = true; //If empty so far, fill at least one
-                    if (hasFilledAll) isFilled = false; //If totally filled so far, don't fill the last one
-                }
+    insertBTypeRow(rand, percentGarbage, i) {
+        let hasFilledAtLeastOne = false; //Make sure each row has at least 1 filled garbage
+        let hasAHole = false; //Make sure an entire row is not solid
 
-                if (isFilled) {
-                    hasFilledAtLeastOne = true;
+        for (let j = 0; j < this.w; j++) {
+            let isFilled = rand.random() < percentGarbage;
 
-                    const triFilled = this.insertBTypeCell(i, j, rand);
+            if (isFilled) {
+                hasFilledAtLeastOne = true;
 
-                    if (triFilled < 4) hasFilledAll = false;
-                } else {
-                    hasFilledAll = false;
-                }
+                const triFilled = this.insertBTypeCell(i, j, rand);
+
+                if (triFilled < 4) hasAHole = true;
+            } else {
+                hasAHole = true;
             }
+        }
+
+        if (!hasAHole) {
+            //The entire row is solid. Pick a random col and add a hole
+            const col = rand.range(this.w);
+            let triFilled = this.insertBTypeCell(i, col, rand);
+            if (triFilled >= 4) { //If it filled it with a solid tri just make it empty
+                this.grid[i][col] = new GridCell();
+            }
+        }
+
+        if (!hasFilledAtLeastOne) {
+            //No garbage in the whole row. Place a random garbage somewhere
+            const col = rand.range(this.w);
+            this.insertBTypeCell(i, col, rand);
         }
     }
 

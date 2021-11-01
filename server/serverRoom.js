@@ -126,6 +126,8 @@ export default class ServerRoom {
         if (!validator.isNumeric(settings.startLevel + '')) {
             this.owner.emit('msg', { msg: 'Start level must be a number between 0 and 29' });
             return;
+        } else {
+            settings.startLevel = parseInt(settings.startLevel);
         }
 
         if (settings.use4x8 !== false && settings.use4x8 !== true) {
@@ -141,15 +143,28 @@ export default class ServerRoom {
         if (!validator.isNumeric(settings.gameType + '') || !Object.values(gameTypes).includes(settings.gameType)) {
             this.owner.emit('msg', { msg: 'Please choose a game type.' });
             return;
+        } else {
+            settings.gameType = parseInt(settings.gameType); //Make sure int
         }
 
         if (settings.gameType == gameTypes.B_TYPE) {
             const min = 1;
             const max = settings.use4x8 ? 8 : 16;
-            if (!validator.isNumeric(settings.garbageHeight + '') || parseInt(settings.garbageHeight) < min || parseInt(settings.garbageHeight) > max) {
+            const height = settings.garbageSettings.height;
+            if (!validator.isNumeric(height + '') || parseInt(height) < min || parseInt(height) > max) {
                 this.owner.emit('msg', { msg: `Please choose a garbage height between ${min} and ${max}` });
                 return;
             }
+
+            const density = settings.garbageSettings.density;
+            if (!validator.isNumeric(density + '') || parseInt(density) < 1 || parseInt(density) > 99) {
+                this.owner.emit('msg', { msg: `Please choose a garbage density between 1 and 99` });
+                return;
+            }
+
+            //Make sure they are ints
+            settings.garbageSettings.height = parseInt(settings.garbageSettings.height);
+            settings.garbageSettings.density = parseInt(settings.garbageSettings.density);
         }
 
         const players = this.users.filter(u => !u.isSpectator).map(u => u.client);
