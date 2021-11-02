@@ -90,6 +90,13 @@ export default class ClientRoom extends React.Component {
                         toggleSpectator={this.changeSpectator}
                         changeReady={this.changeReady}
                         leaveRoom={this.leaveRoom}
+
+                        controls={this.props.controls}
+                        controlChanged={this.props.controlChanged}
+                        resetControls={this.props.resetControls}
+                        vole={this.props.volume}
+                        visualSettings={this.props.visualSettings}
+                        visualSettingsChanged={this.props.visualSettingsChanged}
                     />
 
                     { this.state.ownerId == this.socket.userId ?

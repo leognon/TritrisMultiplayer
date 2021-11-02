@@ -321,7 +321,14 @@ class App extends React.Component {
                             sounds={this.sounds}
                             font={this.font}
                             controls={this.state.controls}
+
+                            controlChanged={this.controlChanged}
+                            resetControls={this.resetControls}
+                            volume={this.state.volume}
+                            setVolume={this.setVolume}
+
                             visualSettings={this.state.visualSettings}
+                            visualSettingsChanged={this.visualSettingsChanged}
                         />
                     </div>);
             default:

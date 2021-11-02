@@ -1,17 +1,25 @@
 import React from 'react';
 import UserLabel from './userLabel.js';
+import Settings from './settings.js';
 
 export default class Lobby extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showRoomCode: true
+            showRoomCode: true,
+            showSettings: false
         }
     }
 
     toggleShowRoomCode = () => {
         this.setState({
             showRoomCode: !this.state.showRoomCode
+        });
+    }
+
+    toggleSettings = show => {
+        this.setState({
+            showSettings: show
         });
     }
 
@@ -56,6 +64,22 @@ export default class Lobby extends React.Component {
                         ?  <button onClick={this.props.changeReady}>Toggle Ready</button>
                         : ''
                 }
+
+                <button id="settings" onClick={() => this.toggleSettings(true)}>Settings</button>
+                { this.state.showSettings &&
+                    <Settings
+                        toggleSettings={this.toggleSettings}
+                        controls={this.props.controls}
+                        controlChanged={this.props.controlChanged}
+                        resetControls={this.props.resetControls}
+                        volume={this.props.volume}
+                        setVolume={this.props.setVolume}
+
+                        visualSettings={this.props.visualSettings}
+                        visualSettingsChanged={this.props.visualSettingsChanged}
+                    />
+                }
+
                 <button onClick={this.props.leaveRoom}>Leave Room</button>
             </div>
             </>
