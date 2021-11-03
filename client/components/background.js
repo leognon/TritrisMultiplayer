@@ -1,23 +1,9 @@
-import React from 'react';
-import Sketch from 'react-p5';
-
-export default class Background extends React.Component {
-    constructor(props) {
-        super(props);
+export default class Background {
+    constructor() {
         this.triangles = [];
         this.nextSpawn = Date.now();
 
         this.lastFrame = Date.now();
-    }
-
-    setup = (p5, canvasParentRef) => {
-        p5.createCanvas(window.innerWidth, window.innerHeight).parent(canvasParentRef);
-        this.draw(p5);
-    }
-
-    windowResized = p5 => {
-        p5.resizeCanvas(window.innerWidth, window.innerHeight);
-        p5.redraw();
     }
 
     draw = p5 => {
@@ -72,12 +58,8 @@ export default class Background extends React.Component {
 
         const vx = Math.cos(theta) * speed;
         const vy = Math.sin(theta) * speed;
-        const img = this.props.pieceImages[Math.floor(Math.random() * this.props.pieceImages.length)][0];
+        const img = p5.pieceImages[Math.floor(Math.random() * p5.pieceImages.length)][0];
         this.triangles.push(new Triangle(x, y, w, vx, vy, img));
-    }
-
-    render = () => {
-        return <Sketch setup={this.setup} draw={this.draw} windowResized={this.windowResized} />;
     }
 }
 

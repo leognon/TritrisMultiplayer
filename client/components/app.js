@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { myP5 as p5 } from '../sketch.js';
+import { p5, p5States } from '../sketch.js';
 
 import io from 'socket.io-client';
 import states from '../../common/states.js';
@@ -245,11 +245,6 @@ class App extends React.Component {
     }
 
     createRoom = () => {
-        console.log('Modifying draw');
-        //TODO Modify myP5???
-        /*window.asdf.draw = () => {
-            console.log('??');
-        }*/
         this.socket.emit('room', {
             type: 'create',
             name: this.state.name
@@ -291,21 +286,16 @@ class App extends React.Component {
     render = () => {
         switch (this.state.state) {
             case states.LOADING:
-                p5.draw = () => {
+                p5.setDrawIfDifferent(p5States.LOADING, () => {
                     p5.background(0);
-                }
+                });
                 return (
-                        //<Sketch setup={this.setup} windowResized={this.windowResized} />
                     <div className="main">
                         <Loading />
                     </div>);
             case states.MENU:
-                p5.draw = () => {
-                    p5.background(50);
-                    p5.ellipse(p5.frameCount % p5.width, p5.height / 2, 30, 30);
-                }
+                p5.setDrawIfDifferent(p5States.BACKGROUND, new Background().draw);
                 return (
-                        //<Background pieceImages={this.pieceImages} />
                     <div className="main">
                         <Menu quickPlay={this.quickPlay}
                             createRoom={this.createRoom}
@@ -351,9 +341,7 @@ class App extends React.Component {
     }
 
     checkLoaded = () => {
-        console.log('Check loaded');
         if (p5.numAssetsLoaded >= p5.totalAssets && this.state.state == states.LOADING) {
-            console.log('Done loading');
             clearInterval(this.checkLoadedInterval);
             this.setState({
                 state: states.MENU

@@ -1,3 +1,9 @@
+const p5States = {
+    LOADING: 0,
+    BACKGROUND: 1,
+}
+
+
 let myP5;
 const sketch = p => {
     myP5 = p;
@@ -9,25 +15,35 @@ const sketch = p => {
     p.font = null;
 
     p.setup = () => {
-        console.log('Starting setup!!!!');
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
         p.background(100);
         p.loadImage('./client/assets/piecesImage.png', img => {
             p.pieceImages = loadPieces(p, img);
             p.numAssetsLoaded++;
-            console.log('Loaded piece images');
         });
         p.loadFont('./client/assets/fff-forward.ttf', fnt => {
             p.font = fnt;
             p.numAssetsLoaded++;
-            console.log('Loaded font');
         });
-        //p.noLoop();
+    }
+
+    p.drawName = -1;
+    p.customDraw = () => {};
+
+    p.setDrawIfDifferent = (name, fn) => {
+        if (p.drawName != name || p.drawName == -1) {
+            p.setDraw(name, fn);
+        }
+    }
+
+    p.setDraw = (name, fn) => {
+        console.log('Draw state set to ' + Object.keys(p5States).filter(x => p5States[x] == name)[0]);
+        p.drawName = name;
+        p.customDraw = fn;
     }
 
     p.draw = () => {
-        console.log('Drawing');
-        p.background(Math.sin(p.frameCount * p.TWO_PI / 500) * 255);
+        p.customDraw(p);
     }
 }
 new p5(sketch);
@@ -67,4 +83,4 @@ function loadPieces(p5, spriteSheet) {
     return pieceImages;
 }
 
-export { myP5 };
+export { myP5 as p5, p5States };

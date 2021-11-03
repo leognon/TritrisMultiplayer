@@ -1,5 +1,5 @@
 import React from 'react';
-import Sketch from 'react-p5';
+import { p5, p5States } from './sketch.js';
 import Lobby from './components/lobby.js';
 import LobbySettings from './components/lobbySettings.js';
 import Background from './components/background.js';
@@ -81,6 +81,7 @@ export default class ClientRoom extends React.Component {
     render = () => {
         switch (this.state.state) {
             case states.LOBBY:
+                p5.setDrawIfDifferent(p5States.BACKGROUND, new Background().draw);
                 return <>
                     <Lobby
                         roomCode={this.state.roomCode}
@@ -125,8 +126,6 @@ export default class ClientRoom extends React.Component {
                         />
                     : ''
                     }
-
-                    <Background pieceImages={this.props.pieceImages}/>
                 </>
             case states.INGAME:
             case states.GAME_OVER:
