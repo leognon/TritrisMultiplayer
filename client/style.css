@@ -51,7 +51,7 @@ body {
      -ms-transform: translateY(-50%);
 }
 
-.react-p5 {
+.p5Canvas {
     z-index: -1;
     position: absolute;
     top: 0px;

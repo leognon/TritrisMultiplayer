@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom';
 import React from 'react';
-import Sketch from 'react-p5';
+import { myP5 as p5 } from '../sketch.js';
 
 import io from 'socket.io-client';
 import states from '../../common/states.js';
@@ -14,11 +14,8 @@ class App extends React.Component {
     constructor(props) {
         super(props);
 
-        this.totalAssets = 3; //pieceImages, font and auth
-
         this.state = {
             state: states.LOADING,
-            assetsLoaded: 0,
             name: localStorage.hasOwnProperty('name') ? localStorage.getItem('name') : ('player' + Math.floor(Math.random()*99+1)),
             controls: this.loadControls(),
             volume: localStorage.hasOwnProperty('volume') ? parseInt(localStorage.getItem('volume')) : 75,
@@ -50,10 +47,11 @@ class App extends React.Component {
             this.socket.userId = userId;
             auth.sessionId = sessionId;
 
-            if (this.state.state === states.LOADING) //Make sure to not go back to menu
-                this.assetLoaded();
-            else
+            if (this.state.state === states.LOADING) { //Make sure to not go back to menu
+                //this.assetLoaded();
+            } else {
                 alert('It seems you have been disconnected for too long. Please refresh the page.');
+            }
             //localStorage.setItem('sessionId', sessionId);
         });
         this.socket.on('reAuth', ({ sessionId, userId }) => {
@@ -64,8 +62,9 @@ class App extends React.Component {
             this.socket.userId = userId;
             auth.sessionId = sessionId;
 
-            if (this.state.state === states.LOADING) //Make sure to not go back to menu
-                this.assetLoaded();
+            if (this.state.state === states.LOADING) { //Make sure to not go back to menu
+                //this.assetLoaded();
+            }
             //localStorage.setItem('sessionId', sessionId);
         });
 
@@ -96,8 +95,11 @@ class App extends React.Component {
             topout: new Sound('../client/assets/topout.wav')
         };
         this.setSoundVolumeTo(this.state.volume);
+
+        this.checkLoadedInterval = setInterval(this.checkLoaded, 300);
     }
 
+    /*
     setup = (p5, canvasParentRef) => {
         p5.createCanvas(window.innerWidth, window.innerHeight).parent(canvasParentRef);
         p5.background(100);
@@ -110,7 +112,7 @@ class App extends React.Component {
             this.assetLoaded();
         });
         p5.noLoop();
-    }
+    }*/
 
     nameChanged = evnt => {
         let name = evnt.target.value;
@@ -243,6 +245,11 @@ class App extends React.Component {
     }
 
     createRoom = () => {
+        console.log('Modifying draw');
+        //TODO Modify myP5???
+        /*window.asdf.draw = () => {
+            console.log('??');
+        }*/
         this.socket.emit('room', {
             type: 'create',
             name: this.state.name
@@ -284,15 +291,22 @@ class App extends React.Component {
     render = () => {
         switch (this.state.state) {
             case states.LOADING:
+                p5.draw = () => {
+                    p5.background(0);
+                }
                 return (
+                        //<Sketch setup={this.setup} windowResized={this.windowResized} />
                     <div className="main">
-                        <Sketch setup={this.setup} windowResized={this.windowResized} />
                         <Loading />
                     </div>);
             case states.MENU:
+                p5.draw = () => {
+                    p5.background(50);
+                    p5.ellipse(p5.frameCount % p5.width, p5.height / 2, 30, 30);
+                }
                 return (
+                        //<Background pieceImages={this.pieceImages} />
                     <div className="main">
-                        <Background pieceImages={this.pieceImages} />
                         <Menu quickPlay={this.quickPlay}
                             createRoom={this.createRoom}
                             joinRoom={this.joinRoom}
@@ -336,54 +350,22 @@ class App extends React.Component {
         }
     }
 
-    assetLoaded = () => {
-        const newNum = this.state.assetsLoaded + 1;
-        const newState = newNum >= this.totalAssets ? states.MENU : states.LOADING;
-        this.setState({
-            assetsLoaded: newNum,
-            state: newState
-        });
+    checkLoaded = () => {
+        console.log('Check loaded');
+        if (p5.numAssetsLoaded >= p5.totalAssets && this.state.state == states.LOADING) {
+            console.log('Done loading');
+            clearInterval(this.checkLoadedInterval);
+            this.setState({
+                state: states.MENU
+            });
+        }
     }
 
+    //TODO Remove windowResized stuff
     windowResized = (p5) => {
         p5.resizeCanvas(window.innerWidth, window.innerHeight);
         p5.redraw();
     }
-}
-
-function loadPieces(p5, spriteSheet) {
-    let pieceImages = []; //A 2d array of each piece color and their rotations and tinted versions
-    for (let i = 0; i < 2; i++) { //All of the colors (except white)
-        for (let j = 0; j < 3; j++) {
-            pieceImages.push(load4Triangles(i, j, spriteSheet));
-        }
-    }
-    pieceImages.push(load4Triangles(0, 3, spriteSheet)); //The white ninja
-    pieceImages.push(load4Triangles(1, 3, spriteSheet)); //The grey triangle
-
-    function load4Triangles(i, j, piecesImage) { //Aaaaaah a function inside a function!!!
-        const triWidth = piecesImage.width / 8;
-        let triangles = [];
-        for (let row = 0; row < 2; row++) {
-            for (let col = 0; col < 2; col++) {
-                const x = (j*2 + col) * triWidth; //The j*2 is because each set of 4 is a 2x2 square of triangles
-                const y = (i*2 + row) * triWidth;
-                const imageSlice = piecesImage.get(x, y, triWidth, triWidth);
-                triangles.push(imageSlice); //A single rotation (not tinted)
-
-                let g = p5.createGraphics(triWidth, triWidth);
-                g.tint(255, 100); //Make it slightly transparent
-                g.image(imageSlice, 0, 0);
-                const tintedImg = g.get(); //Get the p5.Image that is now tinted. Drawing this will be fast
-                g.remove();
-
-                triangles.push(tintedImg); //That same rotation, tinted
-            }
-        }
-        return triangles;
-    }
-
-    return pieceImages;
 }
 
 //Modified from https://www.w3schools.com/graphics/game_sound.asp
