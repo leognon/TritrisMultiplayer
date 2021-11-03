@@ -43,19 +43,10 @@ export default class ClientRoom extends React.Component {
         this.socket.on('room', this.gotData);
     }
 
-    setup = (p5, canvasParentRef) => {
-        p5.createCanvas(window.innerWidth, window.innerHeight).parent(canvasParentRef);
-        p5.textFont(this.props.font);
-    }
-    windowResized = p5 => {
-        p5.resizeCanvas(window.innerWidth, window.innerHeight);
-        p5.redraw();
-    }
-
     draw = p5 => {
         //Do everything necessary (update, show)
         this.update(p5);
-        this.showGame(p5, this.props.pieceImages, this.props.sounds, this.props.visualSettings);
+        this.showGame(p5, p5.pieceImages, this.props.sounds, this.props.visualSettings);
 
         const scl = p5.width * p5.height / (1920 * 1080);
         let text, col;
@@ -81,7 +72,7 @@ export default class ClientRoom extends React.Component {
     render = () => {
         switch (this.state.state) {
             case states.LOBBY:
-                p5.setDrawIfDifferent(p5States.BACKGROUND, new Background().draw);
+                p5.setStateIfDifferent(p5States.BACKGROUND, new Background().draw);
                 return <>
                     <Lobby
                         roomCode={this.state.roomCode}
@@ -129,13 +120,8 @@ export default class ClientRoom extends React.Component {
                 </>
             case states.INGAME:
             case states.GAME_OVER:
-                //TODO Try rendering without react-p5!!
-                return <Sketch
-                    setup={this.setup}
-                    draw={this.draw}
-                    windowResized={this.windowResized}
-                    keyPressed={this.keyPressed}
-                />
+                p5.setStateIfDifferent(p5States.INGAME, this.draw, this.keyPressed);
+                return '';
             default:
                 console.log('No state for clientRoom', this.state.state);
                 return null;
@@ -291,7 +277,6 @@ export default class ClientRoom extends React.Component {
         }
         this.setState({ users: newUsers });
     }
-
 
     matchStarted = (playerIds, settings) => {
         let me = null;

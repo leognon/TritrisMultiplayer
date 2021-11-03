@@ -286,15 +286,15 @@ class App extends React.Component {
     render = () => {
         switch (this.state.state) {
             case states.LOADING:
-                p5.setDrawIfDifferent(p5States.LOADING, () => {
-                    p5.background(0);
+                p5.setStateIfDifferent(p5States.LOADING, () => {
+                    p5.background(100);
                 });
                 return (
                     <div className="main">
                         <Loading />
                     </div>);
             case states.MENU:
-                p5.setDrawIfDifferent(p5States.BACKGROUND, new Background().draw);
+                p5.setStateIfDifferent(p5States.BACKGROUND, new Background().draw);
                 return (
                     <div className="main">
                         <Menu quickPlay={this.quickPlay}
@@ -347,12 +347,6 @@ class App extends React.Component {
                 state: states.MENU
             });
         }
-    }
-
-    //TODO Remove windowResized stuff
-    windowResized = (p5) => {
-        p5.resizeCanvas(window.innerWidth, window.innerHeight);
-        p5.redraw();
     }
 }
 

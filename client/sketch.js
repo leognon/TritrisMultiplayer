@@ -1,6 +1,7 @@
 const p5States = {
     LOADING: 0,
     BACKGROUND: 1,
+    INGAME: 2
 }
 
 
@@ -23,27 +24,39 @@ const sketch = p => {
         });
         p.loadFont('./client/assets/fff-forward.ttf', fnt => {
             p.font = fnt;
+            p.textFont(p.font);
             p.numAssetsLoaded++;
         });
     }
 
-    p.drawName = -1;
+    p.state = -1;
     p.customDraw = () => {};
+    p.customKeyPressed = () => {};
 
-    p.setDrawIfDifferent = (name, fn) => {
-        if (p.drawName != name || p.drawName == -1) {
-            p.setDraw(name, fn);
+    p.setStateIfDifferent = (newState, drawFn, keyPressedFn = () => {}) => {
+        if (p.state != newState || p.state == -1) {
+            p.setState(newState, drawFn, keyPressedFn);
         }
     }
 
-    p.setDraw = (name, fn) => {
-        console.log('Draw state set to ' + Object.keys(p5States).filter(x => p5States[x] == name)[0]);
-        p.drawName = name;
-        p.customDraw = fn;
+    p.setState = (name, drawFn, keyPressedFn = () => {}) => {
+        p.state = name;
+        p.customDraw = drawFn;
+        if (keyPressedFn) p.customKeyPressed = keyPressedFn;
+        else p.customKeyPressed = () => {};
     }
 
     p.draw = () => {
         p.customDraw(p);
+    }
+
+    p.keyPressed = () => {
+        p.customKeyPressed(p);
+    }
+
+    p.windowResized = () => {
+        p.resizeCanvas(window.innerWidth, window.innerHeight);
+        p.redraw();
     }
 }
 new p5(sketch);
