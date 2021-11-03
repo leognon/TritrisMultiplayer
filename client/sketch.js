@@ -15,6 +15,12 @@ const sketch = p => {
     p.pieceImages = null;
     p.font = null;
 
+    p.socket = null;
+    p.frameRateDisplay = 60; //So the name doesn't conflict with p.frameRate()
+    p.lastFrameRateUpdate = -Infinity;
+    p.updateFrameRateEvery = 3 * 1000;
+
+
     p.setup = () => {
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
         p.background(100);
@@ -48,6 +54,35 @@ const sketch = p => {
 
     p.draw = () => {
         p.customDraw(p);
+
+
+        const scl = p.width * p.height / (1920 * 1080);
+
+        if (Date.now() > p.lastFrameRateUpdate + p.updateFrameRateEvery) {
+            p.frameRateDisplay = Math.round(p.frameRate());
+            p.lastFrameRateUpdate = Date.now();
+        }
+
+        let socketText = 'Connecting...';
+        let col = p.color(0);
+        if (p.socket !== null) {
+            if (p.socket.outOfSync) {
+                socketText = 'Disconnected. Please refresh the page';
+                col = p.color(200, 0, 0);
+            } else if (p.socket.disconnected) {
+                socketText = 'Disconnected...';
+                col = p.color(200, 0, 0);
+            } else {
+                socketText = `Ping: ${p.socket.latency}ms`;
+            }
+        }
+
+        let text = `${socketText} | ${p.frameRateDisplay}fps`;
+
+        p.textSize(20 * scl);
+        p.fill(col);
+        p.textAlign(p.RIGHT, p.TOP);
+        p.text(text, p.width - 10*scl, 10*scl);
     }
 
     p.keyPressed = () => {

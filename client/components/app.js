@@ -40,6 +40,7 @@ class App extends React.Component {
             reconnection: true,
             closeOnBeforeunload: false
         });
+        p5.socket = this.socket;
         this.socket.userId = '';
 
         this.socket.on('auth', ({ sessionId, userId }) => {
@@ -51,6 +52,8 @@ class App extends React.Component {
                 //this.assetLoaded();
             } else {
                 alert('It seems you have been disconnected for too long. Please refresh the page.');
+                this.socket.outOfSync = true;
+                //The server thinks it has a different session than what the client thinks
             }
             //localStorage.setItem('sessionId', sessionId);
         });
@@ -98,21 +101,6 @@ class App extends React.Component {
 
         this.checkLoadedInterval = setInterval(this.checkLoaded, 300);
     }
-
-    /*
-    setup = (p5, canvasParentRef) => {
-        p5.createCanvas(window.innerWidth, window.innerHeight).parent(canvasParentRef);
-        p5.background(100);
-        p5.loadImage('../client/assets/piecesImage.png', img => {
-            this.pieceImages = loadPieces(p5, img);
-            this.assetLoaded();
-        });
-        p5.loadFont('../client/assets/fff-forward.ttf', fnt => {
-            this.font = fnt;
-            this.assetLoaded();
-        });
-        p5.noLoop();
-    }*/
 
     nameChanged = evnt => {
         let name = evnt.target.value;
