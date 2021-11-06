@@ -78,8 +78,9 @@ export default class MyGame extends ClientGame {
                 this.addInput(inp);
 
                 //If the piece was able to just move down, reset the timer
-                if (moveDown || (this.gameType == gameTypes.VERSUS && hardDrop)) {
+                if (moveDown || (this.gameType != gameTypes.CLASSIC && hardDrop)) {
                     if (softDrop) this.pushDownPoints++; //Pushing down
+                    else if (hardDrop) this.pushDownPoints = moveData.hardDropPoints;
                     else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
                 }

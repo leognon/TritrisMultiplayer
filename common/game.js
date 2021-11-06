@@ -42,7 +42,7 @@ Add all settings in room
     [ ] Remember last version so update dialogues and popup
 [ ] More gamemodes
     [X] Win condition for each gamemode
-    [ ] B-Type
+    [X] B-Type
     [X] 4x8
     [ ] Bitris
     [ ] Invisible-Tris
@@ -325,8 +325,9 @@ export class Game {
                 const moveData = this.movePiece(input.horzDir, input.rot, input.vertDir, input.hardDrop);
                 if (moveData.moved) this.pieceHasMoved = true;
                 if (moveData.playSound) this.addSound('move');
-                if (input.vertDir || (this.gameType == gameTypes.VERSUS && input.hardDrop)) {
+                if (input.vertDir || (this.gameType != gameTypes.CLASSIC && input.hardDrop)) {
                     if (input.softDrop) this.pushDownPoints++; //Pushing down
+                    else if (input.hardDrop) this.pushDownPoints = moveData.hardDropPoints;
                     else this.pushDownPoints = 0;
                     this.lastMoveDown = this.time;
                 }
@@ -456,7 +457,7 @@ export class Game {
 
         this.currentPiece = null; //There is an entry delay for the next piece
 
-        this.score += this.pushDownPoints;
+        this.score += Math.max(0, this.pushDownPoints - 1);
         this.pushDownPoints = 0;
 
         //Topout if the current piece isn't moved and its blocked
@@ -667,10 +668,11 @@ export class Game {
     movePiece(horzDirection, rotation, moveDown, hardDrop) {
         if (this.gameType != gameTypes.CLASSIC && hardDrop) {
             let moved = false; //Incase it doesn't move down at all
+            let hardDropPoints = 0;
             while (this.isValid(this.currentPiece)) {
                 this.currentPiece.move(0, 1);
                 moved = true;
-                //TODO Calculate push down points for hard drop??
+                hardDropPoints++;
             }
             if (moved) {
                 this.currentPiece.move(0, -1); //Move it back to so it is no longer in the ground
@@ -680,7 +682,8 @@ export class Game {
                 playSound: false,
                 rotated: false,
                 chargeDas: true, //Hard drop charges DAS
-                moved
+                moved,
+                hardDropPoints
             }
         }
         //Apply all transformations
