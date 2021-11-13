@@ -42,7 +42,7 @@ export default class ClientRoom extends React.Component {
     draw = p5 => {
         //Do everything necessary (update, show)
         this.update(p5);
-        this.showGame(p5, p5.pieceImages, this.props.sounds, this.props.visualSettings);
+        this.showGame(p5, p5.pieceImages, p5.sounds, this.props.visualSettings);
     }
 
     render = () => {
@@ -62,7 +62,8 @@ export default class ClientRoom extends React.Component {
                         controls={this.props.controls}
                         controlChanged={this.props.controlChanged}
                         resetControls={this.props.resetControls}
-                        vole={this.props.volume}
+                        soundVolume={this.props.soundVolume}
+                        setSoundVolume={this.props.setSoundVolume}
                         visualSettings={this.props.visualSettings}
                         visualSettingsChanged={this.props.visualSettingsChanged}
                     />

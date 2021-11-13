@@ -18,7 +18,7 @@ class App extends React.Component {
             state: states.LOADING,
             name: localStorage.hasOwnProperty('name') ? localStorage.getItem('name') : ('player' + Math.floor(Math.random()*99+1)),
             controls: this.loadControls(),
-            volume: localStorage.hasOwnProperty('volume') ? parseInt(localStorage.getItem('volume')) : 75,
+            soundVolume: localStorage.hasOwnProperty('soundVolume') ? parseInt(localStorage.getItem('soundVolume')) : 75,
             roomData: {
                 roomCode: '',
                 ownerId: '',
@@ -87,17 +87,7 @@ class App extends React.Component {
         this.socket.on('joinedRoom', this.joinedRoom);
         this.socket.on('leftRoom', this.leaveRoom);
 
-        this.pieceImages = null;
-
-        this.sounds = {
-            move: new Sound('../client/assets/move.wav'),
-            fall: new Sound('../client/assets/fall.wav'),
-            clear: new Sound('../client/assets/clear.wav'),
-            tritris: new Sound('../client/assets/tritris.wav'),
-            levelup: new Sound('../client/assets/levelup.wav'),
-            topout: new Sound('../client/assets/topout.wav')
-        };
-        this.setSoundVolumeTo(this.state.volume);
+        p5.setSoundVolume(this.state.soundVolume); //Make sure to set it initially
 
         this.checkLoadedInterval = setInterval(this.checkLoaded, 300);
     }
@@ -180,21 +170,17 @@ class App extends React.Component {
         window.localStorage.setItem('controls', JSON.stringify(this.state.controls));
     }
 
-    setVolume = evnt => {
+    setSoundVolume = evnt => {
         let vol = parseInt(evnt.target.value);
-        if (vol <= 3) vol = 0; //It doesn't have to be exactly 0 to be muted
-        this.setSoundVolumeTo(vol);
-        this.setState({
-            volume: evnt.target.value
-        }, () => {
-            localStorage.setItem('volume', this.state.volume);
-        });
-    }
 
-    setSoundVolumeTo = vol => {
-        for (const sound in this.sounds) {
-            this.sounds[sound].setVolume(vol / 100);
-        }
+        if (vol <= 3) vol = 0; //It doesn't have to be exactly 0 to be muted
+        p5.setSoundVolume(vol);
+
+        this.setState({
+            soundVolume: evnt.target.value
+        }, () => {
+            localStorage.setItem('soundVolume', this.state.soundVolume);
+        });
     }
 
     visualSettingsChanged = (evnt, setting) => {
@@ -294,8 +280,8 @@ class App extends React.Component {
                             controls={this.state.controls}
                             controlChanged={this.controlChanged}
                             resetControls={this.resetControls}
-                            volume={this.state.volume}
-                            setVolume={this.setVolume}
+                            soundVolume={this.state.soundVolume}
+                            setSoundVolume={this.setSoundVolume}
 
                             visualSettings={this.state.visualSettings}
                             visualSettingsChanged={this.visualSettingsChanged}
@@ -309,15 +295,13 @@ class App extends React.Component {
                             ownerId={this.state.roomData.ownerId}
                             originalUsers={this.state.roomData.originalUsers}
                             socket={this.socket}
-                            pieceImages={this.pieceImages}
-                            sounds={this.sounds}
                             font={this.font}
                             controls={this.state.controls}
 
                             controlChanged={this.controlChanged}
                             resetControls={this.resetControls}
-                            volume={this.state.volume}
-                            setVolume={this.setVolume}
+                            soundVolume={this.state.soundVolume}
+                            setSoundVolume={this.setSoundVolume}
 
                             visualSettings={this.state.visualSettings}
                             visualSettingsChanged={this.visualSettingsChanged}
@@ -335,28 +319,6 @@ class App extends React.Component {
                 state: states.MENU
             });
         }
-    }
-}
-
-//Modified from https://www.w3schools.com/graphics/game_sound.asp
-class Sound {
-    constructor(src) {
-        this.sound = document.createElement('audio');
-
-        this.sound.src = src;
-        this.sound.setAttribute('preload', 'auto');
-        this.sound.setAttribute('controls', 'none');
-        this.sound.style.display = 'none';
-
-        document.querySelector('#sound').appendChild(this.sound);
-    }
-
-    setVolume(vol) {
-        this.sound.volume = vol;
-    }
-
-    play() {
-        this.sound.play();
     }
 }
 

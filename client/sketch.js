@@ -5,6 +5,28 @@ const p5States = {
 }
 
 
+//Modified from https://www.w3schools.com/graphics/game_sound.asp
+class Sound {
+    constructor(src) {
+        this.sound = document.createElement('audio');
+
+        this.sound.src = src;
+        this.sound.setAttribute('preload', 'auto');
+        this.sound.setAttribute('controls', 'none');
+        this.sound.style.display = 'none';
+
+        document.querySelector('#sound').appendChild(this.sound);
+    }
+
+    setVolume(vol) {
+        this.sound.volume = vol;
+    }
+
+    play() {
+        this.sound.play();
+    }
+}
+
 let myP5;
 const sketch = p => {
     myP5 = p;
@@ -20,6 +42,14 @@ const sketch = p => {
     p.lastFrameRateUpdate = -Infinity;
     p.updateFrameRateEvery = 3 * 1000;
 
+    p.sounds = {
+        move: new Sound('../client/assets/move.wav'),
+        fall: new Sound('../client/assets/fall.wav'),
+        clear: new Sound('../client/assets/clear.wav'),
+        tritris: new Sound('../client/assets/tritris.wav'),
+        levelup: new Sound('../client/assets/levelup.wav'),
+        topout: new Sound('../client/assets/topout.wav')
+    };
 
     p.setup = () => {
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
@@ -54,7 +84,6 @@ const sketch = p => {
 
     p.draw = () => {
         p.customDraw(p);
-
 
         const scl = p.width * p.height / (1920 * 1080);
 
@@ -92,6 +121,12 @@ const sketch = p => {
     p.windowResized = () => {
         p.resizeCanvas(window.innerWidth, window.innerHeight);
         p.redraw();
+    }
+
+    p.setSoundVolume = vol => {
+        for (const sound in p.sounds) {
+            p.sounds[sound].setVolume(vol / 100);
+        }
     }
 }
 new p5(sketch);

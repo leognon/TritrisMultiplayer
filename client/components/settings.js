@@ -78,8 +78,8 @@ export default class Settings extends React.Component {
                     <hr />
                     <h3>Volume</h3>
                     <input id="volumeSlider" type="range" min="0" max="100"
-                        value={this.props.volume}
-                        onChange={this.props.setVolume}
+                        value={this.props.soundVolume}
+                        onChange={this.props.setSoundVolume}
                     />
                     <hr />
 
