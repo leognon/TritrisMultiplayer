@@ -64,6 +64,8 @@ export default class ClientRoom extends React.Component {
                         resetControls={this.props.resetControls}
                         soundVolume={this.props.soundVolume}
                         setSoundVolume={this.props.setSoundVolume}
+                        musicVolume={this.props.musicVolume}
+                        setMusicVolume={this.props.setMusicVolume}
                         visualSettings={this.props.visualSettings}
                         visualSettingsChanged={this.props.visualSettingsChanged}
                     />

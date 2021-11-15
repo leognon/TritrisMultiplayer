@@ -39,6 +39,8 @@ export default class Menu extends React.Component {
                         resetControls={this.props.resetControls}
                         soundVolume={this.props.soundVolume}
                         setSoundVolume={this.props.setSoundVolume}
+                        musicVolume={this.props.musicVolume}
+                        setMusicVolume={this.props.setMusicVolume}
 
                         visualSettings={this.props.visualSettings}
                         visualSettingsChanged={this.props.visualSettingsChanged}

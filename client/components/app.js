@@ -19,6 +19,7 @@ class App extends React.Component {
             name: localStorage.hasOwnProperty('name') ? localStorage.getItem('name') : ('player' + Math.floor(Math.random()*99+1)),
             controls: this.loadControls(),
             soundVolume: localStorage.hasOwnProperty('soundVolume') ? parseInt(localStorage.getItem('soundVolume')) : 75,
+            musicVolume: localStorage.hasOwnProperty('musicVolume') ? parseInt(localStorage.getItem('musicVolume')) : 75,
             roomData: {
                 roomCode: '',
                 ownerId: '',
@@ -88,6 +89,7 @@ class App extends React.Component {
         this.socket.on('leftRoom', this.leaveRoom);
 
         p5.setSoundVolume(this.state.soundVolume); //Make sure to set it initially
+        p5.setMusicVolume(this.state.musicVolume);
 
         this.checkLoadedInterval = setInterval(this.checkLoaded, 300);
     }
@@ -180,6 +182,19 @@ class App extends React.Component {
             soundVolume: evnt.target.value
         }, () => {
             localStorage.setItem('soundVolume', this.state.soundVolume);
+        });
+    }
+
+    setMusicVolume = evnt => {
+        let vol = parseInt(evnt.target.value);
+
+        if (vol <= 3) vol = 0; //It doesn't have to be exactly 0 to be muted
+        p5.setMusicVolume(vol);
+
+        this.setState({
+            musicVolume: evnt.target.value
+        }, () => {
+            localStorage.setItem('musicVolume', this.state.musicVolume);
         });
     }
 
@@ -282,6 +297,8 @@ class App extends React.Component {
                             resetControls={this.resetControls}
                             soundVolume={this.state.soundVolume}
                             setSoundVolume={this.setSoundVolume}
+                            musicVolume={this.state.musicVolume}
+                            setMusicVolume={this.setMusicVolume}
 
                             visualSettings={this.state.visualSettings}
                             visualSettingsChanged={this.visualSettingsChanged}
@@ -302,6 +319,8 @@ class App extends React.Component {
                             resetControls={this.resetControls}
                             soundVolume={this.state.soundVolume}
                             setSoundVolume={this.setSoundVolume}
+                            musicVolume={this.state.musicVolume}
+                            setMusicVolume={this.setMusicVolume}
 
                             visualSettings={this.state.visualSettings}
                             visualSettingsChanged={this.visualSettingsChanged}

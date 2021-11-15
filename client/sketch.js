@@ -26,6 +26,16 @@ class Sound {
         this.sound.play();
     }
 }
+class MusicTrack extends Sound {
+    constructor(name, src) {
+        super(src);
+        this.name = name;
+    }
+
+    setOnEnd(fn) {
+        this.sound.onended = fn;
+    }
+}
 
 let myP5;
 const sketch = p => {
@@ -50,6 +60,13 @@ const sketch = p => {
         levelup: new Sound('../client/assets/levelup.wav'),
         topout: new Sound('../client/assets/topout.wav')
     };
+
+    p.musicIsPlaying = false;
+    p.currentTrackIndex = 0;
+    p.musicTracks = [
+        new MusicTrack('trackA', '../client/assets/music/trackA.wav'),
+        new MusicTrack('Isosceles', '../client/assets/music/isosceles.wav')
+    ]
 
     p.setup = () => {
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
@@ -126,6 +143,27 @@ const sketch = p => {
     p.setSoundVolume = vol => {
         for (const sound in p.sounds) {
             p.sounds[sound].setVolume(vol / 100);
+        }
+    }
+
+    window.onclick = () => { //Once the user interacts with the page, start the music
+        if (!p.musicIsPlaying) {
+            p.nextMusicTrack();
+
+            p.musicIsPlaying = true;
+        }
+    }
+    p.nextMusicTrack = () => {
+        p.musicTracks[p.currentTrackIndex].play();
+        p.musicTracks[p.currentTrackIndex].setOnEnd(p.nextMusicTrack);
+
+        p.currentTrackIndex = (p.currentTrackIndex + 1) % p.musicTracks.length;
+    }
+
+    p.setMusicVolume = vol => {
+        console.log('Set vol to ' + vol);
+        for (const track of p.musicTracks) {
+            track.setVolume(vol / 100);
         }
     }
 }
