@@ -19,7 +19,7 @@ class App extends React.Component {
             name: localStorage.hasOwnProperty('name') ? localStorage.getItem('name') : ('player' + Math.floor(Math.random()*99+1)),
             controls: this.loadControls(),
             soundVolume: localStorage.hasOwnProperty('soundVolume') ? parseInt(localStorage.getItem('soundVolume')) : 75,
-            musicVolume: localStorage.hasOwnProperty('musicVolume') ? parseInt(localStorage.getItem('musicVolume')) : 75,
+            musicVolume: localStorage.hasOwnProperty('musicVolume') ? parseInt(localStorage.getItem('musicVolume')) : 0,
             roomData: {
                 roomCode: '',
                 ownerId: '',

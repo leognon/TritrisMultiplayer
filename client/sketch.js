@@ -65,7 +65,9 @@ const sketch = p => {
     p.currentTrackIndex = 0;
     p.musicTracks = [
         new MusicTrack('trackA', '../client/assets/music/trackA.wav'),
-        new MusicTrack('Isosceles', '../client/assets/music/isosceles.wav')
+        new MusicTrack('Isosceles', '../client/assets/music/isosceles.wav'),
+        new MusicTrack('3 Sided Coin', '../client/assets/music/3_Sided_Coin.mp3'),
+        new MusicTrack('Obtuse', '../client/assets/music/Obtuse.mp3')
     ]
 
     p.setup = () => {
