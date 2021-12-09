@@ -5,7 +5,7 @@ import LobbySettings from './components/lobbySettings.js';
 import Background from './components/background.js';
 import COMMON_CONFIG from '../common/config.js';
 import states from '../common/states.js';
-import gameTypes from '../common/gameTypes.js';
+import { gameTypes, boardTypes } from '../common/gameTypes.js';
 import MyGame from './myGame.js';
 import OtherGame from './otherGame.js';
 import keyboardMap from './components/keyboardMap.js';
@@ -21,7 +21,7 @@ export default class ClientRoom extends React.Component {
             visualSettings: this.props.visualSettings,
             settings: {
                 startLevel: 0,
-                use4x8: false,
+                boardType: boardTypes.NORMAL,
                 quadtris: false,
                 gameType: gameTypes.CLASSIC,
                 garbageSettings: {
@@ -78,8 +78,8 @@ export default class ClientRoom extends React.Component {
                             startLevel={this.state.settings.startLevel}
                             startLevelChanged={this.startLevelChanged}
 
-                            use4x8={this.state.settings.use4x8}
-                            use4x8Changed={this.use4x8Changed}
+                            boardType={this.state.settings.boardType}
+                            boardTypeChanged={this.boardTypeChanged}
 
                             quadtris={this.state.settings.quadtris}
                             quadtrisChanged={this.quadtrisChanged}
@@ -183,9 +183,9 @@ export default class ClientRoom extends React.Component {
         }
     }
 
-    use4x8Changed = evnt => {
+    boardTypeChanged = evnt => {
         const newSettings = { ...this.state.settings };
-        newSettings.use4x8 = evnt.target.checked;
+        newSettings.boardType = parseInt(evnt.target.value);
 
         this.setState({ settings: newSettings }, this.garbageHeightChanged);
     }
@@ -203,16 +203,38 @@ export default class ClientRoom extends React.Component {
     }
 
     garbageHeightChanged = evnt => {
-        //What the height is trying to be set to. If the 4x8 checkbox has been updated, evnt is undefined and we correct the boundaries
+        //What the height is trying to be set to. If the boardType has been updated, evnt is undefined and we correct the boundaries
         let height;
         if (evnt !== undefined) {
             height = parseInt(evnt.target.value);
         } else {
-            height = this.state.settings.use4x8 ? 3 : 5;
+            //Set a default height after the board type is changed
+            switch (this.state.settings.boardType) {
+                case boardTypes.SMALL:
+                    height = 3;
+                    break;
+                case boardTypes.NORMAL:
+                    height = 5;
+                    break;
+                case boardTypes.TALL:
+                    height = 7;
+                    break;
+            }
         }
 
         if (height < 1) height = 1;
-        const mx = this.state.settings.use4x8 ? 8 : 16;
+        let mx;
+        switch (this.state.settings.boardType) {
+            case boardTypes.SMALL:
+                mx = 8;
+                break;
+            case boardTypes.NORMAL:
+                mx = 16;
+                break;
+            case boardTypes.TALL:
+                mx = 24;
+                break;
+        }
         if (height > mx) height = mx;
 
         if (isNaN(height)) height = "";
@@ -617,13 +639,13 @@ class ClientMatch {
         }
 
         let boardWidth = (totalWidth / gridW) - padding; //The width of each game board
-        let boardHeight = boardWidth * 2; //The height of each game board
+        let boardHeight = boardWidth * (games[0].h / games[0].w); //The height of each game board
         let cellHeight = boardHeight * boardToTotalHeightRatio; //Including the text at the bottom, the total height of the grid cell
         if ((cellHeight + padding) * gridH > totalHeight) { //If the bottom will cut it off
             cellHeight = (totalHeight / gridH) - padding; //Recalculate so that each cell is as tall as possible
 
             boardHeight = cellHeight / boardToTotalHeightRatio; //Calculate the board height
-            boardWidth = boardHeight / 2; //Calculate the board width
+            boardWidth = boardHeight / (games[0].h / games[0].w); //Calculate the board width
         }
 
         const displayedGridHeight = cellHeight * gridH; //The total height of the grid. Allows for centering

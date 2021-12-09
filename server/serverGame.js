@@ -1,6 +1,6 @@
 import { Game, Input } from '../common/game.js';
 import SERVER_CONFIG from '../server/config.js';
-import gameTypes from '../common/gameTypes.js';
+import { gameTypes } from '../common/gameTypes.js';
 
 export default class ServerGame extends Game {
     constructor(settings) {

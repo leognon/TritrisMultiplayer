@@ -1,5 +1,5 @@
 import ServerGame from './serverGame.js';
-import gameTypes from '../common/gameTypes.js';
+import { gameTypes } from '../common/gameTypes.js';
 
 export default class ServerMatch {
     constructor(clients, settings) {

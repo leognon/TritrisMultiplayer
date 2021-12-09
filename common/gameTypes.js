@@ -3,4 +3,9 @@ const gameTypes = {
     VERSUS: 1,
     B_TYPE: 2,
 }
-export default gameTypes;
+const boardTypes = {
+    NORMAL: 0,
+    SMALL: 1,
+    TALL: 2
+}
+export { gameTypes, boardTypes };

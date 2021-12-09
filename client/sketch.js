@@ -134,6 +134,7 @@ const sketch = p => {
     }
 
     p.keyPressed = () => {
+        //TODO Press M to mute
         p.customKeyPressed(p);
     }
 
@@ -163,7 +164,6 @@ const sketch = p => {
     }
 
     p.setMusicVolume = vol => {
-        console.log('Set vol to ' + vol);
         for (const track of p.musicTracks) {
             track.setVolume(vol / 100);
         }

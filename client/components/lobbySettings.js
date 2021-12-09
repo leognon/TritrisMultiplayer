@@ -1,5 +1,5 @@
 import React from 'react';
-import gameTypes from '../../common/gameTypes.js';
+import { gameTypes, boardTypes } from '../../common/gameTypes.js';
 
 export default class LobbySettings extends React.Component {
     constructor(props) {
@@ -19,11 +19,15 @@ export default class LobbySettings extends React.Component {
                     onChange={this.props.startLevelChanged} />
                 <br />
 
-                <label htmlFor="4x8">4x8: </label>
-                <input id="4x8" type="checkbox"
-                    checked={this.props.use4x8}
-                    onChange={this.props.use4x8Changed}
-                />
+                <label htmlFor="boardType">Board Type: </label>
+                <select name="boardType" id="boardType"
+                    value={this.props.boardType}
+                    onChange={this.props.boardTypeChanged}
+                >
+                    <option value={boardTypes.NORMAL}>Normal (8x16)</option>
+                    <option value={boardTypes.SMALL}>Small (4x8)</option>
+                    <option value={boardTypes.TALL}>Tall (8x24)</option>
+                </select>
                 <br />
 
                 <label htmlFor="quadtris">Quadtris: </label>

@@ -1,6 +1,6 @@
 import { Input } from '../common/game.js';
 import ClientGame from '../client/clientGame';
-import gameTypes from '../common/gameTypes.js';
+import { gameTypes } from '../common/gameTypes.js';
 
 export default class MyGame extends ClientGame {
     constructor(name, myControls, settings) {

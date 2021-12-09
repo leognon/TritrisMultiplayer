@@ -1,7 +1,7 @@
 import { Grid, Piece } from './classes.js';
 import RandomGenerator from 'random-seed';
 import { tritrisJSON, quadtrisJSON } from './pieces.js';
-import gameTypes from '../common/gameTypes.js';
+import { gameTypes, boardTypes } from '../common/gameTypes.js';
 
 /* TODO
 
@@ -25,6 +25,8 @@ If the person receiving garbage is disconnected, could there be a desync?
     Once reconnected, the authoritative state will correct
 
 Click off tab before topping out?
+
+If you're not on the tab, it freezes. Make sure it forces move properly
 
 
 Get a tritris while disconnected??? Does it instantly send the garbage unfairly??
@@ -85,12 +87,19 @@ Database
 export class Game {
     constructor(settings) {
         this.gameType = settings.gameType;
+        this.boardType = settings.boardType;
 
         this.w = 8;
         this.h = 16;
-        if (settings.use4x8) {
-            this.w = 4;
-            this.h = 8;
+        switch (settings.boardType) {
+            case boardTypes.SMALL:
+                this.w = 4;
+                this.h = 8;
+                break;
+            case boardTypes.TALL:
+                this.w = 8;
+                this.h = 24;
+                break;
         }
 
         this.seed = settings.seed;

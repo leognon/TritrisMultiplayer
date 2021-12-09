@@ -1,5 +1,5 @@
 import { Game } from '../common/game.js';
-import gameTypes from '../common/gameTypes.js';
+import { gameTypes } from '../common/gameTypes.js';
 
 export default class ClientGame extends Game {
     constructor(name, settings) {
@@ -74,10 +74,10 @@ export default class ClientGame extends Game {
         //Board Middle 80%
         //Name - Bottom 10%
         let boardHeight = p5.height * 0.8;
-        let boardWidth = boardHeight / 2;
+        let boardWidth = boardHeight / (this.h / this.w);
         if (boardWidth > maxWidth) { //If the window is too thin
             boardWidth = maxWidth;
-            boardHeight = boardWidth * 2;
+            boardHeight = boardWidth * (this.h / this.w);
         }
 
         let left;

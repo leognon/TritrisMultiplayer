@@ -1,6 +1,6 @@
 import validator from 'validator';
 import states from '../common/states.js';
-import gameTypes from '../common/gameTypes.js';
+import { gameTypes, boardTypes } from '../common/gameTypes.js';
 import ServerMatch from './match.js';
 
 export default class ServerRoom {
@@ -130,9 +130,11 @@ export default class ServerRoom {
             settings.startLevel = parseInt(settings.startLevel);
         }
 
-        if (settings.use4x8 !== false && settings.use4x8 !== true) {
-            this.owner.emit('msg', { msg: 'Please check the 4x8 checkbox correctly.' });
+        if (!validator.isNumeric(settings.boardType + '') || !Object.values(boardTypes).includes(settings.boardType)) {
+            this.owner.emit('msg', { msg: 'Please choose a board type.' });
             return;
+        } else {
+            settings.boardType = parseInt(settings.boardType); //Make sure int
         }
 
         if (settings.quadtris !== false && settings.quadtris !== true) {
@@ -149,7 +151,18 @@ export default class ServerRoom {
 
         if (settings.gameType == gameTypes.B_TYPE) {
             const min = 1;
-            const max = settings.use4x8 ? 8 : 16;
+            let max = 16;
+            switch (settings.boardType) {
+                case boardTypes.SMALL:
+                    max = 8;
+                    break;
+                case boardTypes.NORMAL:
+                    max = 16;
+                    break;
+                case boardTypes.TALL:
+                    max = 24;
+                    break;
+            }
             const height = settings.garbageSettings.height;
             if (!validator.isNumeric(height + '') || parseInt(height) < min || parseInt(height) > max) {
                 this.owner.emit('msg', { msg: `Please choose a garbage height between ${min} and ${max}` });
