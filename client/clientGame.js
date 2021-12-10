@@ -1,5 +1,5 @@
 import { Game } from '../common/game.js';
-import { gameTypes } from '../common/gameTypes.js';
+import { gameTypes, boardTypes } from '../common/gameTypes.js';
 
 export default class ClientGame extends Game {
     constructor(name, settings) {
@@ -102,7 +102,7 @@ export default class ClientGame extends Game {
         const boardPosY = scorePosY + scoreHeight + padding;
 
         const nextPosX = boardPosX + boardWidth + padding;
-        const nextPosY = boardPosY + cellW * 2;
+        const nextPosY = boardPosY + cellW * (this.boardType == boardTypes.TALL ? 6 : 2);
         const nextDim = cellW * 3;
 
         const textSize = cellW * 0.5;
