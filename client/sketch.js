@@ -71,6 +71,13 @@ const sketch = p => {
     ]
 
     p.setup = () => {
+        if (window.location.hostname.match('herokuapp')) {
+            if (confirm('Tritris Multiplayer will soon no longer be on herokuapp.'
+                + '\nPlease migrate to \'https://tritris.up.railway.app\''
+                + '\nWould you like to go there now?')) {
+                window.location.href = 'https://tritris.up.railway.app'
+            }
+        }
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
         p.background(100);
         p.loadImage('./client/assets/piecesImage.png', img => {
