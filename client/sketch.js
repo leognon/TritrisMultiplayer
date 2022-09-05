@@ -71,11 +71,11 @@ const sketch = p => {
     ]
 
     p.setup = () => {
-        if (window.location.hostname.match('herokuapp')) {
-            if (confirm('Tritris Multiplayer will soon no longer be on herokuapp.'
-                + '\nPlease migrate to \'https://tritris.up.railway.app\''
+        if (window.location.hostname.match('herokuapp') || window.location.hostname.match('railway')) {
+            if (confirm('Tritris Multi will soon be moved to a new URL.'
+                + '\nPlease migrate to \'https://tritris.onrender.com\''
                 + '\nWould you like to go there now?')) {
-                window.location.href = 'https://tritris.up.railway.app'
+                window.location.href = 'https://tritris.onrender.com'
             }
         }
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
