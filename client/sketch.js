@@ -71,11 +71,11 @@ const sketch = p => {
     ]
 
     p.setup = () => {
-        if (window.location.hostname.match('herokuapp') || window.location.hostname.match('railway')) {
+        if (!window.location.hostname.match('appspot') && !window.location.hostname.match('localhost')) {
             if (confirm('Tritris Multi will soon be moved to a new URL.'
-                + '\nPlease migrate to \'https://tritris.onrender.com\''
+                + '\nPlease migrate to \'https://tritris.uk.r.appspot.com\''
                 + '\nWould you like to go there now?')) {
-                window.location.href = 'https://tritris.onrender.com'
+                window.location.href = 'https://tritris.uk.r.appspot.com'
             }
         }
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
