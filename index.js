@@ -10,17 +10,22 @@ const app = express();
 const server = app.listen(PORT);
 const io = new SocketIOServer(server);
 
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// import { dirname } from 'path';
+// import { fileURLToPath } from 'url';
+// const __dirname = dirname(fileURLToPath(import.meta.url));
+import fs from 'fs';
+const indexHtml = fs.readFileSync("./client/index.html").toString();
+
+
 
 import { addClient, removeClient } from './server/sockets.js';
 import ServerRoom from './server/serverRoom.js';
 //let queue = []; //A list of socket ids in the queue
 let rooms = {}; //The key is the room code
 
+
 app.get('/', (_, res) => {
-    res.send({ root: __dirname });
+    res.send(indexHtml);
     //res.sendFile('/client/index.html', { root: __dirname });
 });
 app.get('/client/assets/*', (req, res) => {
