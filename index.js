@@ -20,7 +20,8 @@ import ServerRoom from './server/serverRoom.js';
 let rooms = {}; //The key is the room code
 
 app.get('/', (_, res) => {
-    res.sendFile('/client/index.html', { root: __dirname });
+    res.send('hello');
+    // res.sendFile('/client/index.html', { root: __dirname });
 });
 app.get('/client/assets/*', (req, res) => {
     res.sendFile(`/client/assets/${req.params[0]}`, { root: __dirname });
