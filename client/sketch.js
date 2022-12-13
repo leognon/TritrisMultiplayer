@@ -73,9 +73,9 @@ const sketch = p => {
     p.setup = () => {
         if (!window.location.hostname.match('leognon') && !window.location.hostname.match('localhost')) {
             if (confirm('Tritris has moved to a new URL.'
-                + '\nPlease migrate to \'http://tritris.leognon.com\''
+                + '\nPlease migrate to \'https://tritris.leognon.com\''
                 + '\nWould you like to go there now?')) {
-                window.location.href = 'http://tritris.leognon.com'
+                window.location.href = 'https://tritris.leognon.com'
             }
         }
         p.createCanvas(window.innerWidth, window.innerHeight); //.parent(canvasParentRef);
